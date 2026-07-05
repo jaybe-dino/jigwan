@@ -8,7 +8,7 @@ pipeline/spatial 및 tests/test_spatial.py에서 교차 검증한다.
 from __future__ import annotations
 
 import math
-from typing import Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 
 EARTH_R = 6_371_000.0  # 지구 평균 반경(m)
 
@@ -132,6 +132,48 @@ def inside_of_arc(origin: Point, a: Point, b: Point, c: Point):
         return None
     (ux, uy), r = cc
     return math.hypot(ux, uy) < r
+
+
+def principal_axis_deg(points: Sequence[Point]) -> float:
+    """정점들의 주축(장축) 방위각(0~180). 건물 폴리곤의 긴 변 방향."""
+    if len(points) < 2:
+        return 0.0
+    o = points[0]
+    xs, ys = [], []
+    for p in points:
+        x, y = local_xy(o, p)
+        xs.append(x)
+        ys.append(y)
+    n = len(xs)
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    syy = sum((y - my) ** 2 for y in ys)
+    sxy = sum((xs[i] - mx) * (ys[i] - my) for i in range(n))
+    # 공분산 행렬 최대 고유벡터 각도
+    theta = 0.5 * math.atan2(2 * sxy, sxx - syy)  # x축(동) 기준 라디안
+    # 방위각(북=0, 시계) = 90 - deg(theta)
+    deg = (90 - math.degrees(theta)) % 180
+    return deg
+
+
+def facing_from_footprint(points: Sequence[Point], toward: Optional[Point] = None) -> float:
+    """건물 footprint에서 좌향의 향(정면 방위각) 추정(휴리스틱).
+
+    긴 변에 수직인 방향(짧은 변 법선)을 정면 후보로 보고, `toward`(도로·개활지
+    쪽 좌표)가 주어지면 그쪽을 향하는 후보를, 없으면 남향에 가까운 후보를 고른다.
+    """
+    long_axis = principal_axis_deg(points)
+    cand_a = (long_axis + 90) % 360
+    cand_b = (cand_a + 180) % 360
+    o = points[0]
+    cx = sum(local_xy(o, p)[0] for p in points) / len(points)
+    cy = sum(local_xy(o, p)[1] for p in points) / len(points)
+    if toward is not None:
+        tx, ty = local_xy(o, toward)
+        tb = (math.degrees(math.atan2(tx - cx, ty - cy)) + 360) % 360  # 중심→toward 방위
+        return cand_a if angle_diff(cand_a, tb) < angle_diff(cand_b, tb) else cand_b
+    # 남향(180) 선호
+    return cand_a if angle_diff(cand_a, 180) <= angle_diff(cand_b, 180) else cand_b
 
 
 def menger_curvature(a: Point, b: Point, c: Point) -> float:

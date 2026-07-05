@@ -8,13 +8,13 @@ from __future__ import annotations
 
 from engine.models import Building, Precision, SiteFeatures
 from engine.scoring import SiteAssessment, assess_site
-from pipeline.collectors.fixture import FixtureCollectors
+from pipeline.collectors.base import Collectors
 
 DEFAULT_RADIUS_M = 1500.0  # 현무/사신사 최대 반경에 맞춤
 
 
 def assemble_features(
-    address: str, collectors: FixtureCollectors, radius_m: float = DEFAULT_RADIUS_M
+    address: str, collectors: Collectors, radius_m: float = DEFAULT_RADIUS_M
 ) -> SiteFeatures:
     info = collectors.building(address)
     loc = info.location
@@ -36,5 +36,13 @@ def assemble_features(
     )
 
 
-def assess_address(address: str, collectors: FixtureCollectors) -> SiteAssessment:
+def assess_address(address: str, collectors: Collectors) -> SiteAssessment:
     return assess_site(assemble_features(address, collectors))
+
+
+def assess_address_auto(address: str) -> SiteAssessment:
+    """키가 있으면 실 API로, 없으면 픽스처로 감정(팩토리 위임)."""
+    from pipeline.collectors.factory import make_collectors
+
+    collectors, _live = make_collectors(address)
+    return assess_address(address, collectors)
