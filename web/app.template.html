@@ -9,57 +9,53 @@
    전통 풍수(인장·먹·한지·오방색·24방위) × 부동산앱 신뢰 UI
    ============================================================ */
 :root{
-  --paper:#FBFAF8; --panel:#FFFFFF; --panel-2:#F6F4F0;
-  --ink:#1F1B18; --ink-soft:#6B645D; --ink-faint:#AAA298;
-  --line:#F0ECE5; --line-soft:#F7F4EF;
-  --seal:#E0483A; --seal-deep:#BC3325; --seal-ink:#EC5A47;
-  /* 오방색 4축 게이지 */
-  --jae:#C0902F;   /* 재물·金 황금 */
-  --gun:#2E8B6F;   /* 건강·木 청록 */
-  --gwan:#3A6EA5;  /* 관계·水 남색 */
-  --myeong:#C24A38;/* 명예·火 주홍 */
-  --good:#17A97C; --warn:#E7A81F; --bad:#E0483A;
-  --shadow:0 2px 8px rgba(31,27,24,.04),0 12px 32px rgba(31,27,24,.06);
-  --radius:22px;
-  --font-serif:"Noto Serif KR","Nanum Myeongjo",AppleMyungjo,"Songti SC","Batang",serif;
+  /* 직방/네이버 부동산풍 — 클린 화이트 + 쿨그레이 + 오렌지 액센트 */
+  --paper:#FFFFFF; --panel:#FFFFFF; --panel-2:#F4F5F7;
+  --ink:#212429; --ink-soft:#6A7280; --ink-faint:#AAB0BA;
+  --line:#EBEDF0; --line-soft:#F2F3F5;
+  --seal:#FF6A2C; --seal-deep:#EE560F; --seal-ink:#FF7E45;   /* 액센트(오렌지) */
+  --jae:#FF6A2C; --gun:#12B886; --gwan:#3B82F6; --myeong:#F59F00;
+  --good:#12B886; --warn:#F59F00; --bad:#FA5252;
+  --shadow:0 1px 3px rgba(20,24,31,.06),0 6px 20px rgba(20,24,31,.07);
+  --radius:16px;
+  /* serif 제거 — 전부 클린 산세리프 */
+  --font-serif:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
   --font-sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --paper:#151109; --panel:#1E1910; --panel-2:#262016;
-    --ink:#EDE7DA; --ink-soft:#B6AD9B; --ink-faint:#867C6B;
-    --line:#332B1F; --line-soft:#2A2318;
-    --seal:#CB5142; --seal-deep:#9E3227; --seal-ink:#D96552;
-    --jae:#D6A94A; --gun:#48A585; --gwan:#5B90C6; --myeong:#D96552;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45);
+    --paper:#17191C; --panel:#1E2125; --panel-2:#282C31;
+    --ink:#E9EBEE; --ink-soft:#A0A7B1; --ink-faint:#6E7681;
+    --line:#2E3238; --line-soft:#262A2F;
+    --seal:#FF7A45; --seal-deep:#EE560F; --seal-ink:#FF8C5C;
+    --jae:#FF7A45; --gun:#20C997; --gwan:#5B92F0; --myeong:#FFB43D;
+    --good:#20C997; --warn:#FFB43D; --bad:#FF6B6B;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5);
   }
 }
 :root[data-theme="light"]{
-  --paper:#FBFAF8; --panel:#FFFFFF; --panel-2:#F6F4F0;
-  --ink:#1F1B18; --ink-soft:#6B645D; --ink-faint:#AAA298;
-  --line:#F0ECE5; --line-soft:#F7F4EF;
-  --seal:#E0483A; --seal-deep:#BC3325; --seal-ink:#EC5A47;
-  --jae:#E7A81F; --gun:#17A97C; --gwan:#3B82F6; --myeong:#F0553F;
-  --shadow:0 1px 2px rgba(30,25,19,.04),0 6px 20px rgba(30,25,19,.06);
+  --paper:#FFFFFF; --panel:#FFFFFF; --panel-2:#F4F5F7;
+  --ink:#212429; --ink-soft:#6A7280; --ink-faint:#AAB0BA;
+  --line:#EBEDF0; --line-soft:#F2F3F5;
+  --seal:#FF6A2C; --seal-deep:#EE560F; --seal-ink:#FF7E45;
+  --jae:#FF6A2C; --gun:#12B886; --gwan:#3B82F6; --myeong:#F59F00;
+  --good:#12B886; --warn:#F59F00; --bad:#FA5252;
+  --shadow:0 1px 3px rgba(20,24,31,.06),0 6px 20px rgba(20,24,31,.07);
 }
 :root[data-theme="dark"]{
-  --paper:#151109; --panel:#1E1910; --panel-2:#262016;
-  --ink:#EDE7DA; --ink-soft:#B6AD9B; --ink-faint:#867C6B;
-  --line:#332B1F; --line-soft:#2A2318;
-  --seal:#CB5142; --seal-deep:#9E3227; --seal-ink:#D96552;
-  --jae:#D6A94A; --gun:#48A585; --gwan:#5B90C6; --myeong:#D96552;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45);
+  --paper:#17191C; --panel:#1E2125; --panel-2:#282C31;
+  --ink:#E9EBEE; --ink-soft:#A0A7B1; --ink-faint:#6E7681;
+  --line:#2E3238; --line-soft:#262A2F;
+  --seal:#FF7A45; --seal-deep:#EE560F; --seal-ink:#FF8C5C;
+  --jae:#FF7A45; --gun:#20C997; --gwan:#5B92F0; --myeong:#FFB43D;
+  --good:#20C997; --warn:#FFB43D; --bad:#FF6B6B;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5);
 }
 
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
-  background:
-    radial-gradient(75% 42% at 12% 0%, color-mix(in srgb,var(--myeong) 8%, transparent), transparent 58%),
-    radial-gradient(70% 40% at 100% 3%, color-mix(in srgb,var(--gwan) 7%, transparent), transparent 55%),
-    radial-gradient(90% 50% at 50% 100%, color-mix(in srgb,var(--jae) 5%, transparent), transparent 60%),
-    var(--paper);
-  background-attachment:fixed;
+  background:var(--panel-2);
   color:var(--ink); font-family:var(--font-sans);
   -webkit-font-smoothing:antialiased; line-height:1.5;
   display:flex; justify-content:center;
@@ -189,20 +185,16 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .backlink{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
   color:var(--ink-soft); margin-bottom:14px; }
 .rep-head{ display:flex; align-items:center; gap:16px; }
-.seal-stamp{ width:96px; height:96px; flex:none; position:relative; display:grid; place-items:center;
-  color:#fff; border-radius:14px; transform:rotate(-4deg);
-  background:
-    repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 3px, transparent 3px 6px),
-    radial-gradient(circle at 30% 25%, color-mix(in srgb,var(--seal) 80%,#fff 12%), var(--seal) 60%, var(--seal-deep));
-  box-shadow:0 6px 18px color-mix(in srgb,var(--seal) 34%,transparent), inset 0 0 0 2px rgba(255,255,255,.28), inset 0 0 0 5px var(--seal);
-  font-family:var(--font-serif); }
-.seal-stamp::after{ content:""; position:absolute; inset:7px; border:1.5px solid rgba(255,255,255,.55); border-radius:9px; }
-.seal-stamp .g{ font-size:26px; font-weight:700; line-height:1; letter-spacing:.04em; z-index:1; text-shadow:0 1px 2px rgba(0,0,0,.25); }
-.seal-stamp .k{ font-size:10px; opacity:.9; margin-top:3px; z-index:1; }
+/* 클린 점수 배지 (직방풍) — 낙관 도장 제거 */
+.seal-stamp{ width:76px; height:76px; flex:none; display:grid; place-items:center;
+  color:#fff; border-radius:18px; background:var(--seal);
+  box-shadow:0 6px 16px color-mix(in srgb,var(--seal) 30%,transparent); }
+.seal-stamp .g{ font-size:22px; font-weight:800; line-height:1; letter-spacing:-.01em; }
+.seal-stamp .k{ display:none; }
 .rep-head .who{ min-width:0; }
 .rep-head .who .addr{ font-size:13px; color:var(--ink-soft); font-weight:600; line-height:1.4; word-break:keep-all; }
-.rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:4px; }
-.rep-head .who .score small{ font-size:20px; color:var(--ink-soft); margin-left:3px; }
+.rep-head .who .score{ font-size:56px; font-weight:800; line-height:.95; font-variant-numeric:tabular-nums; margin-top:4px; letter-spacing:-.02em; }
+.rep-head .who .score small{ font-size:20px; color:var(--ink-soft); margin-left:3px; font-weight:600; }
 .badgerow{ display:flex; align-items:center; gap:7px; margin-top:6px; flex-wrap:wrap; }
 .rep-head .who .grade{ display:inline-block; font-weight:800; font-size:13px; color:#fff;
   background:linear-gradient(135deg, var(--seal-ink), var(--seal-deep)); padding:5px 12px; border-radius:999px;
@@ -296,8 +288,8 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
     linear-gradient(180deg, color-mix(in srgb,var(--seal) 90%,#000 4%), var(--seal-deep));
   color:#fff; border-radius:16px; padding:18px; margin:14px 18px; position:relative; overflow:hidden;
   box-shadow:0 10px 26px color-mix(in srgb,var(--seal) 34%,transparent); }
-.bibo::before{ content:"符"; position:absolute; right:-6px; top:-14px; font-family:var(--font-serif);
-  font-size:120px; opacity:.12; color:#fff; }
+.bibo::before{ content:"✦"; position:absolute; right:-4px; top:-20px;
+  font-size:110px; opacity:.14; color:#fff; }
 .bibo .k{ font-size:11px; letter-spacing:.2em; font-weight:700; opacity:.85; }
 .bibo h3{ color:#fff; font-size:17px; margin:8px 0 6px; }
 .bibo p{ margin:0; font-size:13.5px; line-height:1.6; opacity:.95; }
@@ -893,7 +885,8 @@ function hexA(hex,a){ // hex or var → rgba
     return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;} return m;
 }
 
-const OSM_TILE='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+// 직방/네이버풍 클린 라이트 베이스맵 (CartoDB Positron, 무료·키 불필요)
+const OSM_TILE='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
 let homeLmap=null, repLmap=null;
 
 // 방위·거리로 실좌표 오프셋 (실제 지도 라벨 배치용)
