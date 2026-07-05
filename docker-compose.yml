@@ -1,0 +1,27 @@
+# 지관 로컬 개발 — PostGIS (기획안 §10)
+#
+#   docker compose up -d db
+#   export JIGWAN_DATABASE_URL=postgresql://jigwan:jigwan@localhost:5432/jigwan
+#   psql "$JIGWAN_DATABASE_URL" -f pipeline/db/schema.sql -f pipeline/db/spatial.sql
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: jigwan
+      POSTGRES_PASSWORD: jigwan
+      POSTGRES_DB: jigwan
+    ports:
+      - "5432:5432"
+    volumes:
+      - jigwan_pg:/var/lib/postgresql/data
+      # 스키마·공간함수를 컨테이너 최초 기동 시 자동 적용
+      - ./pipeline/db/schema.sql:/docker-entrypoint-initdb.d/10_schema.sql:ro
+      - ./pipeline/db/spatial.sql:/docker-entrypoint-initdb.d/20_spatial.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jigwan"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jigwan_pg:

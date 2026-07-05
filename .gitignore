@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# 환경/비밀 (공공 API 키 등)
+.env
+*.local
+
+# OS
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json

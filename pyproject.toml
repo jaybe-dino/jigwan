@@ -1,0 +1,24 @@
+[project]
+name = "jigwan"
+version = "0.1.0"
+description = "지관(智官) — AI 풍수지리 감정 엔진 (M1: 룰북 + 데이터 파이프라인)"
+requires-python = ">=3.10"
+# 핵심 엔진은 표준 라이브러리만 사용(의존성 0). 아래는 선택적 배포 의존성.
+dependencies = []
+
+[project.optional-dependencies]
+# PostGIS 파이프라인 실행 시
+db = ["psycopg[binary]>=3.1"]
+# 테스트
+test = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["engine", "engine.rulebook", "pipeline", "pipeline.collectors", "pipeline.spatial"]

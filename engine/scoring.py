@@ -1,0 +1,118 @@
+"""터 점수 집계·등급·4축 게이지 (룰북 §0.3, §12 / 기획안 §4.5, §4).
+
+assess_site(features) → SiteAssessment(터점수, 등급, 요소별 결과, 4축 게이지).
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass, field
+from enum import Enum
+from typing import Any, Dict, List
+
+from engine.calibration import DEFAULT, Calibration
+from engine.models import RuleResult, SiteFeatures
+from engine.rulebook import ALL_RULES
+
+
+class Grade(str, Enum):
+    CHEONHA = "천하명당"  # 95+
+    MYEONGDANG = "명당"   # 85~94
+    GILJI = "길지"        # 70~84
+    PYEONGJI = "평지"     # 50~69
+    BIBOJI = "비보지"     # <50
+
+    @classmethod
+    def of(cls, score: float) -> "Grade":
+        if score >= 95:
+            return cls.CHEONHA
+        if score >= 85:
+            return cls.MYEONGDANG
+        if score >= 70:
+            return cls.GILJI
+        if score >= 50:
+            return cls.PYEONGJI
+        return cls.BIBOJI
+
+
+# 4축 게이지: 각 룰의 (score/max) 기여를 축에 분배. 재물이 메인(기획안 §2).
+# 값은 축 가중(합이 1이 아니어도 됨 — 축별 정규화).
+AXIS_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "R01": {"건강": 0.6, "재물": 0.4},
+    "R02": {"관계": 0.6, "건강": 0.4},
+    "R03": {"재물": 1.0},
+    "R04": {"건강": 0.7, "재물": 0.3},
+    "R05": {"재물": 0.6, "건강": 0.4},
+    "R06": {"재물": 0.5, "관계": 0.5},
+    "R07": {"건강": 1.0},
+    "R08": {"명예": 0.7, "재물": 0.3},
+    "R09": {"명예": 0.5, "재물": 0.5},
+    "R10": {"재물": 0.4, "건강": 0.3, "관계": 0.2, "명예": 0.1},
+}
+AXES = ["재물", "건강", "관계", "명예"]
+
+
+@dataclass
+class SiteAssessment:
+    address: str
+    site_score: int          # 0~100
+    grade: Grade
+    raw_score: float         # 캘리브레이션 전 원점수
+    gauges: Dict[str, int]   # 축 → 0~100
+    results: List[RuleResult] = field(default_factory=list)
+
+    @property
+    def needs_bibo(self) -> bool:
+        return self.grade == Grade.BIBOJI
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "address": self.address,
+            "site_score": self.site_score,
+            "grade": self.grade.value,
+            "raw_score": round(self.raw_score, 2),
+            "gauges": self.gauges,
+            "results": [r.to_dict() for r in self.results],
+        }
+
+
+def _compute_gauges(results: List[RuleResult]) -> Dict[str, int]:
+    acc = {a: 0.0 for a in AXES}
+    wsum = {a: 0.0 for a in AXES}
+    for r in results:
+        if not r.applicable or r.max_score <= 0:
+            continue
+        frac = r.score / r.max_score
+        for axis, w in AXIS_WEIGHTS.get(r.code, {}).items():
+            acc[axis] += frac * w
+            wsum[axis] += w
+    return {
+        a: int(round(100 * acc[a] / wsum[a])) if wsum[a] > 0 else 50
+        for a in AXES
+    }
+
+
+def assess_site(
+    features: SiteFeatures, calibration: Calibration = DEFAULT
+) -> SiteAssessment:
+    results = [rule(features) for rule in ALL_RULES]
+
+    num = 0.0
+    den = 0.0
+    for r in results:
+        if not r.applicable:
+            continue
+        w = calibration.weight(r.code)
+        num += r.score * w
+        den += r.max_score * w
+    raw = (100.0 * num / den) if den > 0 else 0.0
+    final = calibration.map_score(raw)
+    score_int = int(round(final))
+
+    return SiteAssessment(
+        address=features.address,
+        site_score=score_int,
+        grade=Grade.of(score_int),
+        raw_score=raw,
+        gauges=_compute_gauges(results),
+        results=results,
+    )
