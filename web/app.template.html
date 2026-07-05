@@ -1,0 +1,852 @@
+<title>지관 — 터를 봐드립니다</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+/* ============================================================
+   지관(智官) — 모바일 웹 UI 프로토타입
+   전통 풍수(인장·먹·한지·오방색·24방위) × 부동산앱 신뢰 UI
+   ============================================================ */
+:root{
+  --paper:#F3F0E9; --panel:#FBFAF6; --panel-2:#ECE7DC;
+  --ink:#1E1913; --ink-soft:#5A5247; --ink-faint:#8B8171;
+  --line:#DAD3C6; --line-soft:#E7E1D5;
+  --seal:#B23A2E; --seal-deep:#8C2A22; --seal-ink:#C24A38;
+  /* 오방색 4축 게이지 */
+  --jae:#C0902F;   /* 재물·金 황금 */
+  --gun:#2E8B6F;   /* 건강·木 청록 */
+  --gwan:#3A6EA5;  /* 관계·水 남색 */
+  --myeong:#C24A38;/* 명예·火 주홍 */
+  --good:#2E8B6F; --warn:#C0902F; --bad:#B23A2E;
+  --shadow:0 1px 2px rgba(30,25,19,.06),0 8px 24px rgba(30,25,19,.08);
+  --radius:16px;
+  --font-serif:"Noto Serif KR","Nanum Myeongjo",AppleMyungjo,"Songti SC","Batang",serif;
+  --font-sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#151109; --panel:#1E1910; --panel-2:#262016;
+    --ink:#EDE7DA; --ink-soft:#B6AD9B; --ink-faint:#867C6B;
+    --line:#332B1F; --line-soft:#2A2318;
+    --seal:#CB5142; --seal-deep:#9E3227; --seal-ink:#D96552;
+    --jae:#D6A94A; --gun:#48A585; --gwan:#5B90C6; --myeong:#D96552;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="light"]{
+  --paper:#F3F0E9; --panel:#FBFAF6; --panel-2:#ECE7DC;
+  --ink:#1E1913; --ink-soft:#5A5247; --ink-faint:#8B8171;
+  --line:#DAD3C6; --line-soft:#E7E1D5;
+  --seal:#B23A2E; --seal-deep:#8C2A22; --seal-ink:#C24A38;
+  --jae:#C0902F; --gun:#2E8B6F; --gwan:#3A6EA5; --myeong:#C24A38;
+  --shadow:0 1px 2px rgba(30,25,19,.06),0 8px 24px rgba(30,25,19,.08);
+}
+:root[data-theme="dark"]{
+  --paper:#151109; --panel:#1E1910; --panel-2:#262016;
+  --ink:#EDE7DA; --ink-soft:#B6AD9B; --ink-faint:#867C6B;
+  --line:#332B1F; --line-soft:#2A2318;
+  --seal:#CB5142; --seal-deep:#9E3227; --seal-ink:#D96552;
+  --jae:#D6A94A; --gun:#48A585; --gwan:#5B90C6; --myeong:#D96552;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:
+    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb,var(--seal) 6%, transparent), transparent 60%),
+    var(--paper);
+  color:var(--ink); font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased; line-height:1.5;
+  display:flex; justify-content:center;
+}
+.phone{
+  width:100%; max-width:430px; min-height:100vh; position:relative;
+  background:var(--paper); overflow:hidden;
+  box-shadow:0 0 0 1px var(--line-soft);
+}
+@media(min-width:520px){ .phone{ min-height:auto; margin:24px 0; border-radius:34px; overflow:hidden; box-shadow:var(--shadow),0 0 0 1px var(--line); } }
+
+/* 화면 전환 */
+.screen{ display:none; animation:fade .35s ease both; }
+.screen.active{ display:block; }
+@keyframes fade{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+@media (prefers-reduced-motion:reduce){ .screen{animation:none} }
+
+/* 공통 */
+.pad{ padding:18px 18px 28px; }
+.eyebrow{ font-size:11px; letter-spacing:.22em; text-transform:none; color:var(--seal);
+  font-weight:700; display:flex; align-items:center; gap:7px; }
+.eyebrow::before{ content:""; width:14px; height:1.5px; background:var(--seal); display:inline-block; }
+h1,h2,h3{ font-family:var(--font-serif); font-weight:700; text-wrap:balance; margin:0; letter-spacing:-.01em; }
+.muted{ color:var(--ink-soft); } .faint{ color:var(--ink-faint); }
+.tnum{ font-variant-numeric:tabular-nums; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--ink); color:var(--paper); border-radius:12px; padding:14px 18px;
+  font-weight:700; font-size:15px; width:100%; transition:transform .08s ease, opacity .2s; }
+.btn:active{ transform:scale(.98); }
+.btn.seal{ background:var(--seal); color:#fff; }
+.btn.ghost{ background:var(--panel); color:var(--ink); box-shadow:inset 0 0 0 1px var(--line); }
+
+/* ---------- 상단 바 ---------- */
+.topbar{ display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px 6px; }
+.brand{ display:flex; align-items:center; gap:9px; }
+.brand .mark{ width:30px; height:30px; border-radius:8px; background:var(--seal);
+  color:#fff; font-family:var(--font-serif); font-weight:700; font-size:18px;
+  display:grid; place-items:center; box-shadow:0 2px 8px color-mix(in srgb,var(--seal) 40%,transparent); }
+.brand b{ font-family:var(--font-serif); font-size:19px; letter-spacing:.02em; }
+.brand span{ font-size:11px; color:var(--ink-faint); display:block; margin-top:-2px; }
+.iconbtn{ width:34px; height:34px; border-radius:9px; background:var(--panel);
+  box-shadow:inset 0 0 0 1px var(--line); display:grid; place-items:center; font-size:15px; }
+
+/* ---------- 홈: 지도 ---------- */
+.mapwrap{ position:relative; height:340px; background:var(--panel-2);
+  border-bottom:1px solid var(--line); overflow:hidden; }
+.mapwrap canvas{ position:absolute; inset:0; width:100%; height:100%; }
+.pin{ position:absolute; transform:translate(-50%,-100%); text-align:center;
+  cursor:pointer; transition:transform .12s; }
+.pin:active{ transform:translate(-50%,-100%) scale(.94); }
+.pin .bub{ background:var(--panel); color:var(--ink); font-weight:800; font-size:13px;
+  padding:5px 9px; border-radius:11px; box-shadow:var(--shadow),inset 0 0 0 1px var(--line);
+  display:flex; align-items:center; gap:5px; }
+.pin .bub .sc{ color:var(--seal); font-variant-numeric:tabular-nums; }
+.pin .tip{ width:9px; height:9px; background:var(--panel); transform:rotate(45deg);
+  margin:-5px auto 0; box-shadow:2px 2px 3px rgba(0,0,0,.06); }
+.searchcard{ position:absolute; left:14px; right:14px; top:14px; z-index:5; }
+.search{ background:var(--panel); border-radius:13px; box-shadow:var(--shadow),inset 0 0 0 1px var(--line);
+  display:flex; align-items:center; gap:10px; padding:13px 15px; }
+.search input{ border:none; background:none; outline:none; color:var(--ink);
+  font-size:15px; width:100%; font-family:inherit; }
+.search input::placeholder{ color:var(--ink-faint); }
+.trend{ display:flex; gap:8px; overflow-x:auto; padding:14px 18px 4px; scrollbar-width:none; }
+.trend::-webkit-scrollbar{ display:none; }
+.chip{ white-space:nowrap; font-size:12.5px; font-weight:600; color:var(--ink-soft);
+  background:var(--panel); box-shadow:inset 0 0 0 1px var(--line); border-radius:999px;
+  padding:7px 12px; display:flex; align-items:center; gap:6px; }
+.chip .dot{ width:6px; height:6px; border-radius:50%; background:var(--seal); }
+.homecta{ padding:16px 18px 26px; }
+.demo-note{ text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:12px; }
+
+/* ---------- 스캔 연출 ---------- */
+#scan{ position:absolute; inset:0; z-index:40; background:var(--paper);
+  display:none; flex-direction:column; }
+#scan.active{ display:flex; }
+.scanstage{ position:relative; flex:1; }
+.scanstage canvas{ position:absolute; inset:0; width:100%; height:100%; }
+.scanhud{ position:absolute; left:0; right:0; bottom:26px; text-align:center; }
+.scanhud .ttl{ font-family:var(--font-serif); font-size:20px; }
+.scanhud .step{ color:var(--seal); font-weight:700; font-size:13px; height:18px; margin-top:6px; letter-spacing:.02em; }
+.scanbar{ width:180px; height:4px; border-radius:3px; background:var(--panel-2);
+  margin:14px auto 0; overflow:hidden; box-shadow:inset 0 0 0 1px var(--line); }
+.scanbar > i{ display:block; height:100%; width:0; background:var(--seal); }
+
+/* ---------- 리포트 ---------- */
+.rep-hero{ position:relative; padding:20px 18px 8px; }
+.backlink{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
+  color:var(--ink-soft); margin-bottom:14px; }
+.rep-head{ display:flex; align-items:center; gap:16px; }
+.seal-stamp{ width:96px; height:96px; flex:none; position:relative; display:grid; place-items:center;
+  color:#fff; border-radius:14px; transform:rotate(-4deg);
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 3px, transparent 3px 6px),
+    radial-gradient(circle at 30% 25%, color-mix(in srgb,var(--seal) 80%,#fff 12%), var(--seal) 60%, var(--seal-deep));
+  box-shadow:0 6px 18px color-mix(in srgb,var(--seal) 34%,transparent), inset 0 0 0 2px rgba(255,255,255,.28), inset 0 0 0 5px var(--seal);
+  font-family:var(--font-serif); }
+.seal-stamp::after{ content:""; position:absolute; inset:7px; border:1.5px solid rgba(255,255,255,.55); border-radius:9px; }
+.seal-stamp .g{ font-size:26px; font-weight:700; line-height:1; letter-spacing:.04em; z-index:1; text-shadow:0 1px 2px rgba(0,0,0,.25); }
+.seal-stamp .k{ font-size:10px; opacity:.9; margin-top:3px; z-index:1; }
+.rep-head .who .addr{ font-size:13px; color:var(--ink-soft); font-weight:600; }
+.rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:2px; }
+.rep-head .who .score small{ font-size:20px; color:var(--ink-soft); margin-left:3px; }
+.rep-head .who .grade{ display:inline-block; margin-top:6px; font-weight:700; font-size:13px; color:var(--seal);
+  background:color-mix(in srgb,var(--seal) 12%, transparent); padding:4px 10px; border-radius:999px; }
+
+.card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:16px; margin:14px 18px; }
+.card > .hd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card > .hd h3{ font-size:15px; }
+.card .sub{ font-size:11.5px; color:var(--ink-faint); font-weight:600; }
+
+/* 정확도 게이지 */
+.acc{ display:flex; align-items:center; gap:12px; }
+.acc .bar{ flex:1; height:8px; border-radius:5px; background:var(--panel-2); overflow:hidden; box-shadow:inset 0 0 0 1px var(--line); }
+.acc .bar > i{ display:block; height:100%; background:linear-gradient(90deg,var(--gun),var(--jae)); border-radius:5px; }
+.acc .pct{ font-family:var(--font-serif); font-size:20px; font-variant-numeric:tabular-nums; }
+.acc-note{ font-size:12px; color:var(--ink-soft); margin-top:10px; display:flex; gap:7px; align-items:center; }
+.acc-note b{ color:var(--seal); }
+
+/* 4축 게이지 */
+.gauges{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.gauge{ background:var(--panel-2); border-radius:12px; padding:12px 13px; position:relative; }
+.gauge.main{ grid-column:1/-1; display:flex; align-items:center; gap:14px; }
+.gring{ --v:0; width:52px; height:52px; flex:none; border-radius:50%;
+  background:conic-gradient(var(--c,var(--jae)) calc(var(--v)*1%), var(--panel) 0);
+  display:grid; place-items:center; }
+.gring::after{ content:attr(data-v); position:relative; width:38px; height:38px; border-radius:50%;
+  background:var(--panel); display:grid; place-items:center; font-weight:800; font-size:14px;
+  font-variant-numeric:tabular-nums; color:var(--ink); }
+.gauge .lab{ font-size:12px; font-weight:700; color:var(--ink-soft); }
+.gauge .lab .el{ font-family:var(--font-serif); color:var(--c,inherit); margin-left:4px; font-size:11px; }
+.gauge.main .lab{ font-size:14px; }
+.gauge.main .lab b{ color:var(--jae); }
+.gauge.small{ display:flex; align-items:center; gap:11px; }
+.gauge.small .gring{ width:42px; height:42px; }
+.gauge.small .gring::after{ width:31px; height:31px; font-size:12px; }
+.g-jae{ --c:var(--jae) } .g-gun{ --c:var(--gun) } .g-gwan{ --c:var(--gwan) } .g-myeong{ --c:var(--myeong) }
+
+/* 근거 레이어 아코디언 */
+.evtabs{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.evtab{ font-size:12px; font-weight:700; padding:6px 11px; border-radius:999px;
+  color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--line); }
+.evtab[aria-selected="true"]{ background:var(--ink); color:var(--paper); box-shadow:none; }
+.rule{ border-top:1px solid var(--line-soft); padding:13px 2px; }
+.rule:first-child{ border-top:none; }
+.rule .rh{ display:flex; align-items:center; gap:9px; }
+.rule .code{ font-size:10px; font-weight:800; color:var(--ink-faint); font-variant-numeric:tabular-nums;
+  letter-spacing:.04em; background:var(--panel-2); padding:3px 6px; border-radius:6px; }
+.rule .nm{ font-weight:700; font-size:14px; }
+.rule .pts{ margin-left:auto; font-variant-numeric:tabular-nums; font-weight:800; font-size:13px; }
+.rule .pts small{ color:var(--ink-faint); font-weight:600; }
+.rule .track{ height:6px; border-radius:4px; background:var(--panel-2); margin:9px 0 8px; overflow:hidden; }
+.rule .track > i{ display:block; height:100%; border-radius:4px; }
+.rule .ev{ font-size:13.5px; color:var(--ink); line-height:1.55; }
+.rule .th{ display:inline-flex; margin-top:8px; font-size:10.5px; font-weight:700; color:var(--ink-faint);
+  letter-spacing:.03em; }
+.rule.na{ opacity:.5; }
+
+/* 실거래가 */
+.price{ display:flex; align-items:flex-end; gap:14px; }
+.price .now{ font-family:var(--font-serif); font-size:26px; font-variant-numeric:tabular-nums; }
+.price .chg{ font-size:12px; font-weight:700; }
+.price .chg.up{ color:var(--bad); } .price .chg.down{ color:var(--gwan); }
+.spark{ flex:1; height:46px; }
+.price-src{ font-size:10.5px; color:var(--ink-faint); margin-top:8px; }
+
+/* 비보 카드 */
+.bibo{ background:
+    linear-gradient(180deg, color-mix(in srgb,var(--seal) 90%,#000 4%), var(--seal-deep));
+  color:#fff; border-radius:16px; padding:18px; margin:14px 18px; position:relative; overflow:hidden;
+  box-shadow:0 10px 26px color-mix(in srgb,var(--seal) 34%,transparent); }
+.bibo::before{ content:"符"; position:absolute; right:-6px; top:-14px; font-family:var(--font-serif);
+  font-size:120px; opacity:.12; color:#fff; }
+.bibo .k{ font-size:11px; letter-spacing:.2em; font-weight:700; opacity:.85; }
+.bibo h3{ color:#fff; font-size:17px; margin:8px 0 6px; }
+.bibo p{ margin:0; font-size:13.5px; line-height:1.6; opacity:.95; }
+.bibo .do{ margin-top:12px; display:inline-flex; gap:7px; align-items:center; font-size:12px; font-weight:700;
+  background:rgba(255,255,255,.16); padding:8px 12px; border-radius:10px; }
+
+/* 궁합 CTA */
+.compat-cta{ margin:16px 18px; background:var(--panel); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:18px; display:flex; align-items:center; gap:14px; }
+.compat-cta .txt b{ font-family:var(--font-serif); font-size:16px; }
+.compat-cta .txt p{ margin:3px 0 0; font-size:12.5px; color:var(--ink-soft); }
+.compat-cta .go{ margin-left:auto; flex:none; width:44px; height:44px; border-radius:50%;
+  background:var(--seal); color:#fff; display:grid; place-items:center; font-size:18px; }
+
+.notice{ margin:6px 18px 30px; font-size:11px; color:var(--ink-faint); line-height:1.6;
+  padding:12px 14px; background:var(--panel-2); border-radius:12px; }
+
+/* ---------- 바텀시트 (궁합·공유) ---------- */
+.sheet{ position:fixed; inset:0; z-index:60; display:none; }
+.sheet.active{ display:block; }
+.sheet .scrim{ position:absolute; inset:0; background:rgba(20,16,10,.5); animation:fade .25s both; }
+.sheet .panel{ position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+  width:100%; max-width:430px; background:var(--paper); border-radius:22px 22px 0 0;
+  padding:8px 18px 26px; animation:up .32s cubic-bezier(.2,.9,.3,1) both; max-height:92vh; overflow:auto; }
+@keyframes up{ from{transform:translate(-50%,100%)} to{transform:translate(-50%,0)} }
+.grip{ width:38px; height:4px; border-radius:3px; background:var(--line); margin:8px auto 14px; }
+
+/* 궁합 입력 */
+.field{ margin-top:14px; }
+.field label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+.dob{ display:flex; gap:8px; margin-top:8px; }
+.dob select{ flex:1; padding:12px 10px; border-radius:11px; background:var(--panel);
+  box-shadow:inset 0 0 0 1px var(--line); color:var(--ink); font-family:inherit; font-size:14px; -webkit-appearance:none; appearance:none; }
+.check{ display:flex; align-items:center; gap:9px; margin-top:14px; font-size:13px; font-weight:600; color:var(--ink-soft); }
+.check input{ width:18px; height:18px; accent-color:var(--seal); }
+
+/* 궁합 결과 */
+.compat-res{ text-align:center; padding:8px 0 4px; }
+.compat-res .pct{ font-family:var(--font-serif); font-size:66px; line-height:1;
+  font-variant-numeric:tabular-nums; color:var(--seal); }
+.compat-res .pct small{ font-size:24px; }
+.compat-res .cap{ font-size:13.5px; color:var(--ink-soft); margin-top:6px; }
+.compat-line{ display:flex; gap:10px; margin-top:14px; }
+.compat-line .box{ flex:1; background:var(--panel); border-radius:13px; padding:13px; box-shadow:var(--shadow); }
+.compat-line .box .t{ font-size:11px; font-weight:700; color:var(--ink-faint); }
+.compat-line .box .v{ font-family:var(--font-serif); font-size:15px; margin-top:4px; }
+.compat-line .box .d{ font-size:12px; color:var(--ink-soft); margin-top:4px; line-height:1.5; }
+
+/* 공유 카드 */
+.sharecard{ width:100%; aspect-ratio:1080/1350; border-radius:18px; overflow:hidden; position:relative;
+  background:linear-gradient(170deg,#241d14,#120e08); color:#f4efe4; box-shadow:var(--shadow); }
+.sharecard .in{ position:absolute; inset:0; padding:24px; display:flex; flex-direction:column; }
+.sharecard .top{ display:flex; justify-content:space-between; align-items:center; font-size:12px; letter-spacing:.1em; opacity:.8; }
+.sharecard .stamp{ align-self:center; margin-top:auto; width:120px; height:120px; }
+.sharecard .bignum{ text-align:center; font-family:var(--font-serif); font-size:70px; line-height:1; font-variant-numeric:tabular-nums; }
+.sharecard .gr{ text-align:center; font-family:var(--font-serif); font-size:20px; color:var(--seal-ink); margin-top:2px; }
+.sharecard .liner{ text-align:center; font-size:14px; opacity:.9; margin-top:12px; line-height:1.6; font-family:var(--font-serif); }
+.sharecard .foot{ margin-top:auto; display:flex; justify-content:space-between; align-items:end; font-size:11px; opacity:.75; }
+.sharecard .qr{ width:44px; height:44px; border-radius:8px; background:
+   conic-gradient(from 0deg,#fff 0 25%,#0000 0 50%,#fff 0 75%,#0000 0) 0/12px 12px; opacity:.85; }
+.share-actions{ display:flex; gap:10px; margin-top:16px; }
+.share-actions .btn{ flex:1; }
+
+/* 하단 탭바 (홈에서) */
+.tabbar{ display:flex; border-top:1px solid var(--line); background:var(--panel); }
+.tabbar a{ flex:1; text-align:center; padding:10px 0 14px; font-size:10px; font-weight:700; color:var(--ink-faint); }
+.tabbar a .ic{ display:block; font-size:18px; margin-bottom:2px; }
+.tabbar a.on{ color:var(--seal); }
+</style>
+
+<div class="phone" id="phone">
+
+  <!-- ============ 홈 ============ -->
+  <section class="screen active" id="home">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark">智</div>
+        <div><b>지관</b><span>AI 풍수 감정</span></div>
+      </div>
+      <button class="iconbtn" id="theme" title="테마">◑</button>
+    </div>
+
+    <div class="mapwrap">
+      <div class="searchcard">
+        <div class="search">
+          <span>🔍</span>
+          <input placeholder="주소를 넣으면 터를 봐드립니다" readonly>
+        </div>
+      </div>
+      <canvas id="homeMap"></canvas>
+      <!-- 핀은 JS가 배치 -->
+    </div>
+
+    <div class="trend">
+      <div class="chip"><span class="dot"></span>지금 기운 보는 동네</div>
+      <div class="chip">성산동 · 조회 1,204</div>
+      <div class="chip">망원동 · 조회 980</div>
+      <div class="chip">연남동 · 조회 774</div>
+    </div>
+
+    <div class="pad" style="padding-top:16px">
+      <div class="eyebrow">숫자는 다 보셨잖아요</div>
+      <h1 style="font-size:26px; margin:8px 0 4px">이제, 터를 보세요.</h1>
+      <p class="muted" style="font-size:14px; margin:0 0 4px">
+        실제 지형·도로·건물 데이터로 그 터의 풍수를 감정합니다.
+        아래 두 터를 눌러 감정 결과를 확인해 보세요.</p>
+    </div>
+
+    <div class="homecta">
+      <button class="btn seal" onclick="startScan('myeongdang')">🏔️ 명당형 터 감정하기</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="startScan('biboji')">🧭 비보형 터 감정하기</button>
+      <div class="demo-note">데모: 서울 마포 일대 합성 터 · 판정은 실제 룰북 엔진(M1) 출력</div>
+    </div>
+
+    <div class="tabbar">
+      <a class="on"><span class="ic">🗺️</span>지도</a>
+      <a><span class="ic">📖</span>터 도감</a>
+      <a><span class="ic">🀄</span>이달의 기별</a>
+      <a><span class="ic">🧙</span>마이 지관</a>
+    </div>
+  </section>
+
+  <!-- ============ 스캔 연출 ============ -->
+  <div id="scan">
+    <div class="scanstage"><canvas id="scanMap"></canvas></div>
+    <div class="scanhud">
+      <div class="ttl">터를 읽는 중…</div>
+      <div class="step" id="scanStep">지형을 살핍니다</div>
+      <div class="scanbar"><i id="scanFill"></i></div>
+    </div>
+  </div>
+
+  <!-- ============ 리포트 ============ -->
+  <section class="screen" id="report">
+    <div class="rep-hero">
+      <div class="backlink" onclick="show('home')">‹ 지도로</div>
+      <div class="rep-head">
+        <div class="seal-stamp"><div class="g" id="rSealGrade">—</div><div class="k">地官</div></div>
+        <div class="who">
+          <div class="addr" id="rAddr">—</div>
+          <div class="score tnum"><span id="rScore">0</span><small>점</small></div>
+          <span class="grade" id="rGrade">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 정확도 게이지 -->
+    <div class="card">
+      <div class="hd"><h3>감정 정확도</h3><span class="sub">정밀 감정 시스템</span></div>
+      <div class="acc">
+        <div class="bar"><i id="accFill"></i></div>
+        <div class="pct tnum"><span id="accPct">62</span>%</div>
+      </div>
+      <div class="acc-note">＋동·호수 입력 시 <b>75%</b> · 집 내부 3문항까지 <b>90%</b>로 정밀해집니다</div>
+    </div>
+
+    <!-- 4축 게이지 -->
+    <div class="card">
+      <div class="hd"><h3>기운 4축</h3><span class="sub">재물운 중심</span></div>
+      <div class="gauges" id="gauges"></div>
+    </div>
+
+    <!-- 풍수 오버레이 맵 -->
+    <div class="card" style="padding:0; overflow:hidden">
+      <div style="position:relative; height:230px; background:var(--panel-2)">
+        <canvas id="repMap" style="position:absolute; inset:0; width:100%; height:100%"></canvas>
+      </div>
+      <div style="padding:12px 15px">
+        <div class="sub" style="margin-bottom:3px">풍수 오버레이</div>
+        <div style="font-size:12.5px; color:var(--ink-soft)" id="mapLegend">현무 음영 · 수계 흐름 · 좌향 나침반</div>
+      </div>
+    </div>
+
+    <!-- 근거 레이어 -->
+    <div class="card">
+      <div class="hd"><h3>왜 이 결과일까?</h3><span class="sub">근거 레이어</span></div>
+      <div class="evtabs" id="evtabs"></div>
+      <div id="rules"></div>
+    </div>
+
+    <!-- 실거래가 -->
+    <div class="card">
+      <div class="hd"><h3>실거래가 추이</h3><span class="sub">국토부 공개 API</span></div>
+      <div class="price">
+        <div>
+          <div class="now tnum" id="priceNow">—</div>
+          <div class="chg up" id="priceChg">—</div>
+        </div>
+        <svg class="spark" id="spark" viewBox="0 0 200 46" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="price-src">최근 24개월 전용 84㎡ 실거래 · 참고용 병기</div>
+    </div>
+
+    <!-- 비보 카드 (조건부) -->
+    <div id="biboSlot"></div>
+
+    <!-- 궁합 CTA -->
+    <div class="compat-cta" onclick="openCompat()">
+      <div class="txt">
+        <b>이 집과 당신의 궁합은?</b>
+        <p>생년월일을 넣으면 사주·본명궁으로 궁합을 봅니다</p>
+      </div>
+      <div class="go">›</div>
+    </div>
+
+    <div class="notice" id="legal">
+      본 서비스는 전통 풍수지리·명리 이론에 기반한 <b>참고·오락 목적</b> 콘텐츠로,
+      부동산 투자 권유·자문이 아닙니다. 단지·매물별 점수는 개인 조회 결과로만 제공됩니다.
+    </div>
+  </section>
+</div>
+
+<!-- 궁합 시트 -->
+<div class="sheet" id="compatSheet">
+  <div class="scrim" onclick="closeSheet('compatSheet')"></div>
+  <div class="panel">
+    <div class="grip"></div>
+    <div id="compatInput">
+      <div class="eyebrow">궁합 감정</div>
+      <h2 style="font-size:21px; margin:8px 0 2px">나와 이 터의 궁합</h2>
+      <p class="muted" style="font-size:13px; margin:0">사주 오행과 본명궁으로 봅니다. 남편·아이 사주로도 볼 수 있어요.</p>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="dob">
+          <select id="yy"></select><select id="mm"></select><select id="dd"></select>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="noTime"> 태어난 시간을 몰라요 (삼주 분석으로 진행)</label>
+      <div style="height:18px"></div>
+      <button class="btn seal" onclick="runCompat()">궁합 보기</button>
+      <div class="demo-note" style="margin-top:12px">※ 궁합 산출(만세력)은 M3 구현 예정 — 데모는 예시값입니다</div>
+    </div>
+    <div id="compatResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- 공유 시트 -->
+<div class="sheet" id="shareSheet">
+  <div class="scrim" onclick="closeSheet('shareSheet')"></div>
+  <div class="panel">
+    <div class="grip"></div>
+    <div class="eyebrow">공유 카드</div>
+    <h2 style="font-size:20px; margin:8px 0 14px">터의 인장을 나눠보세요</h2>
+    <div class="sharecard" id="shareCard"></div>
+    <div class="share-actions">
+      <button class="btn ghost" onclick="closeSheet('shareSheet')">닫기</button>
+      <button class="btn seal" onclick="alert('데모에서는 저장이 비활성화되어 있어요 🙂')">이미지 저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== 엔진 데이터 (Python 생성기가 주입) ====== */
+const DATA = __DATA__;
+
+/* ====== 유틸 ====== */
+const $ = s => document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const AXIS = [
+  {key:'재물', el:'金', cls:'g-jae'}, {key:'건강', el:'木', cls:'g-gun'},
+  {key:'관계', el:'水', cls:'g-gwan'}, {key:'명예', el:'火', cls:'g-myeong'}
+];
+const CATS = ['형기','도로살','건물','환경'];
+let CUR = 'myeongdang';
+
+/* ====== 테마 토글 ====== */
+$('#theme').onclick = ()=>{
+  const r=document.documentElement;
+  const now = r.getAttribute('data-theme') ||
+    (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  r.setAttribute('data-theme', now==='dark'?'light':'dark');
+  drawHomeMap(); if($('#report').classList.contains('active')) drawRepMap(DATA[CUR]);
+};
+
+/* ====== 화면 전환 ====== */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  $('#phone').scrollTop=0; window.scrollTo(0,0);
+}
+
+/* ============================================================
+   지형 오버레이 캔버스
+   ============================================================ */
+function fitCanvas(cv){
+  const r = cv.getBoundingClientRect(); const dpr = Math.min(2, devicePixelRatio||1);
+  cv.width = r.width*dpr; cv.height = r.height*dpr;
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, w:r.width, h:r.height};
+}
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+/* progress 0..1 로 레이어를 순차 공개 (스캔 연출) */
+function drawTerrain(cv, site, progress){
+  const {ctx,w,h} = fitCanvas(cv);
+  const cx=w/2, cy=h*0.56, R=Math.min(w,h);
+  const ink=css('--ink'), inkFaint=css('--ink-faint'), seal=css('--seal');
+  const water=css('--gwan'), ridge=css('--gun');
+  ctx.clearRect(0,0,w,h);
+
+  // 배경 등고선
+  ctx.globalAlpha=0.10; ctx.strokeStyle=inkFaint; ctx.lineWidth=1;
+  for(let i=1;i<7;i++){ ctx.beginPath();
+    ctx.ellipse(cx, cy-R*0.18, i*R*0.10, i*R*0.075, 0, 0, Math.PI*2); ctx.stroke(); }
+  ctx.globalAlpha=1;
+
+  const m = site.map;
+  const rad = d => (d-90)*Math.PI/180; // 방위각(0=N) → 화면각(북이 위)
+  const P = (deg,dist)=>[cx+Math.cos(rad(deg))*dist, cy+Math.sin(rad(deg))*dist];
+
+  // 1) 현무 음영 (배면 능선)
+  if(progress>0.12 && m.ridge){
+    const a=Math.min(1,(progress-0.12)/0.2);
+    const [rx,ry]=P(m.ridge.bearing, R*0.34);
+    const g=ctx.createRadialGradient(rx,ry,4, rx,ry,R*0.36);
+    g.addColorStop(0, hexA(ridge,0.42*a)); g.addColorStop(1, hexA(ridge,0));
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(rx,ry,R*0.36,0,7); ctx.fill();
+    if(a>0.5) tag(ctx, rx,ry, '玄武 현무', ridge, a);
+  }
+  // 2) 청룡·백호
+  if(progress>0.3 && m.dragon){
+    const a=Math.min(1,(progress-0.3)/0.15);
+    [[m.facing+90,'靑龍'],[m.facing-90,'白虎']].forEach(([deg])=>{
+      const [x,y]=P(deg, R*0.30);
+      const g=ctx.createRadialGradient(x,y,3,x,y,R*0.2);
+      g.addColorStop(0,hexA(ridge,0.24*a)); g.addColorStop(1,hexA(ridge,0));
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,R*0.2,0,7); ctx.fill();
+    });
+  }
+  // 3) 수계
+  if(progress>0.45 && m.water){
+    const a=Math.min(1,(progress-0.45)/0.2);
+    ctx.globalAlpha=a; ctx.strokeStyle=water; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath();
+    const sign = m.water.embrace>=0 ? 1 : -1;
+    const base = m.facing; const dist=R*0.30;
+    for(let t=-60;t<=60;t+=6){
+      const [x,y]=P(base+t, dist - sign*Math.cos(t*Math.PI/180)*R*0.06);
+      t===-60?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke(); ctx.globalAlpha=1;
+    const [lx,ly]=P(base, dist+ (sign>0?R*0.02:-R*0.09));
+    if(a>0.5) tag(ctx,lx,ly, m.water.embrace>=0?'環抱 환포':'反弓 반궁', water, a);
+  }
+  // 4) 도로살 화살표
+  if(progress>0.62 && m.roadSal){
+    const a=Math.min(1,(progress-0.62)/0.15);
+    const [sx,sy]=P(m.roadSal.bearing, R*0.42);
+    ctx.globalAlpha=a; ctx.strokeStyle=seal; ctx.fillStyle=seal; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(cx,cy); ctx.stroke();
+    const ang=Math.atan2(cy-sy,cx-sx);
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.lineTo(cx-12*Math.cos(ang-0.4), cy-12*Math.sin(ang-0.4));
+    ctx.lineTo(cx-12*Math.cos(ang+0.4), cy-12*Math.sin(ang+0.4));
+    ctx.fill(); ctx.globalAlpha=1;
+    if(a>0.5) tag(ctx,sx,sy,'直沖 직충살', seal, a);
+  }
+  // 5) 좌향 나침반 + 건물
+  if(progress>0.78){
+    const a=Math.min(1,(progress-0.78)/0.18);
+    ctx.globalAlpha=a;
+    ctx.strokeStyle=hexA(ink,0.5); ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(cx,cy,26,0,7); ctx.stroke();
+    // 24방위 눈금
+    for(let d=0;d<360;d+=15){ const [x1,y1]=P(d,22),[x2,y2]=P(d,26);
+      ctx.globalAlpha=a*0.5; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+    ctx.globalAlpha=a;
+    // 향(정면) 바늘
+    const [fx,fy]=P(m.facing,34); ctx.strokeStyle=seal; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(fx,fy); ctx.stroke();
+    // 건물점
+    ctx.fillStyle=ink; ctx.beginPath(); ctx.arc(cx,cy,5,0,7); ctx.fill();
+    ctx.fillStyle=css('--paper'); ctx.beginPath(); ctx.arc(cx,cy,2,0,7); ctx.fill();
+    ctx.globalAlpha=1;
+    tag(ctx, fx,fy, m.facingLabel, seal, a);
+  }
+}
+function tag(ctx,x,y,txt,color,a){
+  ctx.save(); ctx.globalAlpha=a; ctx.font='700 10px '+css('--font-sans');
+  const w=ctx.measureText(txt).width+12;
+  ctx.fillStyle=css('--panel'); roundRect(ctx,x-w/2,y-9,w,17,8); ctx.fill();
+  ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(txt,x,y+.5); ctx.restore();
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function hexA(hex,a){ // hex or var → rgba
+  const c=document.createElement('canvas').getContext('2d'); c.fillStyle=hex;
+  const m=c.fillStyle; if(m[0]==='#'){const n=parseInt(m.slice(1),16);
+    return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;} return m;
+}
+
+function drawHomeMap(){
+  const cv=$('#homeMap'); const {ctx,w,h}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  // 은은한 등고선 배경
+  ctx.strokeStyle=css('--line'); ctx.globalAlpha=.7;
+  for(let i=0;i<9;i++){ ctx.beginPath();
+    ctx.moveTo(0, h*0.15*i%h + Math.sin(i)*8);
+    ctx.bezierCurveTo(w*.3,h*0.15*i-20, w*.6,h*0.15*i+24, w,h*0.15*i);
+    ctx.stroke(); }
+  ctx.globalAlpha=1;
+  // 물길
+  ctx.strokeStyle=hexA(css('--gwan'),.35); ctx.lineWidth=10; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-10,h*0.8); ctx.quadraticCurveTo(w*.5,h*0.62,w+10,h*0.9); ctx.stroke();
+  placePins();
+}
+function placePins(){
+  document.querySelectorAll('.pin').forEach(p=>p.remove());
+  const mw=$('.mapwrap');
+  [['myeongdang','82','명당형', 30, 42],['biboji','49','비보형', 68, 66]].forEach(([id,sc,nm,lf,tp])=>{
+    const pin=el('div','pin');
+    pin.style.left=lf+'%'; pin.style.top=tp+'%';
+    pin.innerHTML=`<div class="bub"><span class="sc">${sc}</span> ${nm}</div><div class="tip"></div>`;
+    pin.onclick=()=>startScan(id);
+    mw.appendChild(pin);
+  });
+}
+
+/* ============================================================
+   스캔 연출 (3초)
+   ============================================================ */
+const STEPS=[[0.14,'현무(뒷산)를 확인합니다'],[0.32,'청룡·백호 국세를 봅니다'],
+  [0.5,'물길의 득수를 읽습니다'],[0.66,'도로살을 살핍니다'],[0.82,'좌향 24방위를 잽니다'],[1,'감정을 마쳤습니다']];
+function startScan(id){
+  CUR=id; const site=DATA[id];
+  $('#scan').classList.add('active');
+  const cv=$('#scanMap'); const t0=performance.now(); const dur=3000;
+  function frame(now){
+    let p=Math.min(1,(now-t0)/dur);
+    const e = p<.5? 2*p*p : 1-Math.pow(-2*p+2,2)/2; // easeInOut
+    drawTerrain(cv, site, e);
+    $('#scanFill').style.width=(p*100)+'%';
+    const st=STEPS.find(s=>e<=s[0])||STEPS[STEPS.length-1];
+    $('#scanStep').textContent=st[1];
+    if(p<1) requestAnimationFrame(frame);
+    else setTimeout(()=>{ $('#scan').classList.remove('active'); renderReport(id); }, 380);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   리포트 렌더
+   ============================================================ */
+function renderReport(id){
+  const d=DATA[id]; CUR=id; show('report');
+  $('#rAddr').textContent=d.addr;
+  animateNum($('#rScore'), d.site_score, 700);
+  $('#rGrade').textContent='「'+d.grade+'」';
+  $('#rSealGrade').textContent=d.grade.length>=4? d.grade.slice(0,2): d.grade[0];
+  $('#rSealGrade').style.fontSize = d.grade.length>=3?'18px':'26px';
+  $('#rSealGrade').textContent = d.gradeSeal;
+
+  // 정확도
+  $('#accFill').style.width=d.accuracy+'%'; $('#accPct').textContent=d.accuracy;
+
+  // 4축
+  const gw=$('#gauges'); gw.innerHTML='';
+  AXIS.forEach((a,i)=>{
+    const v=d.gauges[a.key];
+    if(i===0){
+      const g=el('div','gauge main '+a.cls);
+      g.innerHTML=`<div class="gring" style="--v:${v}" data-v="${v}"></div>
+        <div class="lab">가장 중요한 <b>재물운</b> <span class="el">${a.el}</span>
+        <div class="faint" style="font-weight:600; margin-top:3px; font-size:11.5px">저점 매수, 이 터의 재물 기운으로 확신을</div></div>`;
+      gw.appendChild(g);
+    }else{
+      const g=el('div','gauge small '+a.cls);
+      g.innerHTML=`<div class="gring" style="--v:${v}" data-v="${v}"></div>
+        <div class="lab">${a.key}<span class="el">${a.el}</span></div>`;
+      gw.appendChild(g);
+    }
+  });
+
+  // 오버레이 맵
+  drawRepMap(d);
+  $('#mapLegend').textContent=d.legend;
+
+  // 근거 레이어 탭
+  const tabs=$('#evtabs'); tabs.innerHTML='';
+  const all=el('div','evtab','전체'); all.setAttribute('aria-selected','true');
+  all.onclick=()=>filterRules(null,all); tabs.appendChild(all);
+  CATS.forEach(c=>{ const t=el('div','evtab',c); t.onclick=()=>filterRules(c,t); tabs.appendChild(t); });
+  renderRules(d, null);
+
+  // 실거래가
+  $('#priceNow').textContent=d.price.now;
+  const chg=$('#priceChg'); chg.textContent=d.price.chg;
+  chg.className='chg '+(d.price.dir);
+  drawSpark(d.price.series);
+
+  // 비보
+  const slot=$('#biboSlot'); slot.innerHTML='';
+  if(d.bibo){
+    const b=el('div','bibo');
+    b.innerHTML=`<div class="k">오늘의 비보 · 裨補</div><h3>${d.bibo.title}</h3>
+      <p>${d.bibo.body}</p><div class="do">✦ ${d.bibo.action}</div>`;
+    slot.appendChild(b);
+  }
+  // 법적 고지 (비보지 강조)
+  $('#legal').style.boxShadow = d.grade==='비보지' ? 'inset 0 0 0 1px var(--seal)' : 'none';
+}
+function drawRepMap(d){ drawTerrain($('#repMap'), d, 1); }
+
+function renderRules(d, cat){
+  const box=$('#rules'); box.innerHTML='';
+  d.results.filter(r=>!cat||r.category===cat).forEach(r=>{
+    const pct = r.max_score? Math.round(r.score/r.max_score*100):0;
+    const color = pct>=80?'var(--good)': pct>=55?'var(--warn)':'var(--bad)';
+    const row=el('div','rule'+(r.applicable?'':' na'));
+    row.innerHTML=`
+      <div class="rh"><span class="code">${r.code}</span>
+        <span class="nm">${r.name}</span>
+        <span class="pts tnum">${r.score.toFixed(1)}<small>/${r.max_score}</small></span></div>
+      <div class="track"><i style="width:${pct}%; background:${color}"></i></div>
+      <div class="ev">${r.evidence}</div>
+      <div class="th">▪ ${r.theory}${r.tier?' · '+r.tier:''}</div>`;
+    box.appendChild(row);
+  });
+}
+function filterRules(cat, tab){
+  document.querySelectorAll('.evtab').forEach(t=>t.setAttribute('aria-selected','false'));
+  tab.setAttribute('aria-selected','true'); renderRules(DATA[CUR], cat);
+}
+
+function drawSpark(series){
+  const svg=$('#spark'); const n=series.length; const mn=Math.min(...series),mx=Math.max(...series);
+  const X=i=>i/(n-1)*200, Y=v=>44-(v-mn)/(mx-mn||1)*40-2;
+  let dLine=`M${X(0)},${Y(series[0])}`, dArea=`M${X(0)},46 L${X(0)},${Y(series[0])}`;
+  series.forEach((v,i)=>{ if(i){dLine+=` L${X(i)},${Y(v)}`; dArea+=` L${X(i)},${Y(v)}`;} });
+  dArea+=` L200,46 Z`;
+  const up = series[n-1]>=series[0];
+  const col = up? 'var(--bad)':'var(--gwan)';
+  svg.innerHTML=`<path d="${dArea}" fill="${col}" opacity="0.10"/>
+    <path d="${dLine}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="200" cy="${Y(series[n-1])}" r="3" fill="${col}"/>`;
+}
+function animateNum(node, to, dur){
+  const t0=performance.now();
+  (function step(now){ const p=Math.min(1,(now-t0)/dur); const e=1-Math.pow(1-p,3);
+    node.textContent=Math.round(to*e); if(p<1)requestAnimationFrame(step); })(t0);
+}
+
+/* ============================================================
+   궁합
+   ============================================================ */
+function fillDob(){
+  const yy=$('#yy'),mm=$('#mm'),dd=$('#dd');
+  for(let y=2015;y>=1955;y--) yy.appendChild(new Option(y+'년',y));
+  for(let m=1;m<=12;m++) mm.appendChild(new Option(m+'월',m));
+  for(let dv=1;dv<=31;dv++) dd.appendChild(new Option(dv+'일',dv));
+  yy.value=1990; mm.value=5; dd.value=15;
+}
+function openCompat(){ $('#compatInput').style.display='block'; $('#compatResult').style.display='none';
+  $('#compatSheet').classList.add('active'); }
+function closeSheet(id){ $('#'+id).classList.remove('active'); }
+function runCompat(){
+  const d=DATA[CUR];
+  // 데모용 결정적 궁합 산출 (실제 만세력은 M3). 생년으로 값을 흔든다.
+  const y=+$('#yy').value, m=+$('#mm').value, day=+$('#dd').value;
+  const seed=(y*31+m*7+day)%100;
+  const ohaeng = ((seed%13)-6)*3;           // ±18
+  const sect  = (seed%2? 1:-1)*(10+seed%11); // ±20
+  const pct = Math.max(4, Math.min(97, 50+ohaeng+sect));
+  const sects = d.results.find(r=>r.code==='R08');
+  const houseSect = sects && sects.tier ? sects.tier : '동사택';
+  const mySect = seed%2? '동사택':'서사택';
+  const match = mySect===houseSect;
+  const cap = pct>=80?'천생연분의 터': pct>=60?'제법 잘 맞는 터': pct>=45?'무난한 궁합': '비보로 다스릴 궁합';
+  $('#compatInput').style.display='none';
+  const box=$('#compatResult'); box.style.display='block';
+  box.innerHTML=`
+    <div class="compat-res">
+      <div class="eyebrow" style="justify-content:center">${d.addr} · 궁합</div>
+      <div class="pct tnum" style="margin-top:10px"><span id="cpct">0</span><small>%</small></div>
+      <div class="cap">${cap}</div>
+    </div>
+    <div class="compat-line">
+      <div class="box"><div class="t">오행 매칭 (11a)</div>
+        <div class="v" style="color:${ohaeng>=0?'var(--gun)':'var(--seal)'}">${ohaeng>=0?'상생 +':'상극 '}${ohaeng}</div>
+        <div class="d">용신 기운이 이 터의 오행과 ${ohaeng>=0?'어울립니다':'부딪힙니다'}</div></div>
+      <div class="box"><div class="t">본명궁 (11b)</div>
+        <div class="v" style="color:${match?'var(--gun)':'var(--seal)'}">${mySect} · ${match?'일치':'불일치'}</div>
+        <div class="d">이 집은 ${houseSect} — ${match?'같은 계열이라 편안':'맞춰줄 비보 필요'}</div></div>
+    </div>
+    <div class="bibo" style="margin:16px 0 8px">
+      <div class="k">궁합 비보</div><h3>${match?'침대 머리를 생기 방위로':'현관에 붉은 소품 하나'}</h3>
+      <p>${match?'잘 맞는 터입니다. 안방 침대 머리를 동남(생기) 쪽으로 두면 기운이 더 살아납니다.'
+              :'궁합이 부딪히는 자리는 비보로 다스립니다. 현관 왼쪽 붉은 소품이 도로살과 상극 기운을 눌러줍니다.'}</p>
+    </div>
+    <button class="btn seal" onclick="openShare(${pct})">공유 카드 만들기</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost" onclick="closeSheet('compatSheet')">닫기</button>`;
+  animateNum($('#cpct'), pct, 900);
+}
+
+/* ============================================================
+   공유 카드
+   ============================================================ */
+function openShare(pct){
+  const d=DATA[CUR];
+  const card=$('#shareCard');
+  card.innerHTML=`<div class="in">
+    <div class="top"><span>智官 · 지관</span><span>${d.addrShort}</span></div>
+    <div class="stamp"><div class="seal-stamp" style="width:120px;height:120px;transform:rotate(-5deg)">
+      <div class="g" style="font-size:${d.gradeSeal.length>1?'22px':'30px'}">${d.gradeSeal}</div><div class="k">地官</div></div></div>
+    <div class="bignum">${d.site_score}<span style="font-size:26px">점</span></div>
+    <div class="gr">「${d.grade}」${pct!=null?` · 궁합 ${pct}%`:''}</div>
+    <div class="liner">${d.liner}</div>
+    <div class="foot"><div>지관에서 우리집 터 보기<br>jigwan.kr</div><div class="qr"></div></div>
+  </div>`;
+  closeSheet('compatSheet');
+  $('#shareSheet').classList.add('active');
+}
+
+/* ====== 초기화 ====== */
+fillDob(); drawHomeMap();
+addEventListener('resize', ()=>{ drawHomeMap();
+  if($('#report').classList.contains('active')) drawRepMap(DATA[CUR]); });
+</script>

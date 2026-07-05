@@ -20,6 +20,7 @@ M1 = **룰북 v1 상세화**(판정식·근거문 템플릿) + **데이터 파�
 | 판정 엔진 | `engine/` | 구조화 피처 → 요소별 점수 + 근거 문장 자동 생성 |
 | 데이터 파이프라인 | `pipeline/` | 수집기 인터페이스 + PostGIS 스키마 + 공간연산 |
 | 검증 테스트 | `tests/` | 판정 로직·점수 집계·공간연산 검증 (픽스처 기반) |
+| 터 리포트 UI | `web/` | 엔진 출력을 구동하는 모바일 웹 프로토타입(S1·S3·S4·S6·S9) |
 
 ### 설계 원칙 (기획안 §4)
 
@@ -41,10 +42,13 @@ python3 -m engine.demo
 python3 -m pytest tests/ -v          # pytest가 있으면
 python3 tests/run.py                 # 없으면 내장 러너
 
-# 3. PostGIS 파이프라인 (선택 — Docker 필요)
+# 3. 터 리포트 UI — 엔진 출력으로 구동되는 모바일 웹 프로토타입
+python3 -m web.render                 # web/dist/index.html 생성 → 브라우저로 열기
+
+# 4. PostGIS 파이프라인 (선택 — Docker 필요)
 docker compose up -d db
-psql "$JIGWAN_DATABASE_URL" -f pipeline/db/schema.sql
-python3 -m pipeline.validate         # 공간연산 검증
+psql "$JIGWAN_DATABASE_URL" -f pipeline/db/schema.sql -f pipeline/db/spatial.sql
+python3 -m pipeline.validate          # 공간연산 py↔PostGIS 정합성 검증
 ```
 
 ## 아키텍처 (기획안 §10)
