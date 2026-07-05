@@ -113,22 +113,23 @@ def _price(seed: int, up: bool) -> dict:
     }
 
 
-def build_site(builder, up: bool, share_dong: str) -> dict:
-    feats = builder()
-    a = assess_site(feats)
+def _extract_dong(address: str) -> str:
+    for tok in address.replace(",", " ").split():
+        if tok.endswith("동") and len(tok) >= 2:
+            return tok
+    return "이곳"
+
+
+def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int) -> dict:
+    """SiteAssessment → UI 데이터 계약(dict). 프론트(웹·Next.js)의 유일한 입력."""
     d = a.to_dict()
     grade = a.grade.value
-
-    # 정확도: 주소만 62% → 동·호수(정밀) 75% → 집 내부 3문항 90% (기획안 §3)
-    has_unit = feats.precision is not None and feats.precision.dong_position is not None
-    accuracy = 75 if has_unit else 62
-
     return {
         # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.
         # 공유 카드(addrShort)만 §11 낙인방지로 행정동까지 마스킹.
         "addr": a.address,
         "addrShort": f"{share_dong}의 어느 터",
-        "precise": has_unit,  # 「정밀 감정」 배지
+        "precise": accuracy >= 75,  # 「정밀 감정」 배지
         "site_score": a.site_score,
         "grade": grade,
         "gradeSeal": GRADE_SEAL.get(grade, grade[0]),
@@ -149,6 +150,25 @@ def build_site(builder, up: bool, share_dong: str) -> dict:
         "bibo": _bibo(a),
         "liner": LINER.get(grade, ""),
     }
+
+
+def build_site(builder, up: bool, share_dong: str) -> dict:
+    """샘플 빌더 → UI 데이터. 동·호수(정밀) 여부로 정확도를 정한다."""
+    feats = builder()
+    a = assess_site(feats)
+    has_unit = feats.precision is not None and feats.precision.dong_position is not None
+    return shape_assessment(a, up=up, share_dong=share_dong, accuracy=75 if has_unit else 62)
+
+
+def build_from_address(address: str) -> dict:
+    """임의 주소 → UI 데이터 (팩토리: 키 있으면 실 API, 없으면 픽스처).
+
+    Next.js API 라우트/engine_cli 가 호출하는 진입점.
+    """
+    from pipeline.assemble import assess_address_auto
+
+    a = assess_address_auto(address)
+    return shape_assessment(a, up=True, share_dong=_extract_dong(address), accuracy=62)
 
 
 def build_data() -> dict:
