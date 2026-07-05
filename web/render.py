@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from engine.interpret import summarize
 from engine.samples import biboji_site, myeongdang_site
 from engine.scoring import SiteAssessment, assess_site
 
@@ -141,9 +142,11 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
                 "score": r["score"], "max_score": r["max_score"],
                 "applicable": r["applicable"], "evidence": r["evidence"],
                 "theory": r["theory"], "tier": r["tier"],
+                "plain": r.get("plain", ""),  # 쉬운 해석 (메인 노출)
             }
             for r in d["results"]
         ],
+        "interp": summarize(a),  # 종합 쉬운 해석 (강점·아쉬운 점)
         "map": _map_hints(a),
         "legend": _map_hints(a)["legend"],
         "price": _price(seed=a.site_score, up=up),

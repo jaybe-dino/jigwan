@@ -125,10 +125,11 @@ class RuleResult:
     max_score: float
     score: float
     applicable: bool
-    evidence: str  # 근거 문장 (숫자 포함)
+    evidence: str  # 전문가용 근거 문장 (전문용어 + 숫자)
     theory: str  # 형기론/이기론 등 적용 이론
     tier: Optional[str] = None  # 등급어 (예: '현무 든든')
     metrics: Dict[str, Any] = field(default_factory=dict)
+    plain: str = ""  # 일반인용 쉬운 해석 (전문용어 없이, engine.plain에서 채움)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

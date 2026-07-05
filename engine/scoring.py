@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 
 from engine.calibration import DEFAULT, Calibration
 from engine.models import RuleResult, SiteFeatures
+from engine.plain import annotate_plain
 from engine.rulebook import ALL_RULES
 
 
@@ -94,7 +95,7 @@ def _compute_gauges(results: List[RuleResult]) -> Dict[str, int]:
 def assess_site(
     features: SiteFeatures, calibration: Calibration = DEFAULT
 ) -> SiteAssessment:
-    results = [rule(features) for rule in ALL_RULES]
+    results = [annotate_plain(rule(features)) for rule in ALL_RULES]
 
     num = 0.0
     den = 0.0

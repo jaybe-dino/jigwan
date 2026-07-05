@@ -218,25 +218,44 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .gauge.small .gring::after{ width:31px; height:31px; font-size:12px; }
 .g-jae{ --c:var(--jae) } .g-gun{ --c:var(--gun) } .g-gwan{ --c:var(--gwan) } .g-myeong{ --c:var(--myeong) }
 
+/* AI 지관의 해석 카드 (해석 중심) */
+.interp-card{ margin:14px 18px; padding:18px; border-radius:var(--radius);
+  background:linear-gradient(160deg, color-mix(in srgb,var(--seal) 7%, var(--panel)), var(--panel));
+  box-shadow:var(--shadow); box-shadow:var(--shadow),inset 0 0 0 1px color-mix(in srgb,var(--seal) 12%,transparent); }
+.interp-card .who{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; color:var(--seal); margin-bottom:10px; }
+.interp-card .who .av{ width:24px; height:24px; border-radius:8px; background:var(--seal); color:#fff;
+  display:grid; place-items:center; font-family:var(--font-serif); font-size:13px; }
+.interp-card .body{ font-size:15px; line-height:1.65; font-weight:500; letter-spacing:-.01em; }
+.interp-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:13px; }
+.ichip{ font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:999px; }
+.ichip.good{ color:var(--gun); background:color-mix(in srgb,var(--gun) 13%,transparent); }
+.ichip.warn{ color:var(--seal); background:color-mix(in srgb,var(--seal) 12%,transparent); }
+
 /* 근거 레이어 아코디언 */
 .evtabs{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
 .evtab{ font-size:12px; font-weight:700; padding:6px 11px; border-radius:999px;
   color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--line); }
 .evtab[aria-selected="true"]{ background:var(--ink); color:var(--paper); box-shadow:none; }
-.rule{ border-top:1px solid var(--line-soft); padding:13px 2px; }
+.rule{ border-top:1px solid var(--line-soft); padding:15px 2px; }
 .rule:first-child{ border-top:none; }
-.rule .rh{ display:flex; align-items:center; gap:9px; }
-.rule .code{ font-size:10px; font-weight:800; color:var(--ink-faint); font-variant-numeric:tabular-nums;
-  letter-spacing:.04em; background:var(--panel-2); padding:3px 6px; border-radius:6px; }
-.rule .nm{ font-weight:700; font-size:14px; }
-.rule .pts{ margin-left:auto; font-variant-numeric:tabular-nums; font-weight:800; font-size:13px; }
-.rule .pts small{ color:var(--ink-faint); font-weight:600; }
-.rule .track{ height:6px; border-radius:4px; background:var(--panel-2); margin:9px 0 8px; overflow:hidden; }
-.rule .track > i{ display:block; height:100%; border-radius:4px; }
-.rule .ev{ font-size:13.5px; color:var(--ink); line-height:1.55; }
-.rule .th{ display:inline-flex; margin-top:8px; font-size:10.5px; font-weight:700; color:var(--ink-faint);
-  letter-spacing:.03em; }
+.rule .rh{ display:flex; align-items:center; gap:9px; margin-bottom:7px; }
+.rule .nm{ font-weight:800; font-size:15px; letter-spacing:-.01em; }
+.rule .verdict{ margin-left:auto; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:999px; }
+.rule .verdict.good{ color:var(--gun); background:color-mix(in srgb,var(--gun) 13%,transparent); }
+.rule .verdict.ok{ color:var(--warn); background:color-mix(in srgb,var(--warn) 15%,transparent); }
+.rule .verdict.bad{ color:var(--seal); background:color-mix(in srgb,var(--seal) 12%,transparent); }
+.rule .plain{ font-size:14px; color:var(--ink); line-height:1.62; }
+.rule .proof{ margin-top:9px; }
+.rule .proof summary{ font-size:11.5px; font-weight:700; color:var(--ink-faint); cursor:pointer; list-style:none;
+  display:inline-flex; align-items:center; gap:5px; }
+.rule .proof summary::-webkit-details-marker{ display:none; }
+.rule .proof summary::before{ content:"＋ "; }
+.rule .proof[open] summary::before{ content:"− "; }
+.rule .proof .ev{ font-size:12.5px; color:var(--ink-soft); line-height:1.55; margin-top:7px;
+  padding:10px 12px; background:var(--panel-2); border-radius:12px; }
+.rule .proof .ev .th{ display:block; margin-top:6px; font-size:10.5px; font-weight:700; color:var(--ink-faint); }
 .rule.na{ opacity:.5; }
+.rule.na .verdict{ color:var(--ink-faint); background:var(--panel-2); }
 
 /* 실거래가 */
 .price{ display:flex; align-items:flex-end; gap:14px; }
@@ -526,6 +545,9 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       </div>
     </div>
 
+    <!-- AI 지관의 해석 (해석 중심) -->
+    <div class="interp-card" id="interpCard"></div>
+
     <!-- 정확도 게이지 -->
     <div class="card">
       <div class="hd"><h3>감정 정확도</h3><span class="sub">정밀 감정 시스템</span></div>
@@ -718,6 +740,9 @@ const AXIS = [
   {key:'관계', el:'水', cls:'g-gwan'}, {key:'명예', el:'火', cls:'g-myeong'}
 ];
 const CATS = ['형기','도로살','건물','환경'];
+// 코드 → 친근한 이름 (전문용어 대신 · engine.interpret.FRIENDLY와 일치)
+const FRIENDLY = {R01:'뒷산의 받침',R02:'양옆의 감쌈',R03:'물길',R04:'땅의 단단함',R05:'정면 도로',
+  R06:'휜 도로',R07:'고가·철로',R08:'집의 방향',R09:'층수 기운',R10:'주변 환경'};
 let CUR = 'myeongdang';
 
 /* ====== 테마 토글 ====== */
@@ -922,6 +947,15 @@ function renderReport(id){
 
   $('#rPrecise').hidden = !d.precise;
 
+  // AI 지관의 해석 (해석 중심)
+  const ic = $('#interpCard');
+  const ip = d.interp || {body:'', strengths:[], cautions:[]};
+  const chips = (ip.strengths||[]).map(s=>`<span class="ichip good">👍 ${s.name}</span>`).join('')
+    + (ip.cautions||[]).map(c=>`<span class="ichip warn">🔧 ${c.name}</span>`).join('');
+  ic.innerHTML = `<div class="who"><span class="av">智</span> AI 지관의 해석</div>
+    <div class="body">${ip.body||''}</div>
+    ${chips?`<div class="interp-chips">${chips}</div>`:''}`;
+
   // 정확도
   $('#accFill').style.width=d.accuracy+'%'; $('#accPct').textContent=d.accuracy;
 
@@ -976,16 +1010,19 @@ function drawRepMap(d){ drawTerrain($('#repMap'), d, 1); }
 function renderRules(d, cat){
   const box=$('#rules'); box.innerHTML='';
   d.results.filter(r=>!cat||r.category===cat).forEach(r=>{
-    const pct = r.max_score? Math.round(r.score/r.max_score*100):0;
-    const color = pct>=80?'var(--good)': pct>=55?'var(--warn)':'var(--bad)';
+    const pct = r.max_score? r.score/r.max_score : 0;
+    let vk='good', vt='좋아요';
+    if(!r.applicable){ vk='na'; vt='해당 없음'; }
+    else if(pct<0.55){ vk='bad'; vt='아쉬워요'; }
+    else if(pct<0.75){ vk='ok'; vt='보통'; }
     const row=el('div','rule'+(r.applicable?'':' na'));
     row.innerHTML=`
-      <div class="rh"><span class="code">${r.code}</span>
-        <span class="nm">${r.name}</span>
-        <span class="pts tnum">${r.score.toFixed(1)}<small>/${r.max_score}</small></span></div>
-      <div class="track"><i style="width:${pct}%; background:${color}"></i></div>
-      <div class="ev">${r.evidence}</div>
-      <div class="th">▪ ${r.theory}${r.tier?' · '+r.tier:''}</div>`;
+      <div class="rh"><span class="nm">${FRIENDLY[r.code]||r.name}</span>
+        <span class="verdict ${vk}">${vt}</span></div>
+      <div class="plain">${r.plain||r.evidence}</div>
+      <details class="proof"><summary>전문 근거·수치 보기</summary>
+        <div class="ev">${r.evidence}<span class="th">▪ ${r.theory}${r.tier?' · '+r.tier:''}</span></div>
+      </details>`;
     box.appendChild(row);
   });
 }

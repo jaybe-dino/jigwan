@@ -11,10 +11,24 @@ export interface RuleResult {
   score: number;
   max_score: number;
   applicable: boolean;
-  evidence: string;
+  evidence: string; // 전문가용 근거(전문용어+수치)
   theory: string;
   tier: string | null;
+  plain: string; // 일반인용 쉬운 해석 (메인 노출)
 }
+
+export interface Interp {
+  grade_meaning: string;
+  body: string;
+  strengths: { name: string; plain: string }[];
+  cautions: { name: string; plain: string }[];
+}
+
+// 코드 → 친근한 이름 (engine.interpret.FRIENDLY와 일치)
+export const FRIENDLY: Record<string, string> = {
+  R01: "뒷산의 받침", R02: "양옆의 감쌈", R03: "물길", R04: "땅의 단단함", R05: "정면 도로",
+  R06: "휜 도로", R07: "고가·철로", R08: "집의 방향", R09: "층수 기운", R10: "주변 환경",
+};
 
 export interface PriceTrend {
   now: string;
@@ -43,6 +57,7 @@ export interface SiteReport {
   price: PriceTrend;
   bibo: BiboCard | null;
   liner: string;
+  interp: Interp;
 }
 
 export const AXES: { key: AxisKey; el: string; cls: string }[] = [

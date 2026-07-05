@@ -115,19 +115,37 @@ body { background:
 .gauge.main .lab b { color: var(--jae); }
 .gauge .lab .el { font-family: var(--font-serif); margin-left: 4px; font-size: 11px; }
 
-/* 근거 레이어 */
-.rule { border-top: 1px solid var(--line-soft); padding: 13px 2px; }
+/* AI 지관의 해석 카드 */
+.interp-card { margin: 14px 18px; padding: 18px; border-radius: var(--radius);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--seal) 7%, var(--panel)), var(--panel));
+  box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--seal) 12%, transparent); }
+.interp-card .who { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: var(--seal); margin-bottom: 10px; }
+.interp-card .who .av { width: 24px; height: 24px; border-radius: 8px; background: var(--seal); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 13px; }
+.interp-card .body { font-size: 15px; line-height: 1.65; font-weight: 500; letter-spacing: -.01em; }
+.interp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
+.ichip { font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px; }
+.ichip.good { color: var(--gun); background: color-mix(in srgb, var(--gun) 13%, transparent); }
+.ichip.warn { color: var(--seal); background: color-mix(in srgb, var(--seal) 12%, transparent); }
+
+/* 근거 레이어 — 쉬운 해석 우선 */
+.rule { border-top: 1px solid var(--line-soft); padding: 15px 2px; }
 .rule:first-child { border-top: none; }
 .rule.na { opacity: .5; }
-.rule .rh { display: flex; align-items: center; gap: 9px; }
-.rule .code { font-size: 10px; font-weight: 800; color: var(--ink-faint); background: var(--panel-2); padding: 3px 6px; border-radius: 6px; }
-.rule .nm { font-weight: 700; font-size: 14px; }
-.rule .pts { margin-left: auto; font-weight: 800; font-size: 13px; }
-.rule .pts small { color: var(--ink-faint); font-weight: 600; }
-.rule .track { height: 6px; border-radius: 4px; background: var(--panel-2); margin: 9px 0 8px; overflow: hidden; }
-.rule .track > i { display: block; height: 100%; border-radius: 4px; }
-.rule .ev { font-size: 13.5px; line-height: 1.55; }
-.rule .th { display: inline-flex; margin-top: 8px; font-size: 10.5px; font-weight: 700; color: var(--ink-faint); }
+.rule .rh { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.rule .nm { font-weight: 800; font-size: 15px; letter-spacing: -.01em; }
+.rule .verdict { margin-left: auto; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
+.rule .verdict.good { color: var(--gun); background: color-mix(in srgb, var(--gun) 13%, transparent); }
+.rule .verdict.ok { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+.rule .verdict.bad { color: var(--seal); background: color-mix(in srgb, var(--seal) 12%, transparent); }
+.rule .verdict.na { color: var(--ink-faint); background: var(--panel-2); }
+.rule .plain { font-size: 14px; line-height: 1.62; }
+.rule .proof { margin-top: 9px; }
+.rule .proof summary { font-size: 11.5px; font-weight: 700; color: var(--ink-faint); cursor: pointer; list-style: none; }
+.rule .proof summary::-webkit-details-marker { display: none; }
+.rule .proof summary::before { content: "＋ "; }
+.rule .proof[open] summary::before { content: "− "; }
+.rule .proof .ev { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; margin-top: 7px; padding: 10px 12px; background: var(--panel-2); border-radius: 12px; }
+.rule .proof .ev .th { display: block; margin-top: 6px; font-size: 10.5px; font-weight: 700; color: var(--ink-faint); }
 
 /* 비보 카드 */
 .bibo { margin: 14px 18px; padding: 18px; border-radius: 16px; color: #fff; position: relative; overflow: hidden;

@@ -25,6 +25,23 @@ export function Report({ data }: { data: SiteReport }) {
         </div>
       </div>
 
+      <div className="interp-card">
+        <div className="who">
+          <span className="av">智</span> AI 지관의 해석
+        </div>
+        <div className="body">{data.interp.body}</div>
+        {(data.interp.strengths.length > 0 || data.interp.cautions.length > 0) && (
+          <div className="interp-chips">
+            {data.interp.strengths.map((s) => (
+              <span key={s.name} className="ichip good">👍 {s.name}</span>
+            ))}
+            {data.interp.cautions.map((c) => (
+              <span key={c.name} className="ichip warn">🔧 {c.name}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="card">
         <div className="hd">
           <h3>감정 정확도</h3>
