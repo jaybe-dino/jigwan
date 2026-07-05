@@ -37,7 +37,14 @@ class OsmCollectors:
 
     def building(self, address: str) -> BuildingInfo:
         info = self.geocoder.geocode(address)
-        loc = info.location
+        return self._resolve(info.location)
+
+    def building_at(self, loc: LatLon) -> BuildingInfo:
+        """지오코딩 없이 좌표(지도 탭 등)로 바로 건물 정보 구성."""
+        return self._resolve(loc)
+
+    def _resolve(self, loc: LatLon) -> BuildingInfo:
+        info = BuildingInfo(location=loc, facing_deg=180.0, ground_elevation_m=0.0)
         # 좌향: 실제 건물 외곽선 주축 → 도로 쪽을 향하도록
         try:
             ring = self.overpass.building_footprint(loc)

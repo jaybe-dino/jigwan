@@ -45,8 +45,49 @@ def assemble_features(
     )
 
 
+def assemble_at(lat: float, lon: float, collectors, radius_m: float = DEFAULT_RADIUS_M) -> SiteFeatures:
+    """지오코딩 없이 좌표(지도 탭)로 SiteFeatures 조립 — 전국 어디든."""
+    from engine.models import LatLon
+
+    loc = LatLon(lat, lon)
+    get_at = getattr(collectors, "building_at", None)
+    info = get_at(loc) if callable(get_at) else collectors.building("")
+    loc = info.location
+    landmarks = None
+    lm_fn = getattr(collectors, "landmarks", None)
+    if callable(lm_fn):
+        try:
+            landmarks = lm_fn(loc)
+        except Exception:
+            landmarks = None
+    return SiteFeatures(
+        address="지도에서 선택한 자리",
+        building=Building(loc, info.facing_deg, info.ground_elevation_m, info.floors),
+        dem=collectors.dem(loc, radius_m),
+        streams=collectors.streams(loc, radius_m),
+        roads=collectors.roads(loc, 200.0),
+        rails_overpasses=collectors.rails_overpasses(loc, 500.0),
+        pois=collectors.pois(loc, 500.0),
+        historical=collectors.historical(loc),
+        precision=Precision(dong_position=None),
+        landmarks=landmarks,
+    )
+
+
 def assess_address(address: str, collectors: Collectors) -> SiteAssessment:
     return assess_site(assemble_features(address, collectors))
+
+
+def assess_at(lat: float, lon: float, collectors) -> SiteAssessment:
+    return assess_site(assemble_at(lat, lon, collectors))
+
+
+def assess_coord_auto(lat: float, lon: float) -> SiteAssessment:
+    """좌표 → 실데이터 감정(팩토리)."""
+    from pipeline.collectors.factory import make_collectors
+
+    collectors, _live = make_collectors("")
+    return assess_at(lat, lon, collectors)
 
 
 def assess_address_auto(address: str) -> SiteAssessment:

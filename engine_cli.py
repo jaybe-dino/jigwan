@@ -10,16 +10,18 @@ API 키(KAKAO_REST_KEY 등)가 있으면 실주소를 감정하고, 없으면 �
 import json
 import sys
 
-from web.render import build_from_address
+from web.render import build_from_address, build_from_coord
 
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "주소를 입력하세요"}, ensure_ascii=False))
+        print(json.dumps({"error": "주소 또는 좌표를 입력하세요"}, ensure_ascii=False))
         return 2
-    address = sys.argv[1]
     try:
-        data = build_from_address(address)
+        if sys.argv[1] == "--coord" and len(sys.argv) >= 4:
+            data = build_from_coord(float(sys.argv[2]), float(sys.argv[3]))
+        else:
+            data = build_from_address(sys.argv[1])
     except Exception as e:  # noqa: BLE001
         print(json.dumps({"error": str(e)}, ensure_ascii=False))
         return 1

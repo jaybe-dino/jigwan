@@ -9,8 +9,8 @@ const pexec = promisify(execFile);
 // frontend/ 의 상위(리포지토리 루트)에서 python 실행
 const REPO_ROOT = path.join(process.cwd(), "..");
 
-export async function assessAddress(address: string): Promise<SiteReport> {
-  const { stdout } = await pexec("python3", ["engine_cli.py", address], {
+async function run(args: string[]): Promise<SiteReport> {
+  const { stdout } = await pexec("python3", ["engine_cli.py", ...args], {
     cwd: REPO_ROOT,
     maxBuffer: 8 * 1024 * 1024,
     env: process.env,
@@ -18,4 +18,12 @@ export async function assessAddress(address: string): Promise<SiteReport> {
   const data = JSON.parse(stdout);
   if (data && data.error) throw new Error(data.error);
   return data as SiteReport;
+}
+
+export function assessAddress(address: string): Promise<SiteReport> {
+  return run([address]);
+}
+
+export function assessCoord(lat: number, lon: number): Promise<SiteReport> {
+  return run(["--coord", String(lat), String(lon)]);
 }

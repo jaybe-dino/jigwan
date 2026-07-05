@@ -134,6 +134,16 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .pin .bub .sc{ color:var(--seal); font-variant-numeric:tabular-nums; }
 .pin .tip{ width:9px; height:9px; background:var(--panel); transform:rotate(45deg);
   margin:-5px auto 0; box-shadow:2px 2px 3px rgba(0,0,0,.06); }
+/* 지도-베이스: 홈 지도를 전체화면으로 */
+.mapwrap.fullmap{ height:calc(100dvh - 128px); }
+.map-hint{ margin-top:8px; background:var(--panel); color:var(--ink-soft); font-size:12px; font-weight:600;
+  padding:8px 12px; border-radius:12px; box-shadow:var(--shadow); text-align:center; }
+.map-bottom{ position:absolute; left:14px; right:14px; bottom:14px; z-index:5;
+  background:color-mix(in srgb,var(--panel) 94%, transparent); backdrop-filter:blur(8px);
+  border-radius:18px; box-shadow:var(--shadow); padding:14px 15px; }
+.map-bottom .mb-title{ font-family:var(--font-serif); font-size:18px; font-weight:700; }
+.map-bottom .mb-sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.45; }
+.map-bottom .trend{ padding:11px 0 0; }
 .searchcard{ position:absolute; left:14px; right:14px; top:14px; z-index:5; }
 .search{ background:var(--panel); border-radius:18px; box-shadow:var(--shadow);
   display:flex; align-items:center; gap:10px; padding:15px 16px; }
@@ -491,49 +501,27 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <button class="iconbtn" id="theme" title="테마">◑</button>
     </div>
 
-    <div class="mapwrap">
+    <div class="mapwrap fullmap">
+      <div id="homeMap"></div>
       <div class="searchcard">
         <div class="search">
           <span>🔍</span>
           <input id="homeSearch" placeholder="이사 갈 집 주소를 넣어보세요"
             onkeydown="if(event.key==='Enter')searchAddr()">
-          <button class="go-btn" onclick="searchAddr()">감정</button>
+          <button class="go-btn" onclick="searchAddr()">보기</button>
+        </div>
+        <div class="map-hint">📍 지도를 아무 데나 눌러도 그 자리 풍수를 봐드려요</div>
+      </div>
+      <div class="map-bottom">
+        <div class="mb-title">이 집, 나랑 잘 맞을까?</div>
+        <div class="mb-sub">주소를 검색하거나 지도를 눌러 그 자리를 봐요 · 생년월일 넣으면 궁합까지</div>
+        <div class="trend">
+          <div class="chip"><span class="dot"></span>지금 이사철 인기</div>
+          <div class="chip" onclick="startScan('myeongdang')">종로구 평창동 · <b>82점</b></div>
+          <div class="chip" onclick="startScan('biboji')">동대문구 전농동 · <b>49점</b></div>
         </div>
       </div>
-      <div id="homeMap"></div>
-      <!-- 실제 지도 + 핀은 JS가 배치 (Leaflet 없으면 캔버스 폴백) -->
     </div>
-
-    <div class="trend">
-      <div class="chip"><span class="dot"></span>지금 이사철 뜨는 동네</div>
-      <div class="chip">성산동 · 1,204명이 봤어요</div>
-      <div class="chip">망원동 · 980명</div>
-      <div class="chip">연남동 · 774명</div>
-    </div>
-
-    <div class="pad" style="padding-top:16px">
-      <div class="eyebrow">이사 갈 집, 계약 전에</div>
-      <h1 style="font-size:27px; margin:8px 0 6px">이 집, 나랑 잘 맞을까?</h1>
-      <p class="muted" style="font-size:14px; margin:0 0 4px">
-        새로 이사 갈 집의 터를 재미로 봐요. 주소만 넣으면 30초,
-        <b>동·호수</b>까지 넣으면 그 집 한 채를 콕 집어 봐드려요.</p>
-    </div>
-
-    <div class="homecta">
-      <div class="eyebrow" style="margin-bottom:10px">예시로 먼저 둘러보기</div>
-      <button class="addrrow" onclick="startScan('myeongdang')">
-        <span class="ico">🔍</span>
-        <span class="a"><b>서울특별시 마포구 월드컵로 212</b><small>성산시영아파트 3동 1204호</small></span>
-        <span class="go">›</span>
-      </button>
-      <button class="addrrow" onclick="startScan('biboji')">
-        <span class="ico">🔍</span>
-        <span class="a"><b>서울특별시 동대문구 왕산로 220</b><small>청솔빌라 301호</small></span>
-        <span class="go">›</span>
-      </button>
-      <div class="demo-note">데모용 실제 도로명주소 · 판정은 룰북 엔진(M1)의 실제 출력</div>
-    </div>
-
   </section>
 
   <!-- ============ 스캔 연출 ============ -->
@@ -930,6 +918,8 @@ function drawHomeMap(){
         html:`<div class="mappin"><span class="sc">${d.site_score}</span>점</div><div class="tip"></div>`});
       L.marker(d.coord,{icon}).addTo(homeLmap).on('click',()=>startScan(id));
     });
+    // 지도 아무 데나 탭 → 그 좌표의 풍수 (전국 어디든)
+    homeLmap.on('click', e=> assessCoord(e.latlng.lat, e.latlng.lng));
     setTimeout(()=>homeLmap.invalidateSize(),150);
   } else {
     canvasHomeMap(host);
@@ -975,18 +965,25 @@ function startScan(id){
 }
 
 /* 홈 검색 → 실제 엔진(/api/assess) 감정. 서버 없으면(데모) 친절히 안내 */
-async function searchAddr(){
-  const inp=$('#homeSearch'); const q=(inp && inp.value || '').trim();
-  if(!q){ inp && inp.focus(); return; }
+async function assessLive(qs){
   try{
-    const res=await fetch('/api/assess?address='+encodeURIComponent(q));
+    const res=await fetch('/api/assess?'+qs);
     if(!res.ok) throw new Error('server');
     const d=await res.json();
-    if(d.error){ alert(d.error); return; }
-    DATA['_live']=d; startScan('_live');
+    if(d.error){ alert(d.error); return false; }
+    DATA['_live']=d; startScan('_live'); return true;
   }catch(_){
-    alert('아직 감정 서버에 연결되지 않았어요. 아래 예시 주소로 먼저 체험해 보세요 🙂');
+    alert('아직 감정 서버에 연결되지 않았어요(배포본에서 동작). 아래 예시로 먼저 체험해 보세요 🙂');
+    return false;
   }
+}
+function searchAddr(){
+  const inp=$('#homeSearch'); const q=(inp && inp.value || '').trim();
+  if(!q){ inp && inp.focus(); return; }
+  assessLive('address='+encodeURIComponent(q));
+}
+function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
+  assessLive('lat='+lat.toFixed(6)+'&lon='+lon.toFixed(6));
 }
 
 /* ============================================================

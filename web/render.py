@@ -166,14 +166,19 @@ def build_site(builder, up: bool, share_dong: str) -> dict:
 
 
 def build_from_address(address: str) -> dict:
-    """임의 주소 → UI 데이터 (팩토리: 키 있으면 실 API, 없으면 픽스처).
-
-    Next.js API 라우트/engine_cli 가 호출하는 진입점.
-    """
+    """임의 주소 → UI 데이터 (팩토리: 실데이터). Next.js API/engine_cli 진입점."""
     from pipeline.assemble import assess_address_auto
 
     a = assess_address_auto(address)
     return shape_assessment(a, up=True, share_dong=_extract_dong(address), accuracy=62)
+
+
+def build_from_coord(lat: float, lon: float) -> dict:
+    """지도에서 찍은 좌표 → UI 데이터. 전국 어디든 탭하면 그 자리 풍수."""
+    from pipeline.assemble import assess_coord_auto
+
+    a = assess_coord_auto(lat, lon)
+    return shape_assessment(a, up=True, share_dong="이 자리", accuracy=55)
 
 
 def build_data() -> dict:
