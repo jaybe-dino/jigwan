@@ -1,13 +1,13 @@
 /* 지관 Next.js — 웹 프로토타입과 동일한 디자인 토큰(전통 인장·먹·한지·오방색) */
 :root {
-  --paper:#FAF9F5; --panel:#FFFFFF; --panel-2:#F2EFE8;
-  --ink:#211C15; --ink-soft:#635B4E; --ink-faint:#978E7E;
-  --line:#EAE4D9; --line-soft:#F2ECE3;
-  --seal:#B23A2E; --seal-deep:#8C2A22;
-  --jae:#C0902F; --gun:#2E8B6F; --gwan:#3A6EA5; --myeong:#C24A38;
-  --good:#2E8B6F; --warn:#C0902F; --bad:#B23A2E;
-  --shadow:0 1px 2px rgba(30,25,19,.04),0 6px 20px rgba(30,25,19,.06);
-  --radius:16px;
+  --paper:#FBFAF8; --panel:#FFFFFF; --panel-2:#F6F4F0;
+  --ink:#1F1B18; --ink-soft:#6B645D; --ink-faint:#AAA298;
+  --line:#F0ECE5; --line-soft:#F7F4EF;
+  --seal:#E0483A; --seal-deep:#BC3325;
+  --jae:#E7A81F; --gun:#17A97C; --gwan:#3B82F6; --myeong:#F0553F;
+  --good:#17A97C; --warn:#E7A81F; --bad:#E0483A;
+  --shadow:0 2px 8px rgba(31,27,24,.04),0 12px 32px rgba(31,27,24,.06);
+  --radius:22px;
   --font-serif:"Noto Serif KR","Nanum Myeongjo",AppleMyungjo,"Batang",serif;
   --font-sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
 }
@@ -31,7 +31,13 @@ body {
 .phone { width: 100%; max-width: 480px; min-height: 100vh; background: var(--paper); }
 @media (min-width: 560px) { .phone { margin: 24px 0; border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; } }
 a { color: inherit; text-decoration: none; }
-h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; text-wrap: balance; }
+h1, h2 { font-family: var(--font-serif); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: -.015em; }
+h3 { font-family: var(--font-sans); font-weight: 800; margin: 0; letter-spacing: -.01em; }
+body { background:
+    radial-gradient(75% 42% at 12% 0%, color-mix(in srgb, var(--myeong) 8%, transparent), transparent 58%),
+    radial-gradient(70% 40% at 100% 3%, color-mix(in srgb, var(--gwan) 7%, transparent), transparent 55%),
+    var(--paper); background-attachment: fixed; }
+.grade { background: linear-gradient(135deg, var(--seal), var(--seal-deep)) !important; color: #fff !important; font-weight: 800 !important; }
 .muted { color: var(--ink-soft); } .faint { color: var(--ink-faint); font-size: 11.5px; margin-top: 3px; }
 .tnum { font-variant-numeric: tabular-nums; }
 .pad { padding: 18px; }

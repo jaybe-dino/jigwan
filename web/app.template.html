@@ -6,18 +6,18 @@
    전통 풍수(인장·먹·한지·오방색·24방위) × 부동산앱 신뢰 UI
    ============================================================ */
 :root{
-  --paper:#FAF9F5; --panel:#FFFFFF; --panel-2:#F2EFE8;
-  --ink:#211C15; --ink-soft:#635B4E; --ink-faint:#978E7E;
-  --line:#EAE4D9; --line-soft:#F2ECE3;
-  --seal:#B23A2E; --seal-deep:#8C2A22; --seal-ink:#C24A38;
+  --paper:#FBFAF8; --panel:#FFFFFF; --panel-2:#F6F4F0;
+  --ink:#1F1B18; --ink-soft:#6B645D; --ink-faint:#AAA298;
+  --line:#F0ECE5; --line-soft:#F7F4EF;
+  --seal:#E0483A; --seal-deep:#BC3325; --seal-ink:#EC5A47;
   /* 오방색 4축 게이지 */
   --jae:#C0902F;   /* 재물·金 황금 */
   --gun:#2E8B6F;   /* 건강·木 청록 */
   --gwan:#3A6EA5;  /* 관계·水 남색 */
   --myeong:#C24A38;/* 명예·火 주홍 */
-  --good:#2E8B6F; --warn:#C0902F; --bad:#B23A2E;
-  --shadow:0 1px 2px rgba(30,25,19,.04),0 6px 20px rgba(30,25,19,.06);
-  --radius:16px;
+  --good:#17A97C; --warn:#E7A81F; --bad:#E0483A;
+  --shadow:0 2px 8px rgba(31,27,24,.04),0 12px 32px rgba(31,27,24,.06);
+  --radius:22px;
   --font-serif:"Noto Serif KR","Nanum Myeongjo",AppleMyungjo,"Songti SC","Batang",serif;
   --font-sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
 }
@@ -32,11 +32,11 @@
   }
 }
 :root[data-theme="light"]{
-  --paper:#FAF9F5; --panel:#FFFFFF; --panel-2:#F2EFE8;
-  --ink:#211C15; --ink-soft:#635B4E; --ink-faint:#978E7E;
-  --line:#EAE4D9; --line-soft:#F2ECE3;
-  --seal:#B23A2E; --seal-deep:#8C2A22; --seal-ink:#C24A38;
-  --jae:#C0902F; --gun:#2E8B6F; --gwan:#3A6EA5; --myeong:#C24A38;
+  --paper:#FBFAF8; --panel:#FFFFFF; --panel-2:#F6F4F0;
+  --ink:#1F1B18; --ink-soft:#6B645D; --ink-faint:#AAA298;
+  --line:#F0ECE5; --line-soft:#F7F4EF;
+  --seal:#E0483A; --seal-deep:#BC3325; --seal-ink:#EC5A47;
+  --jae:#E7A81F; --gun:#17A97C; --gwan:#3B82F6; --myeong:#F0553F;
   --shadow:0 1px 2px rgba(30,25,19,.04),0 6px 20px rgba(30,25,19,.06);
 }
 :root[data-theme="dark"]{
@@ -52,8 +52,11 @@
 html,body{margin:0}
 body{
   background:
-    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb,var(--seal) 6%, transparent), transparent 60%),
+    radial-gradient(75% 42% at 12% 0%, color-mix(in srgb,var(--myeong) 8%, transparent), transparent 58%),
+    radial-gradient(70% 40% at 100% 3%, color-mix(in srgb,var(--gwan) 7%, transparent), transparent 55%),
+    radial-gradient(90% 50% at 50% 100%, color-mix(in srgb,var(--jae) 5%, transparent), transparent 60%),
     var(--paper);
+  background-attachment:fixed;
   color:var(--ink); font-family:var(--font-sans);
   -webkit-font-smoothing:antialiased; line-height:1.5;
   display:flex; justify-content:center;
@@ -81,15 +84,17 @@ body{
 .eyebrow{ font-size:11px; letter-spacing:.22em; text-transform:none; color:var(--seal);
   font-weight:700; display:flex; align-items:center; gap:7px; }
 .eyebrow::before{ content:""; width:14px; height:1.5px; background:var(--seal); display:inline-block; }
-h1,h2,h3{ font-family:var(--font-serif); font-weight:700; text-wrap:balance; margin:0; letter-spacing:-.01em; }
+h1,h2{ font-family:var(--font-serif); font-weight:700; text-wrap:balance; margin:0; letter-spacing:-.015em; }
+h3{ font-family:var(--font-sans); font-weight:800; margin:0; letter-spacing:-.01em; text-wrap:balance; }
 .muted{ color:var(--ink-soft); } .faint{ color:var(--ink-faint); }
 .tnum{ font-variant-numeric:tabular-nums; }
 button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  background:var(--ink); color:var(--paper); border-radius:12px; padding:14px 18px;
-  font-weight:700; font-size:15px; width:100%; transition:transform .08s ease, opacity .2s; }
+  background:var(--ink); color:var(--paper); border-radius:16px; padding:15px 18px;
+  font-weight:700; font-size:15px; width:100%; transition:transform .08s ease, opacity .2s, box-shadow .2s; }
 .btn:active{ transform:scale(.98); }
-.btn.seal{ background:var(--seal); color:#fff; }
+.btn.seal{ background:linear-gradient(180deg, var(--seal-ink), var(--seal)); color:#fff;
+  box-shadow:0 6px 18px color-mix(in srgb,var(--seal) 32%, transparent); }
 .btn.ghost{ background:var(--panel); color:var(--ink); box-shadow:inset 0 0 0 1px var(--line); }
 
 /* ---------- 상단 바 ---------- */
@@ -118,8 +123,8 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .pin .tip{ width:9px; height:9px; background:var(--panel); transform:rotate(45deg);
   margin:-5px auto 0; box-shadow:2px 2px 3px rgba(0,0,0,.06); }
 .searchcard{ position:absolute; left:14px; right:14px; top:14px; z-index:5; }
-.search{ background:var(--panel); border-radius:13px; box-shadow:var(--shadow),inset 0 0 0 1px var(--line);
-  display:flex; align-items:center; gap:10px; padding:13px 15px; }
+.search{ background:var(--panel); border-radius:18px; box-shadow:var(--shadow);
+  display:flex; align-items:center; gap:10px; padding:15px 16px; }
 .search input{ border:none; background:none; outline:none; color:var(--ink);
   font-size:15px; width:100%; font-family:inherit; }
 .search input::placeholder{ color:var(--ink-faint); }
@@ -131,8 +136,8 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .chip .dot{ width:6px; height:6px; border-radius:50%; background:var(--seal); }
 .homecta{ padding:16px 18px 26px; }
 .addrrow{ width:100%; display:flex; align-items:center; gap:12px; text-align:left;
-  background:var(--panel); border-radius:13px; box-shadow:var(--shadow),inset 0 0 0 1px var(--line);
-  padding:13px 15px; margin-bottom:10px; transition:transform .08s; }
+  background:var(--panel); border-radius:18px; box-shadow:var(--shadow);
+  padding:15px 16px; margin-bottom:11px; transition:transform .08s, box-shadow .2s; }
 .addrrow:active{ transform:scale(.99); }
 .addrrow .ico{ font-size:15px; opacity:.7; }
 .addrrow .a{ flex:1; min-width:0; }
@@ -174,8 +179,9 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:4px; }
 .rep-head .who .score small{ font-size:20px; color:var(--ink-soft); margin-left:3px; }
 .badgerow{ display:flex; align-items:center; gap:7px; margin-top:6px; flex-wrap:wrap; }
-.rep-head .who .grade{ display:inline-block; font-weight:700; font-size:13px; color:var(--seal);
-  background:color-mix(in srgb,var(--seal) 12%, transparent); padding:4px 10px; border-radius:999px; }
+.rep-head .who .grade{ display:inline-block; font-weight:800; font-size:13px; color:#fff;
+  background:linear-gradient(135deg, var(--seal-ink), var(--seal-deep)); padding:5px 12px; border-radius:999px;
+  box-shadow:0 3px 10px color-mix(in srgb,var(--seal) 28%, transparent); }
 .precise{ font-size:11.5px; font-weight:700; color:var(--gun);
   background:color-mix(in srgb,var(--gun) 14%, transparent); padding:4px 9px; border-radius:999px; letter-spacing:.02em; }
 
@@ -195,7 +201,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 
 /* 4축 게이지 */
 .gauges{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.gauge{ background:var(--panel-2); border-radius:12px; padding:12px 13px; position:relative; }
+.gauge{ background:var(--panel-2); border-radius:16px; padding:14px; position:relative; }
 .gauge.main{ grid-column:1/-1; display:flex; align-items:center; gap:14px; }
 .gring{ --v:0; width:52px; height:52px; flex:none; border-radius:50%;
   background:conic-gradient(var(--c,var(--jae)) calc(var(--v)*1%), var(--panel) 0);
@@ -381,6 +387,26 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .dex-ad{ font-size:10.5px; color:var(--ink-faint); margin-top:2px; line-height:1.3; }
 .dex-card.lock{ display:grid; place-items:center; font-size:20px; opacity:.4; aspect-ratio:1; }
 
+/* ---------- S7 정밀 감정 (나침반·9칸) ---------- */
+.compass-wrap{ position:relative; width:220px; margin:12px auto 4px; }
+.compass-wrap canvas{ width:220px; height:220px; display:block; }
+.compass-read{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+.compass-read b{ font-family:var(--font-serif); font-size:34px; font-variant-numeric:tabular-nums; }
+.compass-read span{ font-size:12.5px; font-weight:700; color:var(--seal); margin-top:2px; }
+.grid9{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0 8px;
+  aspect-ratio:1; max-width:280px; }
+.grid9 .cell{ border-radius:14px; background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line);
+  display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--ink-faint); cursor:pointer;
+  transition:transform .08s; }
+.grid9 .cell:active{ transform:scale(.95); }
+.grid9 .cell.anbang{ background:color-mix(in srgb,var(--gwan) 16%,transparent); color:var(--gwan); box-shadow:inset 0 0 0 2px var(--gwan); }
+.grid9 .cell.jubang{ background:color-mix(in srgb,var(--myeong) 16%,transparent); color:var(--myeong); box-shadow:inset 0 0 0 2px var(--myeong); }
+.grid-legend{ font-size:12px; color:var(--ink-soft); text-align:center; display:flex; gap:6px; align-items:center; justify-content:center; }
+.gl{ font-weight:800; padding:2px 8px; border-radius:999px; }
+.gl.anbang{ color:var(--gwan); background:color-mix(in srgb,var(--gwan) 14%,transparent); }
+.gl.jubang{ color:var(--myeong); background:color-mix(in srgb,var(--myeong) 14%,transparent); }
+.linkbtn{ color:var(--seal); font-weight:700; font-size:12px; text-decoration:underline; background:none; }
+
 /* ============================================================
    PC 웹 — 데스크톱 2-pane (좌: 지도/검색 · 우: 리포트)
    모바일이 기본, 넓은 화면에서 대시보드로 확장.
@@ -508,6 +534,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
         <div class="pct tnum"><span id="accPct">62</span>%</div>
       </div>
       <div class="acc-note">＋동·호수 입력 시 <b>75%</b> · 집 내부 3문항까지 <b>90%</b>로 정밀해집니다</div>
+      <button class="btn ghost" style="margin-top:13px" onclick="openPrecision()">✦ 정밀 감정하기 — 집 안 3문항 (90%)</button>
     </div>
 
     <!-- 4축 게이지 -->
@@ -622,6 +649,45 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="demo-note" style="margin-top:12px">※ 궁합 산출(만세력)은 M3 구현 예정 — 데모는 예시값입니다</div>
     </div>
     <div id="compatResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- 정밀 감정 시트 (S7 · 양택삼요) -->
+<div class="sheet" id="precisionSheet">
+  <div class="scrim" onclick="closeSheet('precisionSheet')"></div>
+  <div class="panel">
+    <div class="grip"></div>
+    <div id="precisionInput">
+      <div class="eyebrow">정밀 감정 · 양택삼요(門主灶)</div>
+      <h2 style="font-size:21px; margin:8px 0 2px">집 안을 봅니다</h2>
+      <p class="muted" style="font-size:13px; margin:0 0 4px">현관·안방·주방 세 요소의 배치로 90% 정밀 감정을 엽니다.</p>
+
+      <div class="field">
+        <label>① 현관 방향 — 현관문을 열고 밖을 본 채 폰을 드세요</label>
+        <div class="compass-wrap">
+          <canvas id="compassCv" width="220" height="220"></canvas>
+          <div class="compass-read"><b id="compassDeg">180°</b><span id="compassDir">정남 · 오(午)</span></div>
+        </div>
+        <button class="btn ghost" id="compassBtn" onclick="startCompass()">📱 나침반 센서로 측정</button>
+        <input type="range" id="compassManual" min="0" max="359" value="180"
+          style="width:100%; margin-top:12px; accent-color:var(--seal)"
+          oninput="setCompass(+this.value)">
+        <div class="faint" style="text-align:center; margin-top:4px">센서가 없으면 슬라이더로 맞추세요</div>
+      </div>
+
+      <div class="field">
+        <label>② 안방·주방 위치 — 집 모양 9칸에서 탭</label>
+        <div class="grid9" id="grid9"></div>
+        <div class="grid-legend">
+          <span class="gl anbang">안방</span> → <span class="gl jubang">주방</span> 순서로 탭 ·
+          <button class="linkbtn" onclick="resetGrid()">다시</button>
+        </div>
+      </div>
+
+      <button class="btn seal" onclick="runPrecision()">양택삼요 분석하기</button>
+      <div class="demo-note" style="margin-top:12px">※ 가택구성법(문·주·조 8괘) 상세 판정은 백엔드 연동 시 정밀화 — 데모는 예시 처방</div>
+    </div>
+    <div id="precisionResult" style="display:none"></div>
   </div>
 </div>
 
@@ -1016,6 +1082,120 @@ function openShare(pct){
   </div>`;
   closeSheet('compatSheet');
   $('#shareSheet').classList.add('active');
+}
+
+/* ============================================================
+   S7 정밀 감정 — 나침반(현관 방위) + 9칸(안방·주방) + 양택삼요
+   ============================================================ */
+let precFacing = 180, gridPick = [];
+function angDiff(a,b){ const d=Math.abs((a-b)%360); return Math.min(d,360-d); }
+function dirLabel(deg){
+  const names=['정북','북동','정동','남동','정남','남서','정서','북서'];
+  const mtn=['자(子)','간(艮)','묘(卯)','손(巽)','오(午)','곤(坤)','유(酉)','건(乾)'];
+  const i=Math.round((((deg%360)+360)%360)/45)%8;
+  return names[i]+' · '+mtn[i];
+}
+function houseSect(facing){
+  const B=[[0,'동'],[45,'서'],[90,'동'],[135,'동'],[180,'동'],[225,'서'],[270,'서'],[315,'서']];
+  let best=B[0]; for(const x of B){ if(angDiff(facing,x[0])<angDiff(facing,best[0])) best=x; }
+  return best[1]==='동'?'동사택':'서사택';
+}
+function drawCompass(){
+  const cv=$('#compassCv'); const dpr=Math.min(2,devicePixelRatio||1);
+  cv.width=220*dpr; cv.height=220*dpr; const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const cx=110, cy=110, R=96; ctx.clearRect(0,0,220,220);
+  ctx.fillStyle=css('--panel'); ctx.strokeStyle=css('--line'); ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.fill(); ctx.stroke();
+  for(let d=0; d<360; d+=15){
+    const a=(d-90)*Math.PI/180, big=(d%90===0);
+    const r1=big?R-14:R-8;
+    ctx.strokeStyle= big?css('--ink-soft'):css('--line'); ctx.lineWidth=big?2:1;
+    ctx.beginPath(); ctx.moveTo(cx+Math.cos(a)*(R-2),cy+Math.sin(a)*(R-2));
+    ctx.lineTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1); ctx.stroke();
+  }
+  ctx.fillStyle=css('--ink-faint'); ctx.font='700 12px '+css('--font-sans'); ctx.textAlign='center'; ctx.textBaseline='middle';
+  [['북',0],['동',90],['남',180],['서',270]].forEach(([t,d])=>{ const a=(d-90)*Math.PI/180;
+    ctx.fillText(t, cx+Math.cos(a)*(R-30), cy+Math.sin(a)*(R-30)); });
+  // 향 바늘
+  const a=(precFacing-90)*Math.PI/180;
+  ctx.strokeStyle=css('--seal'); ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*(R-22), cy+Math.sin(a)*(R-22)); ctx.stroke();
+  ctx.fillStyle=css('--seal'); ctx.beginPath();
+  ctx.arc(cx+Math.cos(a)*(R-22), cy+Math.sin(a)*(R-22), 5, 0, 7); ctx.fill();
+  ctx.fillStyle=css('--ink'); ctx.beginPath(); ctx.arc(cx,cy,4,0,7); ctx.fill();
+}
+function setCompass(deg){
+  precFacing=((deg%360)+360)%360;
+  const s=$('#compassManual'); if(s && +s.value!==precFacing) s.value=precFacing;
+  $('#compassDeg').textContent=Math.round(precFacing)+'°';
+  $('#compassDir').textContent=dirLabel(precFacing);
+  drawCompass();
+}
+function onOrient(e){
+  let h = (e.webkitCompassHeading!=null) ? e.webkitCompassHeading : (e.alpha!=null ? (360-e.alpha) : null);
+  if(h==null) return; setCompass(Math.round(h));
+}
+async function startCompass(){
+  const DOE=window.DeviceOrientationEvent;
+  if(DOE && typeof DOE.requestPermission==='function'){
+    try{ const st=await DOE.requestPermission(); if(st!=='granted'){ alert('나침반 권한이 필요합니다. 슬라이더로 맞춰주세요.'); return; } }
+    catch(_){ alert('이 브라우저에선 센서를 쓸 수 없어요. 슬라이더로 맞춰주세요.'); return; }
+  }
+  window.addEventListener('deviceorientation', onOrient);
+  $('#compassBtn').textContent='📱 측정 중… 현관 밖을 향해 폰을 드세요';
+}
+const GRID_DIRS=['북서','북','북동','서','중','동','남서','남','남동'];
+function buildGrid(){
+  const g=$('#grid9'); g.innerHTML='';
+  for(let i=0;i<9;i++){ const c=el('div','cell', i===4?'中':''); c.onclick=()=>pickCell(i); g.appendChild(c); }
+}
+function pickCell(i){ if(gridPick.includes(i)) return; if(gridPick.length>=2) gridPick=[]; gridPick.push(i); paintGrid(); }
+function paintGrid(){
+  document.querySelectorAll('#grid9 .cell').forEach((c,i)=>{
+    const an=gridPick[0]===i, ju=gridPick[1]===i;
+    c.className='cell'+(an?' anbang':'')+(ju?' jubang':'');
+    c.textContent = an?'안방': ju?'주방': (i===4?'中':'');
+  });
+}
+function resetGrid(){ gridPick=[]; paintGrid(); }
+function openPrecision(){
+  $('#precisionInput').style.display='block'; $('#precisionResult').style.display='none';
+  $('#precisionSheet').classList.add('active');
+  buildGrid(); resetGrid(); setCompass(precFacing);
+}
+function runPrecision(){
+  const sect=houseSect(precFacing);
+  const anbang = gridPick[0]!=null? GRID_DIRS[gridPick[0]] : null;
+  const jubang = gridPick[1]!=null? GRID_DIRS[gridPick[1]] : null;
+  const good = sect==='동사택' ? ['북','동','남','남동'] : ['북서','서','북동','남서'];
+  const anOk = anbang && good.includes(anbang), juOk = jubang && good.includes(jubang);
+  const gua = (anOk&&juOk)?'생기(生氣)' : (anOk||juOk)?'복위(伏位)' : '절명(絶命)';
+  const guaColor = (anOk&&juOk)?'var(--gun)' : (anOk||juOk)?'var(--warn)':'var(--seal)';
+  const bibo = anOk&&juOk ? '지금 배치가 좋습니다. 침대 머리를 생기 방위(집의 길한 쪽)로 두면 기운이 더 삽니다.'
+    : !anOk ? '안방이 흉방에 걸립니다. 침대 머리를 '+good[0]+'쪽으로 돌리세요.'
+    : '주방이 흉방입니다. 가스레인지·불 쓰는 자리를 '+good[1]+'쪽으로 옮기면 재물 누수를 막습니다.';
+
+  // 리포트 정확도 90% 반영
+  DATA[CUR].accuracy=90; DATA[CUR].precise=true;
+  if($('#report').classList.contains('active')){
+    $('#accFill').style.width='90%'; $('#accPct').textContent='90'; $('#rPrecise').hidden=false;
+  }
+  $('#precisionInput').style.display='none';
+  const box=$('#precisionResult'); box.style.display='block';
+  box.innerHTML=`
+    <div class="eyebrow" style="justify-content:center">양택삼요 · 문(門)·주(主)·조(灶)</div>
+    <div style="text-align:center; margin:12px 0 4px">
+      <div style="font-family:var(--font-serif); font-size:44px; color:${guaColor}">${gua}</div>
+      <div class="muted" style="font-size:13px">현관 ${dirLabel(precFacing).split(' · ')[0]}향 · ${sect}</div>
+    </div>
+    <div class="compat-line">
+      <div class="box"><div class="t">안방(主)</div><div class="v" style="color:${anOk?'var(--gun)':'var(--seal)'}">${anbang||'미선택'} · ${anOk?'길방':'흉방'}</div></div>
+      <div class="box"><div class="t">주방(灶)</div><div class="v" style="color:${juOk?'var(--gun)':'var(--seal)'}">${jubang||'미선택'} · ${juOk?'길방':'흉방'}</div></div>
+    </div>
+    <div class="bibo" style="margin:16px 0 8px"><div class="k">양택 비보</div><h3>${anOk&&juOk?'좋은 배치 유지':'배치 비보 처방'}</h3><p>${bibo}</p></div>
+    <div class="acc-note" style="text-align:center; justify-content:center"><b>정밀 감정 90% 반영 완료</b> — 리포트 정확도가 올라갔어요</div>
+    <div style="height:14px"></div>
+    <button class="btn seal" onclick="closeSheet('precisionSheet')">리포트로 돌아가기</button>`;
 }
 
 /* ============================================================
