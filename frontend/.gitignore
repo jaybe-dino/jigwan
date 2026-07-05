@@ -4,3 +4,6 @@
 next-env.d.ts
 *.tsbuildinfo
 .env*.local
+
+# 빌드 시 web/dist에서 생성(도커 렌더 단계)
+public/index.html

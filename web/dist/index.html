@@ -128,6 +128,9 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .search input{ border:none; background:none; outline:none; color:var(--ink);
   font-size:15px; width:100%; font-family:inherit; }
 .search input::placeholder{ color:var(--ink-faint); }
+.search .go-btn{ flex:none; white-space:nowrap; background:var(--seal); color:#fff;
+  border-radius:12px; padding:10px 15px; font-weight:800; font-size:14px;
+  box-shadow:0 3px 10px color-mix(in srgb,var(--seal) 28%,transparent); }
 .trend{ display:flex; gap:8px; overflow-x:auto; padding:14px 18px 4px; scrollbar-width:none; }
 .trend::-webkit-scrollbar{ display:none; }
 .chip{ white-space:nowrap; font-size:12.5px; font-weight:600; color:var(--ink-soft);
@@ -470,7 +473,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
     <div class="topbar">
       <div class="brand">
         <div class="mark">智</div>
-        <div><b>지관</b><span>AI 풍수 감정</span></div>
+        <div><b>지관</b><span>이사 갈 집, 터 보기</span></div>
       </div>
       <button class="iconbtn" id="theme" title="테마">◑</button>
     </div>
@@ -479,7 +482,9 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="searchcard">
         <div class="search">
           <span>🔍</span>
-          <input placeholder="도로명·동·호수까지 정확히 입력하세요" readonly>
+          <input id="homeSearch" placeholder="이사 갈 집 주소를 넣어보세요"
+            onkeydown="if(event.key==='Enter')searchAddr()">
+          <button class="go-btn" onclick="searchAddr()">감정</button>
         </div>
       </div>
       <canvas id="homeMap"></canvas>
@@ -487,22 +492,22 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
     </div>
 
     <div class="trend">
-      <div class="chip"><span class="dot"></span>지금 기운 보는 동네</div>
-      <div class="chip">성산동 · 조회 1,204</div>
-      <div class="chip">망원동 · 조회 980</div>
-      <div class="chip">연남동 · 조회 774</div>
+      <div class="chip"><span class="dot"></span>지금 이사철 뜨는 동네</div>
+      <div class="chip">성산동 · 1,204명이 봤어요</div>
+      <div class="chip">망원동 · 980명</div>
+      <div class="chip">연남동 · 774명</div>
     </div>
 
     <div class="pad" style="padding-top:16px">
-      <div class="eyebrow">숫자는 다 보셨잖아요</div>
-      <h1 style="font-size:26px; margin:8px 0 4px">이제, 터를 보세요.</h1>
+      <div class="eyebrow">이사 갈 집, 계약 전에</div>
+      <h1 style="font-size:27px; margin:8px 0 6px">이 집, 나랑 잘 맞을까?</h1>
       <p class="muted" style="font-size:14px; margin:0 0 4px">
-        지번·도로명에 <b>동·호수</b>까지 넣을수록 그 집 한 채를 정밀하게 감정합니다.
-        아래 실제 주소로 결과를 확인해 보세요.</p>
+        새로 이사 갈 집의 터를 재미로 봐요. 주소만 넣으면 30초,
+        <b>동·호수</b>까지 넣으면 그 집 한 채를 콕 집어 봐드려요.</p>
     </div>
 
     <div class="homecta">
-      <div class="eyebrow" style="margin-bottom:10px">감정할 주소</div>
+      <div class="eyebrow" style="margin-bottom:10px">예시로 먼저 둘러보기</div>
       <button class="addrrow" onclick="startScan('myeongdang')">
         <span class="ico">🔍</span>
         <span class="a"><b>서울특별시 마포구 월드컵로 212</b><small>성산시영아파트 3동 1204호</small></span>
@@ -933,6 +938,21 @@ function startScan(id){
   requestAnimationFrame(frame);
 }
 
+/* 홈 검색 → 실제 엔진(/api/assess) 감정. 서버 없으면(데모) 친절히 안내 */
+async function searchAddr(){
+  const inp=$('#homeSearch'); const q=(inp && inp.value || '').trim();
+  if(!q){ inp && inp.focus(); return; }
+  try{
+    const res=await fetch('/api/assess?address='+encodeURIComponent(q));
+    if(!res.ok) throw new Error('server');
+    const d=await res.json();
+    if(d.error){ alert(d.error); return; }
+    DATA['_live']=d; startScan('_live');
+  }catch(_){
+    alert('아직 감정 서버에 연결되지 않았어요. 아래 예시 주소로 먼저 체험해 보세요 🙂');
+  }
+}
+
 /* ============================================================
    리포트 렌더
    ============================================================ */
@@ -967,7 +987,7 @@ function renderReport(id){
       const g=el('div','gauge main '+a.cls);
       g.innerHTML=`<div class="gring" style="--v:${v}" data-v="${v}"></div>
         <div class="lab">가장 중요한 <b>재물운</b> <span class="el">${a.el}</span>
-        <div class="faint" style="font-weight:600; margin-top:3px; font-size:11.5px">저점 매수, 이 터의 재물 기운으로 확신을</div></div>`;
+        <div class="faint" style="font-weight:600; margin-top:3px; font-size:11.5px">이 집에서 돈이 잘 모일 자리인지 봐요</div></div>`;
       gw.appendChild(g);
     }else{
       const g=el('div','gauge small '+a.cls);

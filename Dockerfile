@@ -13,6 +13,11 @@ RUN apt-get update \
 WORKDIR /app
 COPY . .
 
+# 전체 프로토타입(web/dist)을 렌더해 Next public/으로 복사 → '/'에서 서빙
+RUN python3 -m web.render \
+ && mkdir -p frontend/public \
+ && cp web/dist/index.html frontend/public/index.html
+
 # 프론트 빌드
 WORKDIR /app/frontend
 RUN npm ci && npm run build
