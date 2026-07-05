@@ -65,11 +65,16 @@ body{
 }
 @media(min-width:520px){ .phone{ min-height:auto; margin:24px 0; border-radius:34px; overflow:hidden; box-shadow:var(--shadow),0 0 0 1px var(--line); } }
 
-/* 화면 전환 */
-.screen{ display:none; animation:fade .35s ease both; }
-.screen.active{ display:block; }
+/* 화면 전환 — 한 번에 하나의 .view만 보인다(모바일). 데스크톱은 #home 좌측 고정 + 우측 뷰 스왑 */
+.view{ display:none; animation:fade .35s ease both; }
+.view.active{ display:block; }
 @keyframes fade{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
-@media (prefers-reduced-motion:reduce){ .screen{animation:none} }
+@media (prefers-reduced-motion:reduce){ .view{animation:none} }
+/* 뷰 공통 상단 바 */
+.viewbar{ display:flex; align-items:center; gap:10px; padding:16px 18px 6px; }
+.viewbar .back{ font-size:20px; color:var(--ink-soft); }
+.viewbar h2{ font-size:19px; }
+.viewbar .sub{ margin-left:auto; font-size:11.5px; color:var(--ink-faint); font-weight:600; }
 
 /* 공통 */
 .pad{ padding:18px 18px 28px; }
@@ -305,11 +310,76 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .share-actions{ display:flex; gap:10px; margin-top:16px; }
 .share-actions .btn{ flex:1; }
 
-/* 하단 탭바 (홈에서) */
-.tabbar{ display:flex; border-top:1px solid var(--line); background:var(--panel); }
-.tabbar a{ flex:1; text-align:center; padding:10px 0 14px; font-size:10px; font-weight:700; color:var(--ink-faint); }
-.tabbar a .ic{ display:block; font-size:18px; margin-bottom:2px; }
+/* 하단 탭바 — 전 화면 공통(모바일 고정 하단, 데스크톱 좌측 하단) */
+.tabbar{ position:fixed; bottom:0; left:50%; transform:translateX(-50%); z-index:20;
+  width:100%; max-width:430px; display:flex; border-top:1px solid var(--line);
+  background:color-mix(in srgb,var(--panel) 92%, transparent); backdrop-filter:blur(8px); }
+.tabbar a{ flex:1; text-align:center; padding:10px 0 14px; font-size:10px; font-weight:700;
+  color:var(--ink-faint); cursor:pointer; }
+.tabbar a .ic{ display:block; font-size:18px; margin-bottom:2px; filter:grayscale(.3); }
 .tabbar a.on{ color:var(--seal); }
+.tabbar a.on .ic{ filter:none; }
+.view{ padding-bottom:74px; }   /* 고정 탭바 자리 확보(모바일) */
+
+/* ---------- S8 매물 비교 ---------- */
+.cmp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cmp-col{ background:var(--panel); border-radius:14px; box-shadow:var(--shadow); padding:16px 12px; text-align:center; }
+.cmp-col.lead{ box-shadow:var(--shadow),inset 0 0 0 2px var(--seal); }
+.cmp-addr{ font-size:12px; font-weight:700; color:var(--ink-soft); margin-top:10px; line-height:1.35; word-break:keep-all; min-height:32px; }
+.cmp-score{ font-family:var(--font-serif); font-size:40px; line-height:1; margin-top:4px; }
+.cmp-score small{ font-size:15px; color:var(--ink-soft); }
+.cmp-grade{ font-size:12.5px; font-weight:700; color:var(--seal); margin-top:2px; }
+.cmp-gauges{ margin-top:12px; display:flex; flex-direction:column; gap:7px; }
+.cg{ display:flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:var(--ink-soft); }
+.cg span{ width:26px; text-align:left; }
+.cg-bar{ flex:1; height:6px; border-radius:3px; background:var(--panel-2); overflow:hidden; }
+.cg-bar > i{ display:block; height:100%; border-radius:3px; }
+.cg b{ width:20px; text-align:right; color:var(--ink); }
+.cmp-cat{ display:grid; grid-template-columns:1fr 60px 1fr; align-items:center; gap:8px; padding:9px 0; border-top:1px solid var(--line-soft); }
+.cmp-cat:first-of-type{ border-top:none; }
+.cc-name{ text-align:center; font-size:12px; font-weight:800; }
+.cc-b{ height:8px; border-radius:5px; background:var(--panel-2); overflow:hidden; display:flex; justify-content:flex-end; }
+.cc-b > i{ display:block; height:100%; background:var(--ink-faint); border-radius:5px; }
+.cc-b.r{ justify-content:flex-start; }
+.cc-b.win > i{ background:var(--seal); }
+
+/* ---------- S11 이달의 기별 ---------- */
+.dirbadge{ width:46px; height:46px; flex:none; border-radius:12px; background:var(--seal); color:#fff;
+  font-family:var(--font-serif); font-size:22px; display:grid; place-items:center;
+  box-shadow:0 4px 12px color-mix(in srgb,var(--seal) 34%,transparent); }
+.cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-h{ text-align:center; font-size:11px; font-weight:700; color:var(--ink-faint); padding:4px 0; }
+.cal-c{ aspect-ratio:1; display:grid; place-items:center; font-size:12px; font-variant-numeric:tabular-nums;
+  color:var(--ink-soft); border-radius:8px; position:relative; }
+.cal-c.son{ background:color-mix(in srgb,var(--gun) 16%,transparent); color:var(--gun); font-weight:800; }
+.cal-c.gil{ background:color-mix(in srgb,var(--seal) 15%,transparent); color:var(--seal); font-weight:800; }
+.cal-c.son.gil{ background:linear-gradient(135deg,color-mix(in srgb,var(--gun) 22%,transparent),color-mix(in srgb,var(--seal) 22%,transparent)); }
+.cal-legend{ display:flex; align-items:center; gap:4px; font-size:11.5px; color:var(--ink-soft); margin-top:12px; }
+.cal-legend i{ width:11px; height:11px; border-radius:3px; display:inline-block; vertical-align:-1px; }
+.cal-legend i.s-son{ background:color-mix(in srgb,var(--gun) 40%,transparent); }
+.cal-legend i.s-gil{ background:color-mix(in srgb,var(--seal) 40%,transparent); }
+.notirow{ display:flex; align-items:center; justify-content:space-between; margin-top:16px;
+  background:var(--panel); border-radius:13px; box-shadow:var(--shadow); padding:15px 16px; font-size:14px; font-weight:700; }
+.notirow input{ width:20px; height:20px; accent-color:var(--seal); }
+
+/* ---------- S10 마이 지관 ---------- */
+.lvl-name{ font-family:var(--font-serif); font-size:24px; margin:2px 0 14px; }
+.lvl-track{ display:flex; }
+.lvl-step{ flex:1; text-align:center; position:relative; }
+.lvl-step i{ width:16px; height:16px; border-radius:50%; background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line);
+  display:block; margin:0 auto 6px; position:relative; z-index:1; }
+.lvl-step::before{ content:""; position:absolute; top:8px; left:-50%; width:100%; height:2px; background:var(--panel-2); }
+.lvl-step:first-child::before{ display:none; }
+.lvl-step.on i{ background:var(--seal); box-shadow:none; }
+.lvl-step.on::before{ background:var(--seal); }
+.lvl-step span{ font-size:11.5px; font-weight:700; color:var(--ink-soft); }
+.lvl-step.on span{ color:var(--seal); }
+.dex{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.dex-card{ background:var(--panel-2); border-radius:12px; padding:12px 8px; text-align:center; cursor:pointer; }
+.dex-card .seal-stamp{ margin:0 auto; }
+.dex-sc{ font-family:var(--font-serif); font-size:17px; margin-top:7px; }
+.dex-ad{ font-size:10.5px; color:var(--ink-faint); margin-top:2px; line-height:1.3; }
+.dex-card.lock{ display:grid; place-items:center; font-size:20px; opacity:.4; aspect-ratio:1; }
 
 /* ============================================================
    PC 웹 — 데스크톱 2-pane (좌: 지도/검색 · 우: 리포트)
@@ -320,15 +390,21 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   .phone{ max-width:1180px; border-radius:26px; overflow:visible;
     display:grid; grid-template-columns:390px 1fr; align-items:start;
     box-shadow:var(--shadow),0 0 0 1px var(--line); }
-  .screen{ display:block !important; animation:none; }     /* 홈·리포트 동시 표시 */
-  #home{ position:sticky; top:34px; align-self:start; max-height:calc(100vh - 68px);
+  .view{ animation:none; }
+  #home{ display:block !important; grid-column:1;          /* 좌측 상시 노출 */
+    position:sticky; top:34px; align-self:start; max-height:calc(100vh - 68px);
     overflow:auto; border-right:1px solid var(--line); border-radius:26px 0 0 26px;
     scrollbar-width:thin; }
   #home::-webkit-scrollbar{ width:8px; } #home::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
   #home .mapwrap{ height:280px; }
-  #report{ border-radius:0 26px 26px 0; padding-bottom:30px; min-height:60vh; }
+  .view:not(#home){ grid-column:2; display:none; border-radius:0 26px 26px 0;
+    padding-bottom:30px; min-height:60vh; }
+  .view:not(#home).active{ display:block; }
   .rep-hero{ padding-top:26px; }
-  .backlink{ display:none; }                                /* 좌측에 홈이 상시 노출 */
+  /* 탭바: 좌측 홈 컬럼 하단에 고정 */
+  .tabbar{ left:max(24px, calc(50vw - 590px)); transform:none; width:390px;
+    bottom:34px; border-radius:0 0 0 26px; border-right:1px solid var(--line); }
+  #home{ padding-bottom:60px; }
   #report .card{ margin:16px 22px; }
   /* 넓은 화면: 근거 레이어를 2열로 (대시보드 느낌) */
   #report #rules{ columns:2; column-gap:22px; }
@@ -345,7 +421,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 <div class="phone" id="phone">
 
   <!-- ============ 홈 ============ -->
-  <section class="screen active" id="home">
+  <section class="view active" id="home">
     <div class="topbar">
       <div class="brand">
         <div class="mark">智</div>
@@ -395,12 +471,6 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="demo-note">데모용 실제 도로명주소 · 판정은 룰북 엔진(M1)의 실제 출력</div>
     </div>
 
-    <div class="tabbar">
-      <a class="on"><span class="ic">🗺️</span>지도</a>
-      <a><span class="ic">📖</span>터 도감</a>
-      <a><span class="ic">🀄</span>이달의 기별</a>
-      <a><span class="ic">🧙</span>마이 지관</a>
-    </div>
   </section>
 
   <!-- ============ 스캔 연출 ============ -->
@@ -414,9 +484,9 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   </div>
 
   <!-- ============ 리포트 ============ -->
-  <section class="screen" id="report">
+  <section class="view" id="report">
     <div class="rep-hero">
-      <div class="backlink" onclick="show('home')">‹ 지도로</div>
+      <div class="backlink" onclick="nav('home')">‹ 지도로</div>
       <div class="rep-head">
         <div class="seal-stamp"><div class="g" id="rSealGrade">—</div><div class="k">地官</div></div>
         <div class="who">
@@ -494,6 +564,41 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       부동산 투자 권유·자문이 아닙니다. 단지·매물별 점수는 개인 조회 결과로만 제공됩니다.
     </div>
   </section>
+
+  <!-- ============ S8 매물 비교 ============ -->
+  <section class="view" id="compare">
+    <div class="viewbar">
+      <span class="back" onclick="nav('home')">‹</span>
+      <h2>매물 비교</h2><span class="sub">저점 매수, 후보를 나란히</span>
+    </div>
+    <div id="compareBody" class="pad" style="padding-top:8px"></div>
+  </section>
+
+  <!-- ============ S11 이달의 기별 ============ -->
+  <section class="view" id="monthly">
+    <div class="viewbar">
+      <span class="back" onclick="nav('home')">‹</span>
+      <h2>이달의 기별</h2><span class="sub" id="monthTag">—</span>
+    </div>
+    <div id="monthlyBody" class="pad" style="padding-top:8px"></div>
+  </section>
+
+  <!-- ============ S10 마이 지관 ============ -->
+  <section class="view" id="mypage">
+    <div class="viewbar">
+      <span class="back" onclick="nav('home')">‹</span>
+      <h2>마이 지관</h2><span class="sub">터 도감 · 지관 레벨</span>
+    </div>
+    <div id="mypageBody" class="pad" style="padding-top:8px"></div>
+  </section>
+
+  <!-- 하단 탭바 (전 화면 공통) -->
+  <nav class="tabbar" id="tabbar">
+    <a class="on" data-nav="home" onclick="nav('home')"><span class="ic">🗺️</span>지도</a>
+    <a data-nav="compare" onclick="nav('compare')"><span class="ic">⚖️</span>매물 비교</a>
+    <a data-nav="monthly" onclick="nav('monthly')"><span class="ic">🀄</span>이달의 기별</a>
+    <a data-nav="mypage" onclick="nav('mypage')"><span class="ic">🧙</span>마이 지관</a>
+  </nav>
 </div>
 
 <!-- 궁합 시트 -->
@@ -559,9 +664,21 @@ $('#theme').onclick = ()=>{
 };
 
 /* ====== 화면 전환 ====== */
+let lastView='report';
+const TAB_FOR = {home:'home', report:'home', compare:'compare', monthly:'monthly', mypage:'mypage'};
 function show(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
-  $('#phone').scrollTop=0; window.scrollTo(0,0);
+  if(id!=='home') lastView=id;
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id===id));
+  if(isDesktop() && id==='home') $('#'+lastView).classList.add('active');  // 우측 뷰 유지
+  document.querySelectorAll('#tabbar a').forEach(a=>a.classList.toggle('on', a.dataset.nav===TAB_FOR[id]));
+  window.scrollTo(0,0); const ph=$('#phone'); if(ph) ph.scrollTop=0;
+}
+function nav(id){
+  if(id==='compare') renderCompare();
+  if(id==='monthly') renderMonthly();
+  if(id==='mypage') renderMypage();
+  if(id==='home' && !isDesktop()) { /* 모바일: 홈으로 */ }
+  show(id);
 }
 
 /* ============================================================
@@ -899,6 +1016,124 @@ function openShare(pct){
   </div>`;
   closeSheet('compatSheet');
   $('#shareSheet').classList.add('active');
+}
+
+/* ============================================================
+   S8 매물 비교
+   ============================================================ */
+const AXKEY = {재물:'jae', 건강:'gun', 관계:'gwan', 명예:'myeong'};
+function catScore(d, cat){
+  const rs = d.results.filter(r=>r.category===cat && r.applicable);
+  const sc = rs.reduce((a,r)=>a+r.score,0), mx = rs.reduce((a,r)=>a+r.max_score,0);
+  return mx ? sc/mx : 0;
+}
+function smallSeal(d, size){
+  return `<div class="seal-stamp" style="width:${size}px;height:${size}px;transform:rotate(-4deg)">
+    <div class="g" style="font-size:${d.gradeSeal.length>1?size*0.24:size*0.36}px">${d.gradeSeal}</div>
+    <div class="k" style="font-size:${size*0.13}px">地官</div></div>`;
+}
+function renderCompare(){
+  const sites=[DATA.myeongdang, DATA.biboji];
+  const body=$('#compareBody'); body.innerHTML='';
+  const grid=el('div','cmp-grid');
+  sites.forEach((d,i)=>{
+    const c=el('div','cmp-col'+(d.site_score>=sites[1-i].site_score?' lead':''));
+    c.innerHTML=`<div style="text-align:center">${smallSeal(d,60)}</div>
+      <div class="cmp-addr">${d.addr.split(',')[0]}</div>
+      <div class="cmp-score tnum">${d.site_score}<small>점</small></div>
+      <div class="cmp-grade">「${d.grade}」</div>
+      <div class="cmp-gauges">${AXIS.map(a=>`<div class="cg"><span>${a.key}</span>
+        <div class="cg-bar"><i style="width:${d.gauges[a.key]}%;background:var(--${AXKEY[a.key]})"></i></div>
+        <b class="tnum">${d.gauges[a.key]}</b></div>`).join('')}</div>`;
+    grid.appendChild(c);
+  });
+  body.appendChild(grid);
+
+  const catBox=el('div','card'); catBox.style.margin='16px 0 0';
+  catBox.innerHTML='<div class="hd"><h3>항목별 우열</h3><span class="sub">형기·도로살·건물·환경</span></div>';
+  CATS.forEach(cat=>{
+    const s=sites.map(d=>catScore(d,cat));
+    const win = s[0]===s[1]? -1 : (s[0]>s[1]?0:1);
+    const row=el('div','cmp-cat');
+    row.innerHTML=`<div class="cc-b ${win===0?'win':''}"><i style="width:${Math.round(s[0]*100)}%"></i></div>
+      <div class="cc-name">${cat}</div>
+      <div class="cc-b r ${win===1?'win':''}"><i style="width:${Math.round(s[1]*100)}%"></i></div>`;
+    catBox.appendChild(row);
+  });
+  body.appendChild(catBox);
+  const note=el('div','demo-note','＋ 실제 서비스에선 주소를 더 넣어 3곳까지 나란히 비교합니다');
+  note.style.marginTop='14px'; body.appendChild(note);
+}
+
+/* ============================================================
+   S11 이달의 기별
+   ============================================================ */
+function renderMonthly(){
+  $('#monthTag').textContent='丙午년 · 소서(小暑)';
+  const body=$('#monthlyBody'); body.innerHTML='';
+
+  const bibo=el('div','bibo'); bibo.style.margin='0 0 16px';
+  bibo.innerHTML=`<div class="k">이달의 비보 · 小暑</div><h3>남쪽 창을 자주 여세요</h3>
+    <p>화(火) 기운이 왕성한 절기입니다. 남쪽 통풍으로 열기를 다스리면 재물·건강 기운이 순환합니다.</p>
+    <div class="do">✦ 남향 환기 + 붉은 꽃 화병</div>`;
+  body.appendChild(bibo);
+
+  const warn=el('div','card'); warn.style.margin='0 0 16px';
+  warn.innerHTML=`<div class="hd"><h3>이사 방위 주의</h3><span class="sub">丙午년 삼살방</span></div>
+    <div style="display:flex;gap:13px;align-items:center">
+      <div class="dirbadge">北</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.55">올해(오년) 삼살방은
+        <b style="color:var(--seal)">북방(北)</b>. 지금 집에서 <b>북쪽 이사</b>는 피하고,
+        부득이하면 손 없는 날+비보로 다스리세요.</div></div>`;
+  body.appendChild(warn);
+
+  const cal=el('div','card'); cal.style.margin='0 0 16px';
+  cal.innerHTML='<div class="hd"><h3>이달의 길일</h3><span class="sub">손 없는 날·이사 길일</span></div>';
+  const grid=el('div','cal');
+  ['일','월','화','수','목','금','토'].forEach(w=>grid.appendChild(el('div','cal-h',w)));
+  const son=new Set([9,10,19,20,29,30]), gil=new Set([7,15,23]);
+  for(let i=0;i<2;i++) grid.appendChild(el('div','cal-c'));   // 데모: 1일=화
+  for(let d=1;d<=31;d++){
+    const c=el('div','cal-c'+(son.has(d)?' son':'')+(gil.has(d)?' gil':''), `<span>${d}</span>`);
+    grid.appendChild(c);
+  }
+  cal.appendChild(grid);
+  cal.appendChild(el('div','cal-legend','<i class="s-son"></i> 손 없는 날 &nbsp;&nbsp; <i class="s-gil"></i> 이사 길일'));
+  body.appendChild(cal);
+
+  const noti=el('label','notirow','<span>절기·길일 알림 받기</span><input type="checkbox" checked>');
+  body.appendChild(noti);
+}
+
+/* ============================================================
+   S10 마이 지관 (터 도감 + 레벨)
+   ============================================================ */
+function renderMypage(){
+  const body=$('#mypageBody'); body.innerHTML='';
+  const levels=['견습','수습','지관','대지관'], cur=1;
+
+  const lv=el('div','card'); lv.style.margin='0 0 16px';
+  lv.innerHTML=`<div class="hd"><h3>지관 레벨</h3><span class="sub">감정 2 · 공유 1 · 비보 0</span></div>
+    <div class="lvl-name">${levels[cur]} 지관</div>
+    <div class="lvl-track">${levels.map((n,i)=>
+      `<div class="lvl-step ${i<=cur?'on':''}"><i></i><span>${n}</span></div>`).join('')}</div>
+    <div style="font-size:12.5px;color:var(--ink-soft);margin-top:12px">한 곳 더 감정하면
+      <b style="color:var(--seal)">지관</b>으로 승급 — 심화 해석이 해금됩니다</div>`;
+  body.appendChild(lv);
+
+  const dex=el('div','card'); dex.style.margin='0';
+  dex.innerHTML='<div class="hd"><h3>터 도감</h3><span class="sub">감정한 터 2</span></div>';
+  const g=el('div','dex');
+  [['myeongdang',DATA.myeongdang],['biboji',DATA.biboji]].forEach(([id,d])=>{
+    const card=el('div','dex-card');
+    card.onclick=()=>renderReport(id);
+    card.innerHTML=`${smallSeal(d,52)}<div class="dex-sc tnum">${d.site_score}점</div>
+      <div class="dex-ad">${d.addrShort}</div>`;
+    g.appendChild(card);
+  });
+  for(let i=0;i<4;i++) g.appendChild(el('div','dex-card lock','🔒'));
+  dex.appendChild(g);
+  body.appendChild(dex);
 }
 
 /* ====== 초기화 ====== */
