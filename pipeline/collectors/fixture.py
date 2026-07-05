@@ -47,6 +47,9 @@ class FixtureCollectors:
     def historical(self, location: LatLon) -> Optional[HistoricalLand]:
         return self._f.historical
 
+    def landmarks(self, center: LatLon):
+        return self._f.landmarks
+
     def building(self, address: str) -> BuildingInfo:
         b = self._f.building
         return BuildingInfo(

@@ -31,6 +31,11 @@ def _offset(origin: LatLon, dist_m: float, bearing_deg: float) -> LatLon:
     return LatLon(origin.lat + dlat, origin.lon + dlon)
 
 
+def fan_points(center: LatLon, bearings=DEFAULT_BEARINGS, distances=DEFAULT_DISTANCES) -> List[LatLon]:
+    """건물 중심 기준 방위×거리 격자 점 목록(배치 고도조회용)."""
+    return [_offset(center, d, b) for b in bearings for d in distances]
+
+
 def sample_fan(
     center: LatLon,
     elevation_at: ElevationAt,

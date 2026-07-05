@@ -37,58 +37,70 @@ def _ratio(r: RuleResult) -> float:
     return r.score / r.max_score if r.max_score else 0.0
 
 
-def _r01(r):  # 배산임수
+def _iga(word: str) -> str:
+    """받침 유무로 이/가."""
+    c = ord(word[-1])
+    if 0xAC00 <= c <= 0xD7A3:
+        return "가" if (c - 0xAC00) % 28 == 0 else "이"
+    return "이"
+
+
+def _r01(r, lm):  # 배산임수
     if r.metrics.get("max_gain_m", 0) >= 20:
-        return "집 뒤쪽을 산·언덕이 든든하게 받쳐줘요. 등 뒤가 허전하지 않아 안정감 있고, 오래 기대어 살기 좋은 자리예요."
+        back = lm.get("back")
+        who = f"{back}{_iga(back)}" if back else "산·언덕이"
+        return f"집 뒤쪽을 {who} 든든하게 받쳐줘요. 등 뒤가 허전하지 않아 안정감 있고, 오래 기대어 살기 좋은 자리예요."
     return "집 뒤에 기댈 언덕이 거의 없어요. 뒤가 트여 허전할 수 있으니, 뒤쪽 벽에 큰 가구나 그림으로 '등받이'를 만들어 주면 좋아요."
 
 
-def _r02(r):  # 사신사
+def _r02(r, lm):  # 사신사
     if _ratio(r) >= 0.6:
-        return "집 양옆을 언덕이 감싸줘서 아늑해요. 좌우가 뻥 뚫리지 않아 포근한 느낌의 자리예요."
+        l, rr = lm.get("left"), lm.get("right")
+        extra = f" 왼쪽 {l}, 오른쪽 {rr}이(가) 양옆을 지켜줘요." if (l and rr) else ""
+        return "집 양옆을 언덕이 감싸줘서 아늑해요. 좌우가 뻥 뚫리지 않아 포근한 느낌의 자리예요." + extra
     return "집 양옆이 트여 있어 감싸주는 느낌이 약해요. 창가에 화분이나 키 큰 화초로 아늑함을 더하면 좋아요."
 
 
-def _r03(r):  # 환포/반궁수
+def _r03(r, lm):  # 환포/반궁수
     s = r.metrics.get("embrace_sign", 0)
+    w = lm.get("water") or "물길"
     if s > 0:
-        return "집 앞으로 흐르는 물이 집을 감싸 안듯 흘러요. 예부터 '재물이 모이는 자리'로 보는 좋은 물길이에요."
+        return f"집 앞으로 흐르는 {w}{_iga(w)} 집을 감싸 안듯 흘러요. 예부터 '돈이 모이는 자리'로 보는 좋은 물길이에요."
     if s < 0:
-        return "물길이 집을 등지고 바깥으로 휘어 나가요. 기운이 빠져나간다고 보는 자리라, 앞쪽에 밝은 조명이나 화분으로 기운을 붙잡아 주면 좋아요."
+        return f"{w}{_iga(w)} 집을 등지고 바깥으로 휘어 나가요. 기운이 빠져나간다고 보는 자리라, 앞쪽에 밝은 조명이나 화분으로 기운을 붙잡아 주면 좋아요."
     return "가까이 물길이 없어, 물의 좋고 나쁨은 크게 따질 게 없는 자리예요."
 
 
-def _r04(r):  # 매립·구하도
+def _r04(r, lm):  # 매립·구하도
     if _ratio(r) >= 0.99:
         return "옛날부터 마른 땅이었어요. 땅이 단단해 안심할 수 있는 자리예요."
     t = r.metrics.get("worst_type", "물가")
     return f"이 땅은 예전에 '{t}'였어요. 땅이 무르거나 습할 수 있으니, 습기 관리와 밝은 조명이 도움돼요."
 
 
-def _r05(r):  # 직충살
+def _r05(r, lm):  # 직충살
     if _ratio(r) >= 0.99:
         return "집 정면으로 곧게 들이치는 도로가 없어요. 앞이 편안한 자리예요."
     return ("집 정면으로 도로가 곧게 찔러 들어와요(이런 걸 '직충살'이라 해요). "
             "차·바람·시선이 정면으로 들이쳐 부담될 수 있으니, 현관 앞에 가림막이나 큰 화분을 두면 한결 편해져요.")
 
 
-def _r06(r):  # 반궁살
+def _r06(r, lm):  # 반궁살
     if _ratio(r) >= 0.99:
         return "도로가 등을 떠미는 자리가 아니에요. 편안한 편이에요."
     return "휘어진 도로의 바깥쪽에 집이 있어요. 도로가 등을 미는 느낌이라, 그쪽 창에 커튼이나 화분으로 완충해 주면 좋아요."
 
 
-def _r07(r):  # 고가·철로
+def _r07(r, lm):  # 고가·철로
     if _ratio(r) >= 0.99:
         return "가까이 고가도로나 철로가 없어요. 조용하고 안정된 자리예요."
     return "가까이 고가도로나 철로가 있어요. 소음·진동·시선이 있을 수 있으니, 이중창이나 두꺼운 커튼이 도움돼요."
 
 
-def _r08(r):  # 좌향
+def _r08(r, lm):  # 좌향
     deg = r.metrics.get("facing_deg", 180)
-    sect = r.metrics.get("sect", "동사택")
-    return (f"집이 바라보는 방향은 {_dir_ko(deg)}쪽이에요. 이 방향은 '{sect}'이라는 계열에 속하는데, "
-            "나와 잘 맞는 방향인지는 '궁합'에서 생년월일로 확인할 수 있어요.")
+    return (f"집이 바라보는 방향은 {_dir_ko(deg)}쪽이에요. 나와 이 방향이 잘 맞는지는 "
+            "생년월일만 넣으면 '궁합'으로 바로 알 수 있어요.")
 
 
 _OHAENG_PLAIN = {
@@ -98,7 +110,7 @@ _OHAENG_PLAIN = {
 }
 
 
-def _r09(r):  # 층수·동
+def _r09(r, lm):  # 층수·동
     if not r.applicable:
         return "동·호수를 입력하면 층수와 동 배치까지 자세히 봐드려요."
     oh = r.metrics.get("ohaeng", "토")
@@ -106,7 +118,7 @@ def _r09(r):  # 층수·동
     return f"{fl}층은 오행(다섯 기운)으로 보면 {_OHAENG_PLAIN.get(oh, '중심의 기운')}과 어울리는 층이에요."
 
 
-def _r10(r):  # 주변 POI
+def _r10(r, lm):  # 주변 POI
     net = r.metrics.get("net_score", 0)
     if net > 0.3:
         return "가까이 공원·학교·물처럼 기분 좋은 시설이 있어 환경이 쾌적해요."
@@ -121,9 +133,9 @@ _PLAIN = {
 }
 
 
-def annotate_plain(result: RuleResult) -> RuleResult:
-    """RuleResult.plain 을 쉬운 해석으로 채운다."""
+def annotate_plain(result: RuleResult, landmarks: dict | None = None) -> RuleResult:
+    """RuleResult.plain 을 쉬운 해석으로 채운다. landmarks가 있으면 실제 지명 반영."""
     fn = _PLAIN.get(result.code)
     if fn is not None:
-        result.plain = fn(result)
+        result.plain = fn(result, landmarks or {})
     return result

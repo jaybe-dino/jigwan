@@ -60,6 +60,8 @@ class SiteAssessment:
     raw_score: float         # 캘리브레이션 전 원점수
     gauges: Dict[str, int]   # 축 → 0~100
     results: List[RuleResult] = field(default_factory=list)
+    coord: tuple = (0.0, 0.0)  # (lat, lon) — 지도 중심
+    landmarks: Dict[str, str] = field(default_factory=dict)  # 실제 지형지물 이름
 
     @property
     def needs_bibo(self) -> bool:
@@ -95,7 +97,7 @@ def _compute_gauges(results: List[RuleResult]) -> Dict[str, int]:
 def assess_site(
     features: SiteFeatures, calibration: Calibration = DEFAULT
 ) -> SiteAssessment:
-    results = [annotate_plain(rule(features)) for rule in ALL_RULES]
+    results = [annotate_plain(rule(features), features.landmarks) for rule in ALL_RULES]
 
     num = 0.0
     den = 0.0
@@ -109,6 +111,7 @@ def assess_site(
     final = calibration.map_score(raw)
     score_int = int(round(final))
 
+    loc = features.building.location
     return SiteAssessment(
         address=features.address,
         site_score=score_int,
@@ -116,4 +119,6 @@ def assess_site(
         raw_score=raw,
         gauges=_compute_gauges(results),
         results=results,
+        coord=(loc.lat, loc.lon),
+        landmarks=features.landmarks or {},
     )

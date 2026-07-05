@@ -122,16 +122,19 @@ def test_building_floors_parses():
     assert c.floors("11440", "10800", "212") == 15
 
 
-# --- 팩토리 폴백 ---
-def test_factory_falls_back_to_fixture_without_keys():
-    collectors, live = make_collectors("명당", config=Config())
-    assert live is False
-    # 픽스처는 Collectors 계약을 만족 → building() 동작
-    info = collectors.building("명당")
-    assert info.location is not None
-
-
-def test_factory_uses_api_with_kakao_key():
-    collectors, live = make_collectors("주소", config=Config(kakao_key="KEY"))
+# --- 팩토리: 기본은 실데이터(OSM), JIGWAN_FIXTURE면 픽스처 ---
+def test_factory_defaults_to_real_osm():
+    collectors, live = make_collectors("서울 종로구 평창동", config=Config())
     assert live is True
-    assert collectors.__class__.__name__ == "ApiCollectors"
+    assert collectors.__class__.__name__ == "OsmCollectors"
+
+
+def test_factory_fixture_when_env_set(monkeypatch=None):
+    import os
+    os.environ["JIGWAN_FIXTURE"] = "1"
+    try:
+        collectors, live = make_collectors("명당", config=Config())
+        assert live is False
+        assert collectors.building("명당").location is not None
+    finally:
+        del os.environ["JIGWAN_FIXTURE"]

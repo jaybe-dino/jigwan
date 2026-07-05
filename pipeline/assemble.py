@@ -18,6 +18,14 @@ def assemble_features(
 ) -> SiteFeatures:
     info = collectors.building(address)
     loc = info.location
+    # 실제 지형지물 이름(산·강) — 수집기가 제공하면 해석에 반영
+    landmarks = None
+    lm_fn = getattr(collectors, "landmarks", None)
+    if callable(lm_fn):
+        try:
+            landmarks = lm_fn(loc)
+        except Exception:
+            landmarks = None
     return SiteFeatures(
         address=address,
         building=Building(
@@ -33,6 +41,7 @@ def assemble_features(
         pois=collectors.pois(loc, 500.0),
         historical=collectors.historical(loc),
         precision=Precision(dong_position=None),
+        landmarks=landmarks,
     )
 
 

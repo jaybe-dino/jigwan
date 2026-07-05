@@ -104,6 +104,8 @@ class SiteFeatures:
     pois: List[POI] = field(default_factory=list)
     historical: Optional[HistoricalLand] = None
     precision: Optional[Precision] = None
+    # 실제 지형지물 이름(뒷산·물길 등) — 있으면 해석에 그대로 반영
+    landmarks: Optional[Dict[str, str]] = None
 
 
 # ---------------------------------------------------------------------------

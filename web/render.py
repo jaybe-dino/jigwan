@@ -149,6 +149,8 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "interp": summarize(a),  # 종합 쉬운 해석 (강점·아쉬운 점)
         "map": _map_hints(a),
         "legend": _map_hints(a)["legend"],
+        "coord": [a.coord[0], a.coord[1]],  # 지도 중심 (실좌표)
+        "landmarks": a.landmarks,             # 실제 산·강 이름
         "price": _price(seed=a.site_score, up=up),
         "bibo": _bibo(a),
         "liner": LINER.get(grade, ""),

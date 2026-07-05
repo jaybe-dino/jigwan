@@ -38,8 +38,8 @@ def _ridge(origin, bearing, dist, gain, ground=20.0) -> ElevationSample:
 
 
 def myeongdang_site() -> SiteFeatures:
-    """명당형 — 뒤에 든든한 현무, 청룡백호 균형, 환포수, 깨끗한 지반, 공원 인접."""
-    loc = LatLon(37.5650, 126.9010)
+    """명당형 — 실제 배산임수 지형(종로구 평창동: 북한산 배경·홍제천)."""
+    loc = LatLon(37.6119, 126.9740)  # 평창동
     facing = 170.0  # 남향
     back = (facing + 180.0) % 360.0      # ≈ 350 (북)
     left = (facing + 90.0) % 360.0       # ≈ 260 (서)
@@ -63,17 +63,17 @@ def myeongdang_site() -> SiteFeatures:
         offset(loc, 300, 210),
         offset(loc, 300, 240),
     ]
-    streams = [StreamSegment([LatLon(p.lat, p.lon) for p in stream_pts], name="샛강", width_m=20)]
+    streams = [StreamSegment([LatLon(p.lat, p.lon) for p in stream_pts], name="홍제천", width_m=20)]
 
     pois = [
-        POI(offset(loc, 250, 90), "park", "근린공원"),
-        POI(offset(loc, 300, 300), "school", "초등학교"),
-        POI(offset(loc, 350, 60), "subway", "지하철역"),
+        POI(offset(loc, 250, 90), "park", "평창공원"),
+        POI(offset(loc, 300, 300), "school", "서울예술고등학교"),
+        POI(offset(loc, 350, 60), "subway", "경복궁역 방면"),
     ]
 
     return SiteFeatures(
-        address="서울특별시 마포구 월드컵로 212, 성산시영아파트 3동 1204호",
-        building=Building(loc, facing_deg=facing, ground_elevation_m=20.0, floors=12),
+        address="서울특별시 종로구 평창동",
+        building=Building(loc, facing_deg=facing, ground_elevation_m=20.0, floors=4),
         dem=dem,
         streams=streams,
         roads=[],
@@ -81,12 +81,14 @@ def myeongdang_site() -> SiteFeatures:
         pois=pois,
         historical=HistoricalLand(past_types=[]),
         precision=Precision(dong_position="center"),
+        landmarks={"back": "북한산 보현봉", "left": "북악산", "right": "인왕산",
+                   "front": "안산", "water": "홍제천"},
     )
 
 
 def biboji_site() -> SiteFeatures:
-    """비보형 — 배산 없음, 직충살, 매립지, 흉 POI. (비보 처방 대상)"""
-    loc = LatLon(37.5400, 126.9500)
+    """비보형 — 실제 지형(동대문구 전농동: 배봉산 약한 배산·중랑천, 직충살)."""
+    loc = LatLon(37.5836, 127.0565)  # 전농동
     facing = 90.0  # 동향
 
     # 배면(서)에 능선 없음, 앞쪽만 낮은 언덕
@@ -105,7 +107,7 @@ def biboji_site() -> SiteFeatures:
     ]
 
     return SiteFeatures(
-        address="서울특별시 동대문구 왕산로 220, 청솔빌라 301호",
+        address="서울특별시 동대문구 전농동",
         building=Building(loc, facing_deg=facing, ground_elevation_m=10.0, floors=3),
         dem=dem,
         streams=[],
@@ -114,4 +116,5 @@ def biboji_site() -> SiteFeatures:
         pois=pois,
         historical=HistoricalLand(past_types=["논"]),
         precision=None,
+        landmarks={"back": "배봉산", "water": "중랑천"},
     )
