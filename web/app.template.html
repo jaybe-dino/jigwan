@@ -125,6 +125,15 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   padding:7px 12px; display:flex; align-items:center; gap:6px; }
 .chip .dot{ width:6px; height:6px; border-radius:50%; background:var(--seal); }
 .homecta{ padding:16px 18px 26px; }
+.addrrow{ width:100%; display:flex; align-items:center; gap:12px; text-align:left;
+  background:var(--panel); border-radius:13px; box-shadow:var(--shadow),inset 0 0 0 1px var(--line);
+  padding:13px 15px; margin-bottom:10px; transition:transform .08s; }
+.addrrow:active{ transform:scale(.99); }
+.addrrow .ico{ font-size:15px; opacity:.7; }
+.addrrow .a{ flex:1; min-width:0; }
+.addrrow .a b{ display:block; font-size:14px; font-weight:700; }
+.addrrow .a small{ display:block; font-size:12px; color:var(--ink-soft); margin-top:1px; }
+.addrrow .go{ color:var(--seal); font-size:20px; font-weight:700; }
 .demo-note{ text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:12px; }
 
 /* ---------- 스캔 연출 ---------- */
@@ -155,11 +164,15 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .seal-stamp::after{ content:""; position:absolute; inset:7px; border:1.5px solid rgba(255,255,255,.55); border-radius:9px; }
 .seal-stamp .g{ font-size:26px; font-weight:700; line-height:1; letter-spacing:.04em; z-index:1; text-shadow:0 1px 2px rgba(0,0,0,.25); }
 .seal-stamp .k{ font-size:10px; opacity:.9; margin-top:3px; z-index:1; }
-.rep-head .who .addr{ font-size:13px; color:var(--ink-soft); font-weight:600; }
-.rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:2px; }
+.rep-head .who{ min-width:0; }
+.rep-head .who .addr{ font-size:13px; color:var(--ink-soft); font-weight:600; line-height:1.4; word-break:keep-all; }
+.rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:4px; }
 .rep-head .who .score small{ font-size:20px; color:var(--ink-soft); margin-left:3px; }
-.rep-head .who .grade{ display:inline-block; margin-top:6px; font-weight:700; font-size:13px; color:var(--seal);
+.badgerow{ display:flex; align-items:center; gap:7px; margin-top:6px; flex-wrap:wrap; }
+.rep-head .who .grade{ display:inline-block; font-weight:700; font-size:13px; color:var(--seal);
   background:color-mix(in srgb,var(--seal) 12%, transparent); padding:4px 10px; border-radius:999px; }
+.precise{ font-size:11.5px; font-weight:700; color:var(--gun);
+  background:color-mix(in srgb,var(--gun) 14%, transparent); padding:4px 9px; border-radius:999px; letter-spacing:.02em; }
 
 .card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
   padding:16px; margin:14px 18px; }
@@ -297,6 +310,36 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .tabbar a{ flex:1; text-align:center; padding:10px 0 14px; font-size:10px; font-weight:700; color:var(--ink-faint); }
 .tabbar a .ic{ display:block; font-size:18px; margin-bottom:2px; }
 .tabbar a.on{ color:var(--seal); }
+
+/* ============================================================
+   PC 웹 — 데스크톱 2-pane (좌: 지도/검색 · 우: 리포트)
+   모바일이 기본, 넓은 화면에서 대시보드로 확장.
+   ============================================================ */
+@media (min-width:1024px){
+  body{ align-items:flex-start; padding:34px 24px; }
+  .phone{ max-width:1180px; border-radius:26px; overflow:visible;
+    display:grid; grid-template-columns:390px 1fr; align-items:start;
+    box-shadow:var(--shadow),0 0 0 1px var(--line); }
+  .screen{ display:block !important; animation:none; }     /* 홈·리포트 동시 표시 */
+  #home{ position:sticky; top:34px; align-self:start; max-height:calc(100vh - 68px);
+    overflow:auto; border-right:1px solid var(--line); border-radius:26px 0 0 26px;
+    scrollbar-width:thin; }
+  #home::-webkit-scrollbar{ width:8px; } #home::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  #home .mapwrap{ height:280px; }
+  #report{ border-radius:0 26px 26px 0; padding-bottom:30px; min-height:60vh; }
+  .rep-hero{ padding-top:26px; }
+  .backlink{ display:none; }                                /* 좌측에 홈이 상시 노출 */
+  #report .card{ margin:16px 22px; }
+  /* 넓은 화면: 근거 레이어를 2열로 (대시보드 느낌) */
+  #report #rules{ columns:2; column-gap:22px; }
+  #report #rules .rule{ break-inside:avoid; }
+  #scan{ border-radius:26px; }
+}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){
+  .addrrow{ transition:transform .08s, box-shadow .15s; }
+  .addrrow:hover{ box-shadow:var(--shadow),inset 0 0 0 1px var(--seal); }
+  .pin:hover .bub{ box-shadow:var(--shadow),inset 0 0 0 1px var(--seal); }
+}
 </style>
 
 <div class="phone" id="phone">
@@ -315,7 +358,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="searchcard">
         <div class="search">
           <span>🔍</span>
-          <input placeholder="주소를 넣으면 터를 봐드립니다" readonly>
+          <input placeholder="도로명·동·호수까지 정확히 입력하세요" readonly>
         </div>
       </div>
       <canvas id="homeMap"></canvas>
@@ -333,15 +376,23 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="eyebrow">숫자는 다 보셨잖아요</div>
       <h1 style="font-size:26px; margin:8px 0 4px">이제, 터를 보세요.</h1>
       <p class="muted" style="font-size:14px; margin:0 0 4px">
-        실제 지형·도로·건물 데이터로 그 터의 풍수를 감정합니다.
-        아래 두 터를 눌러 감정 결과를 확인해 보세요.</p>
+        지번·도로명에 <b>동·호수</b>까지 넣을수록 그 집 한 채를 정밀하게 감정합니다.
+        아래 실제 주소로 결과를 확인해 보세요.</p>
     </div>
 
     <div class="homecta">
-      <button class="btn seal" onclick="startScan('myeongdang')">🏔️ 명당형 터 감정하기</button>
-      <div style="height:10px"></div>
-      <button class="btn ghost" onclick="startScan('biboji')">🧭 비보형 터 감정하기</button>
-      <div class="demo-note">데모: 서울 마포 일대 합성 터 · 판정은 실제 룰북 엔진(M1) 출력</div>
+      <div class="eyebrow" style="margin-bottom:10px">감정할 주소</div>
+      <button class="addrrow" onclick="startScan('myeongdang')">
+        <span class="ico">🔍</span>
+        <span class="a"><b>서울특별시 마포구 월드컵로 212</b><small>성산시영아파트 3동 1204호</small></span>
+        <span class="go">›</span>
+      </button>
+      <button class="addrrow" onclick="startScan('biboji')">
+        <span class="ico">🔍</span>
+        <span class="a"><b>서울특별시 동대문구 왕산로 220</b><small>청솔빌라 301호</small></span>
+        <span class="go">›</span>
+      </button>
+      <div class="demo-note">데모용 실제 도로명주소 · 판정은 룰북 엔진(M1)의 실제 출력</div>
     </div>
 
     <div class="tabbar">
@@ -371,7 +422,10 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
         <div class="who">
           <div class="addr" id="rAddr">—</div>
           <div class="score tnum"><span id="rScore">0</span><small>점</small></div>
-          <span class="grade" id="rGrade">—</span>
+          <div class="badgerow">
+            <span class="grade" id="rGrade">—</span>
+            <span class="precise" id="rPrecise" hidden>✦ 정밀 감정</span>
+          </div>
         </div>
       </div>
     </div>
@@ -683,6 +737,8 @@ function renderReport(id){
   $('#rSealGrade').style.fontSize = d.grade.length>=3?'18px':'26px';
   $('#rSealGrade').textContent = d.gradeSeal;
 
+  $('#rPrecise').hidden = !d.precise;
+
   // 정확도
   $('#accFill').style.width=d.accuracy+'%'; $('#accPct').textContent=d.accuracy;
 
@@ -846,7 +902,11 @@ function openShare(pct){
 }
 
 /* ====== 초기화 ====== */
+const isDesktop = ()=> matchMedia('(min-width:1024px)').matches;
 fillDob(); drawHomeMap();
+// 데스크톱은 우측 리포트 패널을 기본 감정 결과로 채워 2-pane를 완성
+if(isDesktop()) renderReport('myeongdang');
 addEventListener('resize', ()=>{ drawHomeMap();
-  if($('#report').classList.contains('active')) drawRepMap(DATA[CUR]); });
+  if(isDesktop() && $('#rScore').textContent==='0') renderReport('myeongdang');
+  drawRepMap(DATA[CUR]); });
 </script>

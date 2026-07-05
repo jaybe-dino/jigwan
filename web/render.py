@@ -113,21 +113,26 @@ def _price(seed: int, up: bool) -> dict:
     }
 
 
-def build_site(builder, up: bool) -> dict:
-    a = assess_site(builder())
+def build_site(builder, up: bool, share_dong: str) -> dict:
+    feats = builder()
+    a = assess_site(feats)
     d = a.to_dict()
     grade = a.grade.value
-    # 주소 마스킹 (행정동까지)
-    raw = a.address.split(" (")[0]
-    parts = raw.split()
-    dong = next((p for p in parts if p.endswith("동")), parts[-1])
+
+    # 정확도: 주소만 62% → 동·호수(정밀) 75% → 집 내부 3문항 90% (기획안 §3)
+    has_unit = feats.precision is not None and feats.precision.dong_position is not None
+    accuracy = 75 if has_unit else 62
+
     return {
-        "addr": raw,
-        "addrShort": f"{dong}의 어느 터",
+        # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.
+        # 공유 카드(addrShort)만 §11 낙인방지로 행정동까지 마스킹.
+        "addr": a.address,
+        "addrShort": f"{share_dong}의 어느 터",
+        "precise": has_unit,  # 「정밀 감정」 배지
         "site_score": a.site_score,
         "grade": grade,
         "gradeSeal": GRADE_SEAL.get(grade, grade[0]),
-        "accuracy": 62,  # Lv.1 주소만
+        "accuracy": accuracy,
         "gauges": d["gauges"],
         "results": [
             {
@@ -148,8 +153,8 @@ def build_site(builder, up: bool) -> dict:
 
 def build_data() -> dict:
     return {
-        "myeongdang": build_site(myeongdang_site, up=True),
-        "biboji": build_site(biboji_site, up=False),
+        "myeongdang": build_site(myeongdang_site, up=True, share_dong="성산동"),
+        "biboji": build_site(biboji_site, up=False, share_dong="전농동"),
     }
 
 

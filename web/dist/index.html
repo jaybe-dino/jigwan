@@ -125,6 +125,15 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   padding:7px 12px; display:flex; align-items:center; gap:6px; }
 .chip .dot{ width:6px; height:6px; border-radius:50%; background:var(--seal); }
 .homecta{ padding:16px 18px 26px; }
+.addrrow{ width:100%; display:flex; align-items:center; gap:12px; text-align:left;
+  background:var(--panel); border-radius:13px; box-shadow:var(--shadow),inset 0 0 0 1px var(--line);
+  padding:13px 15px; margin-bottom:10px; transition:transform .08s; }
+.addrrow:active{ transform:scale(.99); }
+.addrrow .ico{ font-size:15px; opacity:.7; }
+.addrrow .a{ flex:1; min-width:0; }
+.addrrow .a b{ display:block; font-size:14px; font-weight:700; }
+.addrrow .a small{ display:block; font-size:12px; color:var(--ink-soft); margin-top:1px; }
+.addrrow .go{ color:var(--seal); font-size:20px; font-weight:700; }
 .demo-note{ text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:12px; }
 
 /* ---------- 스캔 연출 ---------- */
@@ -155,11 +164,15 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .seal-stamp::after{ content:""; position:absolute; inset:7px; border:1.5px solid rgba(255,255,255,.55); border-radius:9px; }
 .seal-stamp .g{ font-size:26px; font-weight:700; line-height:1; letter-spacing:.04em; z-index:1; text-shadow:0 1px 2px rgba(0,0,0,.25); }
 .seal-stamp .k{ font-size:10px; opacity:.9; margin-top:3px; z-index:1; }
-.rep-head .who .addr{ font-size:13px; color:var(--ink-soft); font-weight:600; }
-.rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:2px; }
+.rep-head .who{ min-width:0; }
+.rep-head .who .addr{ font-size:13px; color:var(--ink-soft); font-weight:600; line-height:1.4; word-break:keep-all; }
+.rep-head .who .score{ font-family:var(--font-serif); font-size:58px; line-height:.95; font-variant-numeric:tabular-nums; margin-top:4px; }
 .rep-head .who .score small{ font-size:20px; color:var(--ink-soft); margin-left:3px; }
-.rep-head .who .grade{ display:inline-block; margin-top:6px; font-weight:700; font-size:13px; color:var(--seal);
+.badgerow{ display:flex; align-items:center; gap:7px; margin-top:6px; flex-wrap:wrap; }
+.rep-head .who .grade{ display:inline-block; font-weight:700; font-size:13px; color:var(--seal);
   background:color-mix(in srgb,var(--seal) 12%, transparent); padding:4px 10px; border-radius:999px; }
+.precise{ font-size:11.5px; font-weight:700; color:var(--gun);
+  background:color-mix(in srgb,var(--gun) 14%, transparent); padding:4px 9px; border-radius:999px; letter-spacing:.02em; }
 
 .card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
   padding:16px; margin:14px 18px; }
@@ -297,6 +310,36 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .tabbar a{ flex:1; text-align:center; padding:10px 0 14px; font-size:10px; font-weight:700; color:var(--ink-faint); }
 .tabbar a .ic{ display:block; font-size:18px; margin-bottom:2px; }
 .tabbar a.on{ color:var(--seal); }
+
+/* ============================================================
+   PC 웹 — 데스크톱 2-pane (좌: 지도/검색 · 우: 리포트)
+   모바일이 기본, 넓은 화면에서 대시보드로 확장.
+   ============================================================ */
+@media (min-width:1024px){
+  body{ align-items:flex-start; padding:34px 24px; }
+  .phone{ max-width:1180px; border-radius:26px; overflow:visible;
+    display:grid; grid-template-columns:390px 1fr; align-items:start;
+    box-shadow:var(--shadow),0 0 0 1px var(--line); }
+  .screen{ display:block !important; animation:none; }     /* 홈·리포트 동시 표시 */
+  #home{ position:sticky; top:34px; align-self:start; max-height:calc(100vh - 68px);
+    overflow:auto; border-right:1px solid var(--line); border-radius:26px 0 0 26px;
+    scrollbar-width:thin; }
+  #home::-webkit-scrollbar{ width:8px; } #home::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  #home .mapwrap{ height:280px; }
+  #report{ border-radius:0 26px 26px 0; padding-bottom:30px; min-height:60vh; }
+  .rep-hero{ padding-top:26px; }
+  .backlink{ display:none; }                                /* 좌측에 홈이 상시 노출 */
+  #report .card{ margin:16px 22px; }
+  /* 넓은 화면: 근거 레이어를 2열로 (대시보드 느낌) */
+  #report #rules{ columns:2; column-gap:22px; }
+  #report #rules .rule{ break-inside:avoid; }
+  #scan{ border-radius:26px; }
+}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){
+  .addrrow{ transition:transform .08s, box-shadow .15s; }
+  .addrrow:hover{ box-shadow:var(--shadow),inset 0 0 0 1px var(--seal); }
+  .pin:hover .bub{ box-shadow:var(--shadow),inset 0 0 0 1px var(--seal); }
+}
 </style>
 
 <div class="phone" id="phone">
@@ -315,7 +358,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="searchcard">
         <div class="search">
           <span>🔍</span>
-          <input placeholder="주소를 넣으면 터를 봐드립니다" readonly>
+          <input placeholder="도로명·동·호수까지 정확히 입력하세요" readonly>
         </div>
       </div>
       <canvas id="homeMap"></canvas>
@@ -333,15 +376,23 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div class="eyebrow">숫자는 다 보셨잖아요</div>
       <h1 style="font-size:26px; margin:8px 0 4px">이제, 터를 보세요.</h1>
       <p class="muted" style="font-size:14px; margin:0 0 4px">
-        실제 지형·도로·건물 데이터로 그 터의 풍수를 감정합니다.
-        아래 두 터를 눌러 감정 결과를 확인해 보세요.</p>
+        지번·도로명에 <b>동·호수</b>까지 넣을수록 그 집 한 채를 정밀하게 감정합니다.
+        아래 실제 주소로 결과를 확인해 보세요.</p>
     </div>
 
     <div class="homecta">
-      <button class="btn seal" onclick="startScan('myeongdang')">🏔️ 명당형 터 감정하기</button>
-      <div style="height:10px"></div>
-      <button class="btn ghost" onclick="startScan('biboji')">🧭 비보형 터 감정하기</button>
-      <div class="demo-note">데모: 서울 마포 일대 합성 터 · 판정은 실제 룰북 엔진(M1) 출력</div>
+      <div class="eyebrow" style="margin-bottom:10px">감정할 주소</div>
+      <button class="addrrow" onclick="startScan('myeongdang')">
+        <span class="ico">🔍</span>
+        <span class="a"><b>서울특별시 마포구 월드컵로 212</b><small>성산시영아파트 3동 1204호</small></span>
+        <span class="go">›</span>
+      </button>
+      <button class="addrrow" onclick="startScan('biboji')">
+        <span class="ico">🔍</span>
+        <span class="a"><b>서울특별시 동대문구 왕산로 220</b><small>청솔빌라 301호</small></span>
+        <span class="go">›</span>
+      </button>
+      <div class="demo-note">데모용 실제 도로명주소 · 판정은 룰북 엔진(M1)의 실제 출력</div>
     </div>
 
     <div class="tabbar">
@@ -371,7 +422,10 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
         <div class="who">
           <div class="addr" id="rAddr">—</div>
           <div class="score tnum"><span id="rScore">0</span><small>점</small></div>
-          <span class="grade" id="rGrade">—</span>
+          <div class="badgerow">
+            <span class="grade" id="rGrade">—</span>
+            <span class="precise" id="rPrecise" hidden>✦ 정밀 감정</span>
+          </div>
         </div>
       </div>
     </div>
@@ -483,7 +537,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 
 <script>
 /* ====== 엔진 데이터 (Python 생성기가 주입) ====== */
-const DATA = {"myeongdang": {"addr": "서울 마포구 성산동", "addrShort": "성산동의 어느 터", "site_score": 82, "grade": "길지", "gradeSeal": "吉", "accuracy": 62, "gauges": {"재물": 83, "건강": 92, "관계": 87, "명예": 74}, "results": [{"code": "R01", "name": "배산임수", "category": "형기", "score": 12.0, "max_score": 15.0, "applicable": true, "evidence": "북 380m, +42m 능선이 등을 받칩니다 — 현무가 안정된 형국입니다.", "theory": "형기론 · 현무(玄武)", "tier": "현무 안정된"}, {"code": "R02", "name": "사신사", "category": "형기", "score": 8.166666666666666, "max_score": 10.0, "applicable": true, "evidence": "좌청룡 +24m · 우백호 +22m — 청룡백호가 감싸 안는 균형. 낮은 안산이 앞을 감쌉니다.", "theory": "형기론 · 좌청룡·우백호·안산", "tier": "청룡백호가 감싸 안는 균형"}, {"code": "R03", "name": "환포반궁수", "category": "형기", "score": 7.105478313019487, "max_score": 10.0, "applicable": true, "evidence": "289m 앞 샛강이(가) 이 터를 감싸 안습니다 — 재물이 모이는 환포수입니다.", "theory": "형기론 · 득수(得水)", "tier": "환포수(길)"}, {"code": "R04", "name": "매립구하도", "category": "형기", "score": 5.0, "max_score": 5.0, "applicable": true, "evidence": "과거에도 마른 땅이었습니다 — 지반이 안정된 터입니다.", "theory": "형기론 · 지기(地氣)·지반", "tier": "지반 안정"}, {"code": "R05", "name": "직충살", "category": "도로살", "score": 8.0, "max_score": 8.0, "applicable": true, "evidence": "정면으로 찔러드는 도로가 없어 직충살은 없습니다.", "theory": "형기론 · 도로살(直沖)", "tier": "직충살 없음"}, {"code": "R06", "name": "반궁살", "category": "도로살", "score": 7.0, "max_score": 7.0, "applicable": true, "evidence": "활처럼 등을 미는 곡선도로가 없어 반궁살은 없습니다.", "theory": "형기론 · 도로살(反弓)", "tier": "반궁살 없음"}, {"code": "R07", "name": "고가철로", "category": "도로살", "score": 5.0, "max_score": 5.0, "applicable": true, "evidence": "인접한 고가·철로가 없어 충살이 없습니다.", "theory": "형기론 · 충살(고가·철로)", "tier": "무해"}, {"code": "R08", "name": "좌향24방위", "category": "건물", "score": 10.500000000000002, "max_score": 15.0, "applicable": true, "evidence": "건물은 임좌 병향(170°) — 동사택에 속하는 배치입니다.", "theory": "이기론 · 24방위 좌향·동서사택", "tier": "동사택"}, {"code": "R09", "name": "층수동배치", "category": "건물", "score": 8.0, "max_score": 10.0, "applicable": true, "evidence": "12층은 오행상 '화' — 명예·활동의 기운(화)입니다. 단지 중심에 자리해 바람을 갈무리하는 길한 국세.", "theory": "이기론 · 층수 오행·국세", "tier": "화 층"}, {"code": "R10", "name": "주변POI", "category": "환경", "score": 10.825742657414288, "max_score": 15.0, "applicable": true, "evidence": "250m 근린공원이(가) 길(吉)으로 작용 — 전반적으로 길한 환경입니다.", "theory": "형기론+환경 · 사(砂)의 길흉", "tier": "전반적으로 길한 환경"}], "map": {"facing": 170.0, "facingLabel": "임좌병향", "ridge": {"bearing": 350.0}, "dragon": true, "water": {"embrace": 1.0}, "roadSal": null, "legend": "현무 음영 · 환포수 · 좌향 나침반"}, "legend": "현무 음영 · 환포수 · 좌향 나침반", "price": {"now": "12.7억", "chg": "▲ 18.4% (24개월)", "dir": "up", "series": [10.76, 11.27, 11.48, 11.39, 11.0, 11.36, 11.42, 11.18, 11.69, 11.9, 11.81, 11.42, 11.78, 11.84, 11.6, 12.11, 12.32, 12.23, 11.84, 12.2, 12.26, 12.02, 12.53, 12.74]}, "bibo": null, "liner": "기운이 안정된 길한 터. 살 만한 자리입니다."}, "biboji": {"addr": "서울", "addrShort": "서울의 어느 터", "site_score": 49, "grade": "비보지", "gradeSeal": "裨補", "accuracy": 62, "gauges": {"재물": 56, "건강": 32, "관계": 56, "명예": 73}, "results": [{"code": "R01", "name": "배산임수", "category": "형기", "score": 3.0, "max_score": 15.0, "applicable": true, "evidence": "배면에 의지할 능선이 없어 바람을 등지지 못하는 형국입니다.", "theory": "형기론 · 현무(玄武)", "tier": "현무 허함"}, {"code": "R02", "name": "사신사", "category": "형기", "score": 3.0, "max_score": 10.0, "applicable": true, "evidence": "좌청룡 +0m · 우백호 +0m — 청룡·백호가 모두 낮아 국세가 열린 형국. 앞을 받쳐주는 안산이 뚜렷합니다.", "theory": "형기론 · 좌청룡·우백호·안산", "tier": "청룡·백호가 모두 낮아 국세가 열린 형국"}, {"code": "R03", "name": "환포반궁수", "category": "형기", "score": 5.0, "max_score": 10.0, "applicable": true, "evidence": "가까운 수계가 없어 물의 길흉은 중립입니다.", "theory": "형기론 · 득수(得水)", "tier": "수계 없음"}, {"code": "R04", "name": "매립구하도", "category": "형기", "score": 2.6, "max_score": 5.0, "applicable": true, "evidence": "이 필지는 과거 '논'이었습니다 — 지반·수맥이 약한 터(현대적으로도 침수·연약지반에 유의)입니다.", "theory": "형기론 · 지기(地氣)·지반", "tier": "과거 논"}, {"code": "R05", "name": "직충살", "category": "도로살", "score": 4.6614772170607965, "max_score": 8.0, "applicable": true, "evidence": "정면 70m에서 폭 14m 도로가 곧게 찔러 들어옵니다 — 직충살(현관 방위 비보 권장)입니다.", "theory": "형기론 · 도로살(直沖)", "tier": "직충살"}, {"code": "R06", "name": "반궁살", "category": "도로살", "score": 7.0, "max_score": 7.0, "applicable": true, "evidence": "활처럼 등을 미는 곡선도로가 없어 반궁살은 없습니다.", "theory": "형기론 · 도로살(反弓)", "tier": "반궁살 없음"}, {"code": "R07", "name": "고가철로", "category": "도로살", "score": 1.0, "max_score": 5.0, "applicable": true, "evidence": "고가도로가 90m·높이차 9m로 인접 — 기류·소음이 터를 흔드는 형국입니다.", "theory": "형기론 · 충살(고가·철로)", "tier": "강한 충살"}, {"code": "R08", "name": "좌향24방위", "category": "건물", "score": 13.5, "max_score": 15.0, "applicable": true, "evidence": "건물은 유좌 묘향(90°) — 동사택에 속하는 배치입니다.", "theory": "이기론 · 24방위 좌향·동서사택", "tier": "동사택"}, {"code": "R09", "name": "층수동배치", "category": "건물", "score": 6.0, "max_score": 10.0, "applicable": true, "evidence": "3층은 오행상 '목' — 성장·건강의 기운(목)입니다.", "theory": "이기론 · 층수 오행·국세", "tier": "목 층"}, {"code": "R10", "name": "주변POI", "category": "환경", "score": 3.1569968704704117, "max_score": 15.0, "applicable": true, "evidence": "120m 장례식장이(가) 흉(凶)으로 작용 — 전반적으로 흉한 기운(비보 권장)입니다.", "theory": "형기론+환경 · 사(砂)의 길흉", "tier": "전반적으로 흉한 기운(비보 권장)"}], "map": {"facing": 90.0, "facingLabel": "유좌묘향", "ridge": null, "dragon": false, "water": null, "roadSal": {"bearing": 90.0}, "legend": "도로살 · 좌향 나침반"}, "legend": "도로살 · 좌향 나침반", "price": {"now": "6.0억", "chg": "▼ 52.0% (24개월)", "dir": "down", "series": [12.5, 12.0, 11.5, 11.0, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.0, 6.5, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]}, "bibo": {"title": "현관 왼쪽에 붉은 소품을 두세요", "body": "정면으로 찔러드는 도로살이 재물 기운을 치고 들어옵니다. 붉은 기운이 그 예기(銳氣)를 눌러 흩어줍니다.", "action": "현관 좌측 붉은 화병·매트 배치"}, "liner": "지금은 약하나, 다스리면 살아나는 터입니다."}};
+const DATA = {"myeongdang": {"addr": "서울특별시 마포구 월드컵로 212, 성산시영아파트 3동 1204호", "addrShort": "성산동의 어느 터", "precise": true, "site_score": 82, "grade": "길지", "gradeSeal": "吉", "accuracy": 75, "gauges": {"재물": 83, "건강": 92, "관계": 87, "명예": 74}, "results": [{"code": "R01", "name": "배산임수", "category": "형기", "score": 12.0, "max_score": 15.0, "applicable": true, "evidence": "북 380m, +42m 능선이 등을 받칩니다 — 현무가 안정된 형국입니다.", "theory": "형기론 · 현무(玄武)", "tier": "현무 안정된"}, {"code": "R02", "name": "사신사", "category": "형기", "score": 8.166666666666666, "max_score": 10.0, "applicable": true, "evidence": "좌청룡 +24m · 우백호 +22m — 청룡백호가 감싸 안는 균형. 낮은 안산이 앞을 감쌉니다.", "theory": "형기론 · 좌청룡·우백호·안산", "tier": "청룡백호가 감싸 안는 균형"}, {"code": "R03", "name": "환포반궁수", "category": "형기", "score": 7.105478313019487, "max_score": 10.0, "applicable": true, "evidence": "289m 앞 샛강이(가) 이 터를 감싸 안습니다 — 재물이 모이는 환포수입니다.", "theory": "형기론 · 득수(得水)", "tier": "환포수(길)"}, {"code": "R04", "name": "매립구하도", "category": "형기", "score": 5.0, "max_score": 5.0, "applicable": true, "evidence": "과거에도 마른 땅이었습니다 — 지반이 안정된 터입니다.", "theory": "형기론 · 지기(地氣)·지반", "tier": "지반 안정"}, {"code": "R05", "name": "직충살", "category": "도로살", "score": 8.0, "max_score": 8.0, "applicable": true, "evidence": "정면으로 찔러드는 도로가 없어 직충살은 없습니다.", "theory": "형기론 · 도로살(直沖)", "tier": "직충살 없음"}, {"code": "R06", "name": "반궁살", "category": "도로살", "score": 7.0, "max_score": 7.0, "applicable": true, "evidence": "활처럼 등을 미는 곡선도로가 없어 반궁살은 없습니다.", "theory": "형기론 · 도로살(反弓)", "tier": "반궁살 없음"}, {"code": "R07", "name": "고가철로", "category": "도로살", "score": 5.0, "max_score": 5.0, "applicable": true, "evidence": "인접한 고가·철로가 없어 충살이 없습니다.", "theory": "형기론 · 충살(고가·철로)", "tier": "무해"}, {"code": "R08", "name": "좌향24방위", "category": "건물", "score": 10.500000000000002, "max_score": 15.0, "applicable": true, "evidence": "건물은 임좌 병향(170°) — 동사택에 속하는 배치입니다.", "theory": "이기론 · 24방위 좌향·동서사택", "tier": "동사택"}, {"code": "R09", "name": "층수동배치", "category": "건물", "score": 8.0, "max_score": 10.0, "applicable": true, "evidence": "12층은 오행상 '화' — 명예·활동의 기운(화)입니다. 단지 중심에 자리해 바람을 갈무리하는 길한 국세.", "theory": "이기론 · 층수 오행·국세", "tier": "화 층"}, {"code": "R10", "name": "주변POI", "category": "환경", "score": 10.825742657414288, "max_score": 15.0, "applicable": true, "evidence": "250m 근린공원이(가) 길(吉)으로 작용 — 전반적으로 길한 환경입니다.", "theory": "형기론+환경 · 사(砂)의 길흉", "tier": "전반적으로 길한 환경"}], "map": {"facing": 170.0, "facingLabel": "임좌병향", "ridge": {"bearing": 350.0}, "dragon": true, "water": {"embrace": 1.0}, "roadSal": null, "legend": "현무 음영 · 환포수 · 좌향 나침반"}, "legend": "현무 음영 · 환포수 · 좌향 나침반", "price": {"now": "12.7억", "chg": "▲ 18.4% (24개월)", "dir": "up", "series": [10.76, 11.27, 11.48, 11.39, 11.0, 11.36, 11.42, 11.18, 11.69, 11.9, 11.81, 11.42, 11.78, 11.84, 11.6, 12.11, 12.32, 12.23, 11.84, 12.2, 12.26, 12.02, 12.53, 12.74]}, "bibo": null, "liner": "기운이 안정된 길한 터. 살 만한 자리입니다."}, "biboji": {"addr": "서울특별시 동대문구 왕산로 220, 청솔빌라 301호", "addrShort": "전농동의 어느 터", "precise": false, "site_score": 49, "grade": "비보지", "gradeSeal": "裨補", "accuracy": 62, "gauges": {"재물": 56, "건강": 32, "관계": 56, "명예": 73}, "results": [{"code": "R01", "name": "배산임수", "category": "형기", "score": 3.0, "max_score": 15.0, "applicable": true, "evidence": "배면에 의지할 능선이 없어 바람을 등지지 못하는 형국입니다.", "theory": "형기론 · 현무(玄武)", "tier": "현무 허함"}, {"code": "R02", "name": "사신사", "category": "형기", "score": 3.0, "max_score": 10.0, "applicable": true, "evidence": "좌청룡 +0m · 우백호 +0m — 청룡·백호가 모두 낮아 국세가 열린 형국. 앞을 받쳐주는 안산이 뚜렷합니다.", "theory": "형기론 · 좌청룡·우백호·안산", "tier": "청룡·백호가 모두 낮아 국세가 열린 형국"}, {"code": "R03", "name": "환포반궁수", "category": "형기", "score": 5.0, "max_score": 10.0, "applicable": true, "evidence": "가까운 수계가 없어 물의 길흉은 중립입니다.", "theory": "형기론 · 득수(得水)", "tier": "수계 없음"}, {"code": "R04", "name": "매립구하도", "category": "형기", "score": 2.6, "max_score": 5.0, "applicable": true, "evidence": "이 필지는 과거 '논'이었습니다 — 지반·수맥이 약한 터(현대적으로도 침수·연약지반에 유의)입니다.", "theory": "형기론 · 지기(地氣)·지반", "tier": "과거 논"}, {"code": "R05", "name": "직충살", "category": "도로살", "score": 4.6614772170607965, "max_score": 8.0, "applicable": true, "evidence": "정면 70m에서 폭 14m 도로가 곧게 찔러 들어옵니다 — 직충살(현관 방위 비보 권장)입니다.", "theory": "형기론 · 도로살(直沖)", "tier": "직충살"}, {"code": "R06", "name": "반궁살", "category": "도로살", "score": 7.0, "max_score": 7.0, "applicable": true, "evidence": "활처럼 등을 미는 곡선도로가 없어 반궁살은 없습니다.", "theory": "형기론 · 도로살(反弓)", "tier": "반궁살 없음"}, {"code": "R07", "name": "고가철로", "category": "도로살", "score": 1.0, "max_score": 5.0, "applicable": true, "evidence": "고가도로가 90m·높이차 9m로 인접 — 기류·소음이 터를 흔드는 형국입니다.", "theory": "형기론 · 충살(고가·철로)", "tier": "강한 충살"}, {"code": "R08", "name": "좌향24방위", "category": "건물", "score": 13.5, "max_score": 15.0, "applicable": true, "evidence": "건물은 유좌 묘향(90°) — 동사택에 속하는 배치입니다.", "theory": "이기론 · 24방위 좌향·동서사택", "tier": "동사택"}, {"code": "R09", "name": "층수동배치", "category": "건물", "score": 6.0, "max_score": 10.0, "applicable": true, "evidence": "3층은 오행상 '목' — 성장·건강의 기운(목)입니다.", "theory": "이기론 · 층수 오행·국세", "tier": "목 층"}, {"code": "R10", "name": "주변POI", "category": "환경", "score": 3.1569968704704117, "max_score": 15.0, "applicable": true, "evidence": "120m 장례식장이(가) 흉(凶)으로 작용 — 전반적으로 흉한 기운(비보 권장)입니다.", "theory": "형기론+환경 · 사(砂)의 길흉", "tier": "전반적으로 흉한 기운(비보 권장)"}], "map": {"facing": 90.0, "facingLabel": "유좌묘향", "ridge": null, "dragon": false, "water": null, "roadSal": {"bearing": 90.0}, "legend": "도로살 · 좌향 나침반"}, "legend": "도로살 · 좌향 나침반", "price": {"now": "6.0억", "chg": "▼ 52.0% (24개월)", "dir": "down", "series": [12.5, 12.0, 11.5, 11.0, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.0, 6.5, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]}, "bibo": {"title": "현관 왼쪽에 붉은 소품을 두세요", "body": "정면으로 찔러드는 도로살이 재물 기운을 치고 들어옵니다. 붉은 기운이 그 예기(銳氣)를 눌러 흩어줍니다.", "action": "현관 좌측 붉은 화병·매트 배치"}, "liner": "지금은 약하나, 다스리면 살아나는 터입니다."}};
 
 /* ====== 유틸 ====== */
 const $ = s => document.querySelector(s);
@@ -683,6 +737,8 @@ function renderReport(id){
   $('#rSealGrade').style.fontSize = d.grade.length>=3?'18px':'26px';
   $('#rSealGrade').textContent = d.gradeSeal;
 
+  $('#rPrecise').hidden = !d.precise;
+
   // 정확도
   $('#accFill').style.width=d.accuracy+'%'; $('#accPct').textContent=d.accuracy;
 
@@ -846,7 +902,11 @@ function openShare(pct){
 }
 
 /* ====== 초기화 ====== */
+const isDesktop = ()=> matchMedia('(min-width:1024px)').matches;
 fillDob(); drawHomeMap();
+// 데스크톱은 우측 리포트 패널을 기본 감정 결과로 채워 2-pane를 완성
+if(isDesktop()) renderReport('myeongdang');
 addEventListener('resize', ()=>{ drawHomeMap();
-  if($('#report').classList.contains('active')) drawRepMap(DATA[CUR]); });
+  if(isDesktop() && $('#rScore').textContent==='0') renderReport('myeongdang');
+  drawRepMap(DATA[CUR]); });
 </script>

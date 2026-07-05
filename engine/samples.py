@@ -72,7 +72,7 @@ def myeongdang_site() -> SiteFeatures:
     ]
 
     return SiteFeatures(
-        address="서울 마포구 성산동 (샘플·명당형)",
+        address="서울특별시 마포구 월드컵로 212, 성산시영아파트 3동 1204호",
         building=Building(loc, facing_deg=facing, ground_elevation_m=20.0, floors=12),
         dem=dem,
         streams=streams,
@@ -105,7 +105,7 @@ def biboji_site() -> SiteFeatures:
     ]
 
     return SiteFeatures(
-        address="서울 (샘플·비보형)",
+        address="서울특별시 동대문구 왕산로 220, 청솔빌라 301호",
         building=Building(loc, facing_deg=facing, ground_elevation_m=10.0, floors=3),
         dem=dem,
         streams=[],
