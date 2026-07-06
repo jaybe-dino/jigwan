@@ -241,7 +241,13 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .scanhud .step{ color:var(--seal); font-weight:700; font-size:13px; height:18px; margin-top:6px; letter-spacing:.02em; }
 .scanbar{ width:180px; height:4px; border-radius:3px; background:var(--panel-2);
   margin:14px auto 0; overflow:hidden; box-shadow:inset 0 0 0 1px var(--line); }
-.scanbar > i{ display:block; height:100%; width:0; background:var(--seal); }
+.scanbar > i{ display:block; height:100%; width:0; background:var(--seal); transition:width .18s ease; }
+/* 토스트(비차단 알림) — alert 대체 */
+#toast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%,16px); z-index:9999;
+  background:var(--ink); color:var(--paper); font-size:13px; font-weight:700; line-height:1.45;
+  padding:12px 18px; border-radius:14px; box-shadow:var(--shadow); max-width:88vw; text-align:center;
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
+#toast.show{ opacity:1; transform:translate(-50%,0); }
 
 /* ---------- 리포트 ---------- */
 .rep-hero{ position:relative; padding:20px 18px 8px; }
@@ -868,7 +874,7 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
     <div class="sharecard" id="shareCard"></div>
     <div class="share-actions">
       <button class="btn ghost" onclick="closeSheet('shareSheet')">닫기</button>
-      <button class="btn seal" onclick="alert('데모에서는 저장이 비활성화되어 있어요 🙂')">이미지 저장</button>
+      <button class="btn seal" onclick="toast('데모에서는 저장이 비활성화되어 있어요 🙂')">이미지 저장</button>
     </div>
   </div>
 </div>
@@ -1152,35 +1158,77 @@ function canvasHomeMap(host){   // 네이버 지도 없을 때(오프라인) 폴
    ============================================================ */
 const STEPS=[[0.14,'현무(뒷산)를 확인합니다'],[0.32,'청룡·백호 국세를 봅니다'],
   [0.5,'물길의 득수를 읽습니다'],[0.66,'도로살을 살핍니다'],[0.82,'좌향 24방위를 잽니다'],[1,'감정을 마쳤습니다']];
+let scanRAF=null;
+function endScan(){ if(scanRAF){ cancelAnimationFrame(scanRAF); scanRAF=null; } $('#scan').classList.remove('active'); }
+
+// 데이터가 이미 있는 경우(예시·명당·랭킹) — 지형 스캔 후 리포트
 function startScan(id){
-  CUR=id; const site=DATA[id];
+  CUR=id; const site=DATA[id]; endScan();
   $('#scan').classList.add('active');
-  const cv=$('#scanMap'); const t0=performance.now(); const dur=3000;
-  function frame(now){
+  const cv=$('#scanMap'); const t0=performance.now(); const dur=2200;
+  (function frame(now){
     let p=Math.min(1,(now-t0)/dur);
-    const e = p<.5? 2*p*p : 1-Math.pow(-2*p+2,2)/2; // easeInOut
+    const e = p<.5? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
     drawTerrain(cv, site, e);
     $('#scanFill').style.width=(p*100)+'%';
     const st=STEPS.find(s=>e<=s[0])||STEPS[STEPS.length-1];
     $('#scanStep').textContent=st[1];
-    if(p<1) requestAnimationFrame(frame);
-    else setTimeout(()=>{ $('#scan').classList.remove('active'); renderReport(id); }, 380);
-  }
-  requestAnimationFrame(frame);
+    if(p<1) scanRAF=requestAnimationFrame(frame);
+    else setTimeout(()=>{ endScan(); renderReport(id); }, 260);
+  })(t0);
 }
 
-/* 홈 검색 → 실제 엔진(/api/assess) 감정. 서버 없으면(데모) 친절히 안내 */
+// 탭 즉시 반응: 데이터 오기 전부터 로딩 스캔을 띄운다(진행바 90%까지 점근)
+const LOAD_PH={ map:{facing:180, facingLabel:'', ridge:null, dragon:false, water:null, roadSal:null, legend:''} };
+function beginScan(){
+  endScan(); $('#scan').classList.add('active');
+  $('#scanStep').textContent='주변 지형을 살피는 중…';
+  const cv=$('#scanMap'); const t0=performance.now();
+  (function frame(now){
+    const t=(now-t0)/1000; const p=1-Math.exp(-t*1.1);   // 0 → ~1 점근
+    drawTerrain(cv, LOAD_PH, 0.05);                        // 등고선만(로딩)
+    $('#scanFill').style.width=Math.min(90, p*90)+'%';
+    scanRAF=requestAnimationFrame(frame);
+  })(t0);
+}
+// 데이터 확보 후 실제 지형으로 마무리 → 리포트
+function finishScan(id){
+  CUR=id; endScan(); $('#scan').classList.add('active');
+  const site=DATA[id]; const cv=$('#scanMap'); const t0=performance.now(); const dur=900;
+  (function frame(now){
+    let p=Math.min(1,(now-t0)/dur);
+    const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    drawTerrain(cv, site, e);
+    $('#scanFill').style.width=(55+p*45)+'%';
+    const st=STEPS.find(s=>e<=s[0])||STEPS[STEPS.length-1];
+    $('#scanStep').textContent=st[1];
+    if(p<1) scanRAF=requestAnimationFrame(frame);
+    else setTimeout(()=>{ endScan(); renderReport(id); }, 220);
+  })(t0);
+}
+
+/* 홈 검색·지도 탭 → 실제 엔진(/api/assess). 탭 즉시 로딩 표시(무반응 방지). */
 async function assessLive(qs){
+  beginScan();
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), 22000);
   try{
-    const res=await fetch('/api/assess?'+qs);
+    const res=await fetch('/api/assess?'+qs, {signal:ctrl.signal});
+    clearTimeout(to);
     if(!res.ok) throw new Error('server');
     const d=await res.json();
-    if(d.error){ alert(d.error); return false; }
-    DATA['_live']=d; startScan('_live'); return true;
+    if(d.error) throw new Error(d.error);
+    DATA['_live']=d; finishScan('_live'); return true;
   }catch(_){
-    alert('아직 감정 서버에 연결되지 않았어요(배포본에서 동작). 아래 예시로 먼저 체험해 보세요 🙂');
+    clearTimeout(to); endScan();
+    toast('감정 서버에 연결하지 못했어요. 잠시 후 다시 시도하거나 예시를 눌러보세요.');
     return false;
   }
+}
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), 3400);
 }
 function searchAddr(){
   const inp=$('#homeSearch'); const q=(inp && inp.value || '').trim();
@@ -1408,7 +1456,7 @@ async function runCompat(){
   const btn=event&&event.target; if(btn){ btn.textContent='보는 중…'; btn.disabled=true; }
   let c;
   try{ const res=await fetch('/api/compat?'+qs); c=await res.json(); if(c.error) throw new Error(c.error); }
-  catch(_){ alert('궁합 서버에 연결되지 않았어요(배포본에서 동작).'); if(btn){btn.textContent='궁합 보기'; btn.disabled=false;} return; }
+  catch(_){ toast('궁합 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'); if(btn){btn.textContent='궁합 보기'; btn.disabled=false;} return; }
   const oh=c.ohaeng_delta, match=c.match_sect, pct=c.percent;
   const pil=c.pillars||{}; const sajuStr=[pil['년'],pil['월'],pil['일'],pil['시']].filter(Boolean).join(' ');
   $('#compatInput').style.display='none';
@@ -1511,8 +1559,8 @@ function onOrient(e){
 async function startCompass(){
   const DOE=window.DeviceOrientationEvent;
   if(DOE && typeof DOE.requestPermission==='function'){
-    try{ const st=await DOE.requestPermission(); if(st!=='granted'){ alert('나침반 권한이 필요합니다. 슬라이더로 맞춰주세요.'); return; } }
-    catch(_){ alert('이 브라우저에선 센서를 쓸 수 없어요. 슬라이더로 맞춰주세요.'); return; }
+    try{ const st=await DOE.requestPermission(); if(st!=='granted'){ toast('나침반 권한이 필요합니다. 슬라이더로 맞춰주세요.'); return; } }
+    catch(_){ toast('이 브라우저에선 센서를 쓸 수 없어요. 슬라이더로 맞춰주세요.'); return; }
   }
   window.addEventListener('deviceorientation', onOrient);
   $('#compassBtn').textContent='📱 측정 중… 현관 밖을 향해 폰을 드세요';
