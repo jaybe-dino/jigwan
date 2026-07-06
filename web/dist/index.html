@@ -1561,4 +1561,32 @@ addEventListener('orientationchange', ()=>setTimeout(()=>{ sizeHomeMap();
   if(homeNMap&&naverOK()) naver.maps.Event.trigger(homeNMap,'resize'); }, 250));
 // 전체 로드 완료 후 한 번 더 — naver 스크립트/레이아웃 지연으로 빈 지도가 남는 것 방지
 addEventListener('load', ()=>{ sizeHomeMap(); drawHomeMap(); });
+
+/* === 임시 진단 오버레이 (지도 안 뜨는 원인 파악용 · 해결되면 제거) ===
+   화면 좌하단에 지도 상태를 찍어줌. 스크린샷 한 장이면 원인이 특정된다. */
+(function(){
+  function box(){ let d=document.getElementById('mapDbg');
+    if(!d){ d=document.createElement('div'); d.id='mapDbg';
+      d.style.cssText='position:fixed;left:8px;bottom:150px;z-index:9999;'
+        +'font:11px/1.5 ui-monospace,Menlo,monospace;background:rgba(0,0,0,.85);color:#4ade80;'
+        +'padding:9px 11px;border-radius:9px;max-width:92vw;white-space:pre-wrap;'
+        +'box-shadow:0 4px 16px rgba(0,0,0,.45)';
+      (document.body||document.documentElement).appendChild(d); }
+    return d; }
+  function snap(tag){
+    var mw=document.querySelector('.mapwrap.fullmap');
+    var host=document.getElementById('homeMap');
+    var imgs=host?host.querySelectorAll('img').length:0;
+    var cvs=host?host.querySelectorAll('canvas').length:0;
+    box().textContent='[진단 '+tag+']  탭하면 갱신\n'
+      +'naver='+(!!window.naver)+'  maps='+!!(window.naver&&window.naver.maps)+'\n'
+      +'authFail='+window.__naverAuthFail+'  triedAlt='+window.__naverTriedAlt+'\n'
+      +'homeNMap생성='+!!window.homeNMap+'\n'
+      +'mapwrapH='+(mw?mw.offsetHeight:'-')+'  hostH='+(host?host.offsetHeight:'-')+'\n'
+      +'host자식='+(host?host.children.length:'-')+'  img타일='+imgs+'  canvas='+cvs+'\n'
+      +'innerH='+window.innerHeight+'  UA='+(/iPhone|iPad/.test(navigator.userAgent)?'iOS':'기타'); }
+  window.__snap=snap;
+  [500,1500,3000,5000].forEach(function(t){ setTimeout(function(){ snap('t'+t); }, t); });
+  document.addEventListener('click', function(){ snap('tap'); }, true);
+})();
 </script>
