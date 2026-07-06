@@ -8,7 +8,7 @@ function navermap_authFailure(){
   if(!window.__naverTriedAlt){
     window.__naverTriedAlt=true; window.homeNMap=null; window.repNMap=null;
     var s=document.createElement('script');
-    s.src='https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=__NAVER_KEY__';
+    s.src='https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=__NAVER_KEY__&submodules=geocoder';
     s.onload=function(){ window.__naverAuthFail=false; if(window.drawHomeMap) drawHomeMap(); };
     document.head.appendChild(s);
   } else {
@@ -17,7 +17,7 @@ function navermap_authFailure(){
   }
 }
 </script>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=__NAVER_KEY__"></script>
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=__NAVER_KEY__&submodules=geocoder"></script>
 <style>
 /* ============================================================
    지관(智官) — 모바일 웹 UI 프로토타입
@@ -142,6 +142,20 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .maplabel{ background:rgba(255,255,255,.94); color:#1f1b18; font-weight:800; font-size:11px;
   padding:3px 8px; border-radius:8px; box-shadow:0 1px 5px rgba(0,0,0,.18);
   white-space:nowrap; transform:translate(-50%,-50%); }
+/* 리포트 지도 — 집 위치점 + 사신사(현무·청룡·백호·주작)·득수 라벨 */
+.repdot{ width:16px; height:16px; border-radius:50%; background:var(--seal); border:3px solid #fff;
+  box-shadow:0 2px 7px rgba(0,0,0,.4); }
+.lmk{ transform:translate(-50%,-50%); white-space:nowrap; background:rgba(255,255,255,.97); color:#1f2430;
+  font-size:11px; font-weight:800; padding:4px 9px; border-radius:9px; box-shadow:0 2px 9px rgba(0,0,0,.2);
+  border-left:3px solid var(--ink-faint); line-height:1.25; }
+.lmk b{ display:block; font-size:9px; letter-spacing:.02em; margin-bottom:1px; font-weight:800; }
+.lmk.back{ border-left-color:#2f9e6f; } .lmk.back b{ color:#2f9e6f; }
+.lmk.left{ border-left-color:var(--gwan); } .lmk.left b{ color:var(--gwan); }
+.lmk.right{ border-left-color:#8b94a3; } .lmk.right b{ color:#6b7484; }
+.lmk.front{ border-left-color:#2f8fd8; } .lmk.front b{ color:#2f8fd8; }
+@media (prefers-color-scheme:dark){ .lmk{ background:rgba(30,33,37,.97); color:#e9ebee; } }
+.lmk-key{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--ink-soft); }
+.lmk-key i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
 .pin{ position:absolute; transform:translate(-50%,-100%); text-align:center;
   cursor:pointer; transition:transform .12s; }
 .pin:active{ transform:translate(-50%,-100%) scale(.94); }
@@ -435,6 +449,27 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
 .tabbar a.on{ color:var(--seal); }
 .tabbar a.on .ic{ filter:none; }
 
+/* ---------- 명당 랭킹 ---------- */
+.rank-note{ font-size:12.5px; color:var(--ink-soft); line-height:1.55; background:var(--panel-2);
+  border-radius:12px; padding:12px 14px; margin-bottom:14px; }
+.rank-note b{ color:var(--seal); }
+.rank-list{ display:flex; flex-direction:column; gap:8px; }
+.rank-row{ display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  background:var(--panel); border-radius:14px; box-shadow:var(--shadow); padding:13px 14px;
+  transition:transform .08s, box-shadow .2s; }
+.rank-row:active{ transform:scale(.99); }
+.rank-row.ghost{ opacity:.55; box-shadow:inset 0 0 0 1px var(--line); background:transparent; }
+.rank-no{ flex:none; width:30px; text-align:center; font-family:var(--font-serif); font-size:18px;
+  font-weight:800; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+.rank-no.top{ font-size:22px; }
+.rank-info{ flex:1; min-width:0; }
+.rank-info b{ display:block; font-size:15px; font-weight:800; }
+.rank-info small{ display:block; font-size:11.5px; color:var(--ink-soft); margin-top:1px; word-break:keep-all; }
+.rank-sc{ flex:none; text-align:right; }
+.rank-sc b{ font-family:var(--font-serif); font-size:22px; color:var(--seal); }
+.rank-sc i{ display:block; font-size:11px; font-weight:700; color:var(--ink-soft); font-style:normal; margin-top:1px; }
+.rank-sc.muted{ font-size:12px; font-weight:700; color:var(--ink-faint); }
+
 /* ---------- S8 매물 비교 ---------- */
 .cmp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .cmp-col{ background:var(--panel); border-radius:14px; box-shadow:var(--shadow); padding:16px 12px; text-align:center; }
@@ -597,7 +632,7 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
           <span>⛰️ 배산임수</span><span>💧 물길</span><span>🛣️ 도로살</span><span>🧭 좌향</span><span>🎂 나와 궁합</span>
         </div>
         <div class="trend">
-          <div class="chip"><span class="dot"></span>예시로 보기</div>
+          <div class="chip" onclick="nav('rank')" style="background:var(--seal); color:#fff; box-shadow:none">🏔️ 전국 명당 랭킹</div>
           <div class="chip" onclick="startScan('myeongdang')">종로구 평창동 · <b>82점</b></div>
           <div class="chip" onclick="startScan('biboji')">동대문구 전농동 · <b>49점</b></div>
         </div>
@@ -655,14 +690,20 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
       <div class="gauges" id="gauges"></div>
     </div>
 
-    <!-- 풍수 오버레이 맵 -->
+    <!-- 풍수 오버레이 맵 — 주변 산·강·사신사·배산임수 -->
     <div class="card" style="padding:0; overflow:hidden">
-      <div style="position:relative; height:230px; background:var(--panel-2)">
+      <div style="position:relative; height:300px; background:var(--panel-2)">
         <div id="repMap" style="position:absolute; inset:0"></div>
       </div>
       <div style="padding:12px 15px">
-        <div class="sub" style="margin-bottom:3px">풍수 오버레이</div>
-        <div style="font-size:12.5px; color:var(--ink-soft)" id="mapLegend">현무 음영 · 수계 흐름 · 좌향 나침반</div>
+        <div class="sub" style="margin-bottom:5px">주변 풍수 지형 · 실측</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px">
+          <span class="lmk-key"><i style="background:#2f9e6f"></i>현무(뒷산)</span>
+          <span class="lmk-key"><i style="background:var(--gwan)"></i>청룡(좌)</span>
+          <span class="lmk-key"><i style="background:#8b94a3"></i>백호(우)</span>
+          <span class="lmk-key"><i style="background:#2f8fd8"></i>득수·주작(앞)</span>
+        </div>
+        <div style="font-size:12px; color:var(--ink-soft)" id="mapLegend">뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다</div>
       </div>
     </div>
 
@@ -720,12 +761,22 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
     <div id="mypageBody" class="pad" style="padding-top:8px"></div>
   </section>
 
+  <!-- ============ 명당 랭킹 (전국 실측) ============ -->
+  <section class="panel" id="rank">
+    <div class="viewbar">
+      <span class="back" onclick="nav('home')">‹</span>
+      <h2>명당 랭킹</h2><span class="sub">전국 실측 순위</span>
+    </div>
+    <div id="rankBody" class="pad" style="padding-top:8px"></div>
+  </section>
+
   <!-- 결과 패널 배경 딤(모바일) -->
   <div class="pscrim" id="pscrim" onclick="closePanel()"></div>
 
   <!-- 하단 탭바 (전 화면 공통) -->
   <nav class="tabbar" id="tabbar">
     <a class="on" data-nav="home" onclick="nav('home')"><span class="ic">🗺️</span>지도</a>
+    <a data-nav="rank" onclick="nav('rank')"><span class="ic">🏔️</span>명당 랭킹</a>
     <a data-nav="compare" onclick="nav('compare')"><span class="ic">⚖️</span>집 비교</a>
     <a data-nav="monthly" onclick="nav('monthly')"><span class="ic">🀄</span>이사 날짜</a>
     <a data-nav="mypage" onclick="nav('mypage')"><span class="ic">🧙</span>내 기록</a>
@@ -837,16 +888,21 @@ const FRIENDLY = {R01:'뒷산의 받침',R02:'양옆의 감쌈',R03:'물길',R04
   R06:'휜 도로',R07:'고가·철로',R08:'집의 방향',R09:'층수 기운',R10:'주변 환경'};
 let CUR = 'myeongdang';
 
-/* 전국 명당(名堂) — 예로부터 풍수 좋기로 이름난 실제 터. 탭하면 그 자리를 실측 감정. */
+/* 전국 명당(名堂) — 예로부터 풍수 좋기로 이름난 실제 터. 탭하면 그 자리를 실측 감정.
+   랭킹은 이 목록을 실제 지형(산·강·도로 등)으로 측정해 매긴다. */
 const HOTSPOTS = [
-  {name:'성북동',   sub:'서울 성북',  lat:37.5957, lon:126.9985},
-  {name:'부암동',   sub:'서울 종로',  lat:37.5926, lon:126.9660},
-  {name:'남연군 묘', sub:'예산 가야산', lat:36.6689, lon:126.8430},
-  {name:'하회마을',  sub:'안동',       lat:36.5390, lon:128.5180},
-  {name:'양동마을',  sub:'경주',       lat:35.9987, lon:129.2559},
-  {name:'닭실마을',  sub:'봉화',       lat:36.9430, lon:128.7360},
-  {name:'선교장',   sub:'강릉',       lat:37.7870, lon:128.8840},
-  {name:'한옥마을',  sub:'전주',       lat:35.8150, lon:127.1530}
+  {name:'평창동',   sub:'서울 종로',   lat:37.6119, lon:126.9740, why:'북한산 배산임수'},
+  {name:'성북동',   sub:'서울 성북',   lat:37.5957, lon:126.9985, why:'북악·응봉 감쌈'},
+  {name:'부암동',   sub:'서울 종로',   lat:37.5926, lon:126.9660, why:'인왕산 자락'},
+  {name:'한남동',   sub:'서울 용산',   lat:37.5340, lon:127.0000, why:'남산 남향·한강'},
+  {name:'남연군 묘', sub:'예산 덕산',   lat:36.6689, lon:126.8430, why:'가야산 대명당'},
+  {name:'하회마을',  sub:'안동',        lat:36.5390, lon:128.5180, why:'낙동강 물돌이'},
+  {name:'양동마을',  sub:'경주',        lat:35.9987, lon:129.2559, why:'설창산 물(勿)자형'},
+  {name:'닭실마을',  sub:'봉화',        lat:36.9430, lon:128.7360, why:'금계포란형'},
+  {name:'회룡포',   sub:'예천',        lat:36.5860, lon:128.2760, why:'내성천 육지 속 섬'},
+  {name:'선교장',   sub:'강릉',        lat:37.7870, lon:128.8840, why:'시루봉 배산'},
+  {name:'외암마을',  sub:'아산',        lat:36.7360, lon:126.9160, why:'설화산 배산임수'},
+  {name:'한옥마을',  sub:'전주',        lat:35.8150, lon:127.1530, why:'승암산·전주천'}
 ];
 
 /* ====== 테마 토글 ====== */
@@ -860,7 +916,7 @@ $('#theme').onclick = ()=>{
 
 /* ====== 오버레이 패널 (지도=배경 상시, 결과=모바일 하단시트/PC 좌측패널) ====== */
 let curPanel=null;
-const TAB_FOR = {home:'home', report:'home', compare:'compare', monthly:'monthly', mypage:'mypage'};
+const TAB_FOR = {home:'home', report:'home', rank:'rank', compare:'compare', monthly:'monthly', mypage:'mypage'};
 function setTab(id){ document.querySelectorAll('#tabbar a').forEach(a=>a.classList.toggle('on', a.dataset.nav===TAB_FOR[id])); }
 function openPanel(id){
   curPanel=id;
@@ -880,6 +936,7 @@ function closePanel(){
 function show(id){ if(id==='home') closePanel(); else openPanel(id); }   // 호환 별칭
 function nav(id){
   if(id==='home'){ closePanel(); return; }
+  if(id==='rank') renderRank();
   if(id==='compare') renderCompare();
   if(id==='monthly') renderMonthly();
   if(id==='mypage') renderMypage();
@@ -1130,6 +1187,23 @@ async function assessLive(qs){
 function searchAddr(){
   const inp=$('#homeSearch'); const q=(inp && inp.value || '').trim();
   if(!q){ inp && inp.focus(); return; }
+  // 네이버 지오코더(클라이언트)로 한국 주소를 정확히 좌표 변환 → 그 자리 실측 감정.
+  // 지오코더가 없거나 실패하면 서버 지오코딩으로 폴백.
+  if(naverOK() && naver.maps.Service && naver.maps.Service.geocode){
+    try{
+      naver.maps.Service.geocode({ query:q }, function(status, resp){
+        const ok = status===naver.maps.Service.Status.OK;
+        const list = ok && resp && resp.v2 && resp.v2.addresses;
+        if(list && list.length){
+          const a=list[0];
+          assessCoord(parseFloat(a.y), parseFloat(a.x));
+        }else{
+          assessLive('address='+encodeURIComponent(q));
+        }
+      });
+      return;
+    }catch(_){ /* 폴백 */ }
+  }
   assessLive('address='+encodeURIComponent(q));
 }
 function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
@@ -1188,9 +1262,14 @@ function renderReport(id){
     }
   });
 
-  // 오버레이 맵
+  // 오버레이 맵 — 실제 주변 산·강 이름을 요약해 안내
   drawRepMap(d);
-  $('#mapLegend').textContent=d.legend;
+  const lm=d.landmarks||{};
+  const names=[lm.back&&('뒷산 '+lm.back), lm.water&&('앞물 '+lm.water),
+    lm.left&&('좌 '+lm.left), lm.right&&('우 '+lm.right)].filter(Boolean);
+  $('#mapLegend').textContent = names.length
+    ? ('실측: '+names.join(' · '))
+    : '뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다';
 
   // 근거 레이어 탭
   const tabs=$('#evtabs'); tabs.innerHTML='';
@@ -1216,20 +1295,32 @@ function drawRepMap(d){
     host.innerHTML='';
     repNMap=makeNMap(host, d.coord, 15);
     const seal=css('--seal');
-    new naver.maps.Circle({ map:repNMap, center:nLatLng(d.coord), radius:400,
-      strokeColor:seal, strokeWeight:1, fillColor:seal, fillOpacity:0.08 });
-    new naver.maps.Marker({ position:nLatLng(d.coord), map:repNMap,
-      icon:{ content:'<div style="width:16px;height:16px;border-radius:50%;background:'+seal+';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>', anchor:new naver.maps.Point(8,8) }});
+    const lat=d.coord[0], lon=d.coord[1];
     const m=d.map||{}, lm=d.landmarks||{};
-    const addL=(brg,dist,txt)=>{ const p=llOffset(d.coord[0],d.coord[1],dist,brg);
+    const facing=(m.facing!=null? m.facing : 180);
+    const backBrg=m.ridge? m.ridge.bearing : (facing+180)%360;
+
+    // 명당 반경
+    new naver.maps.Circle({ map:repNMap, center:nLatLng(d.coord), radius:340,
+      strokeColor:seal, strokeWeight:1, fillColor:seal, fillOpacity:0.06 });
+    // 배산임수 축 — 뒷산(현무) → 집 → 앞(주작·득수)
+    const backPt=llOffset(lat,lon,820,backBrg), frontPt=llOffset(lat,lon,540,facing);
+    new naver.maps.Polyline({ map:repNMap, path:[nLatLng(backPt),nLatLng(d.coord),nLatLng(frontPt)],
+      strokeColor:seal, strokeWeight:2, strokeOpacity:.5, strokeStyle:'shortdash' });
+    // 집 위치
+    new naver.maps.Marker({ position:nLatLng(d.coord), map:repNMap, zIndex:100,
+      icon:{ content:'<div class="repdot"></div>', anchor:new naver.maps.Point(11,11) }});
+    // 사신사 + 득수 — 실제 산·강 이름을 방위별로
+    const g=(brg,dist,role,name,icon,cls)=>{ if(!name) return;
+      const p=llOffset(lat,lon,dist,brg);
       new naver.maps.Marker({ position:nLatLng(p), map:repNMap,
-        icon:{ content:`<div class="maplabel">${txt}</div>`, anchor:new naver.maps.Point(0,0) }}); };
-    if(m.ridge && lm.back) addL(m.ridge.bearing, 750, '⛰️ '+lm.back);
-    if(m.water && lm.water) addL((m.facing||180), 380, '💧 '+lm.water);
-    if(lm.left) addL(((m.facing||180)+90)%360, 500, lm.left);
-    if(lm.right) addL(((m.facing||180)-90+360)%360, 500, lm.right);
+        icon:{ content:`<div class="lmk ${cls}"><b>${icon} ${role}</b>${name}</div>`, anchor:new naver.maps.Point(0,0) }}); };
+    g(backBrg, 820, '현무(뒷산)', lm.back, '⛰️', 'back');
+    g((facing+90)%360, 560, '청룡(좌)', lm.left, '⛰️', 'left');
+    g((facing-90+360)%360, 560, '백호(우)', lm.right, '⛰️', 'right');
+    g(facing, 540, lm.water?'득수(물)':'주작(앞)', lm.water||lm.front, lm.water?'💧':'🏞️', 'front');
   } else {
-    host.innerHTML='<canvas style="width:100%;height:100%"></canvas>';
+    host.innerHTML='<canvas class="fallcv" style="width:100%;height:100%"></canvas>';
     drawTerrain(host.querySelector('canvas'), d, 1);
   }
 }
@@ -1468,6 +1559,68 @@ function runPrecision(){
     <div class="acc-note" style="text-align:center; justify-content:center"><b>정밀 감정 90% 반영 완료</b> — 리포트 정확도가 올라갔어요</div>
     <div style="height:14px"></div>
     <button class="btn seal" onclick="closeSheet('precisionSheet')">리포트로 돌아가기</button>`;
+}
+
+/* ============================================================
+   명당 랭킹 — 전국 명당을 실제 지형으로 측정해 순위
+   ============================================================ */
+const RANK = { started:false, done:false, items:[] };
+function renderRank(){
+  const body=$('#rankBody');
+  if(!RANK.started){
+    RANK.started=true;
+    RANK.items = HOTSPOTS.map(h=>Object.assign({}, h, {score:null, grade:null, d:null, state:'wait'}));
+    body.innerHTML = `<div class="rank-note">전국 이름난 명당을 <b>실제 지형(산·강·도로)</b>으로 측정해 순위를 매깁니다. 탭하면 그 자리 상세 풍수를 봐요.</div>
+      <div id="rankList" class="rank-list"></div>
+      <div class="demo-note" id="rankStat" style="margin-top:14px">측정 준비 중…</div>`;
+    paintRank();
+    runRank();
+  } else {
+    paintRank();
+  }
+}
+async function runRank(){
+  let idx=0; const CONC=2;
+  async function worker(){
+    while(idx<RANK.items.length){
+      const it=RANK.items[idx++]; it.state='run'; paintRank();
+      try{
+        const res=await fetch('/api/assess?lat='+it.lat.toFixed(6)+'&lon='+it.lon.toFixed(6));
+        const d=await res.json();
+        if(d && !d.error && typeof d.site_score==='number'){
+          it.score=d.site_score; it.grade=d.grade; it.d=d; it.state='ok';
+        } else { it.state='err'; }
+      }catch(_){ it.state='err'; }
+      paintRank();
+    }
+  }
+  await Promise.all(Array.from({length:CONC}, ()=>worker()));
+  RANK.done=true; paintRank();
+}
+function paintRank(){
+  const list=$('#rankList'); if(!list) return;
+  const ok=RANK.items.filter(i=>i.state==='ok').slice().sort((a,b)=>b.score-a.score);
+  const rest=RANK.items.filter(i=>i.state!=='ok');
+  let html='';
+  ok.forEach((it,i)=>{
+    const key='_rank'+HOTSPOTS.indexOf(it); DATA[key]=it.d;
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    html+=`<button class="rank-row" onclick="renderReport('${key}')">
+      <span class="rank-no ${i<3?'top':''}">${medal}</span>
+      <span class="rank-info"><b>${it.name}</b><small>${it.sub} · ${it.why||''}</small></span>
+      <span class="rank-sc"><b class="tnum">${it.score}</b><i>${it.grade}</i></span></button>`;
+  });
+  rest.forEach(it=>{
+    const st = it.state==='run'?'측정 중…' : it.state==='err'?'측정 실패' : '대기';
+    html+=`<div class="rank-row ghost">
+      <span class="rank-no">·</span>
+      <span class="rank-info"><b>${it.name}</b><small>${it.sub}</small></span>
+      <span class="rank-sc muted">${st}</span></div>`;
+  });
+  list.innerHTML=html;
+  const stat=$('#rankStat');
+  if(stat){ const n=ok.length, t=RANK.items.length;
+    stat.innerHTML = RANK.done ? `실측 완료 · ${n}곳 순위 (실패 ${t-n})` : `실측 중… ${n}/${t}곳 완료`; }
 }
 
 /* ============================================================
