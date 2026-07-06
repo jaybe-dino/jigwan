@@ -1,8 +1,8 @@
 <title>지관 — 이사 갈 집, 터 보기</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- 실제 지도 (Leaflet + OSM 타일). 서버 배포 시 동작, 오프라인(아티팩트)이면 캔버스로 폴백 -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- 네이버 지도 (등록 도메인에서만 동작 · 아니면 캔버스 폴백) -->
+<script>function navermap_authFailure(){ window.__naverAuthFail=true; }</script>
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=f3uixmqkl0"></script>
 <style>
 /* ============================================================
    지관(智官) — 모바일 웹 UI 프로토타입
@@ -902,8 +902,12 @@ function hexA(hex,a){ // hex or var → rgba
 }
 
 // 직방/네이버풍 클린 라이트 베이스맵 (CartoDB Positron, 무료·키 불필요)
-const OSM_TILE='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
-let homeLmap=null, repLmap=null;
+let homeNMap=null, repNMap=null;
+function naverOK(){ return !!(window.naver && naver.maps && !window.__naverAuthFail); }
+function nLatLng(a){ return new naver.maps.LatLng(a[0], a[1]); }
+function makeNMap(host, center, zoom){
+  return new naver.maps.Map(host, { center:nLatLng(center), zoom,
+    logoControl:false, mapDataControl:false, scaleControl:false, zoomControl:false }); }
 
 // 방위·거리로 실좌표 오프셋 (실제 지도 라벨 배치용)
 function llOffset(lat,lon,dist,brg){
@@ -916,25 +920,22 @@ function llOffset(lat,lon,dist,brg){
 function drawHomeMap(){
   const host=$('#homeMap');
   document.querySelectorAll('.pin').forEach(p=>p.remove());
-  if(window.L){
-    if(homeLmap) return homeLmap.invalidateSize();
-    homeLmap=L.map(host,{zoomControl:false, attributionControl:false, scrollWheelZoom:false});
-    homeLmap.setView([37.5665,126.9780], 11);
-    L.tileLayer(OSM_TILE,{maxZoom:19}).addTo(homeLmap);
+  if(naverOK()){
+    if(homeNMap){ naver.maps.Event.trigger(homeNMap,'resize'); return; }
+    homeNMap=makeNMap(host,[37.5665,126.9780],11);
     [['myeongdang',DATA.myeongdang],['biboji',DATA.biboji]].forEach(([id,d])=>{
       if(!d.coord) return;
-      const icon=L.divIcon({className:'', iconSize:[86,30], iconAnchor:[43,34],
-        html:`<div class="mappin"><span class="sc">${d.site_score}</span>점</div><div class="tip"></div>`});
-      L.marker(d.coord,{icon}).addTo(homeLmap).on('click',()=>startScan(id));
+      const mk=new naver.maps.Marker({ position:nLatLng(d.coord), map:homeNMap,
+        icon:{ content:`<div class="mappin"><span class="sc">${d.site_score}</span>점</div>`, anchor:new naver.maps.Point(30,34) }});
+      naver.maps.Event.addListener(mk,'click',()=>startScan(id));
     });
     // 지도 아무 데나 탭 → 그 좌표의 풍수 (전국 어디든)
-    homeLmap.on('click', e=> assessCoord(e.latlng.lat, e.latlng.lng));
-    setTimeout(()=>homeLmap.invalidateSize(),150);
+    naver.maps.Event.addListener(homeNMap,'click', e=> assessCoord(e.coord.lat(), e.coord.lng()));
   } else {
     canvasHomeMap(host);
   }
 }
-function canvasHomeMap(host){   // Leaflet 없을 때(오프라인) 폴백
+function canvasHomeMap(host){   // 네이버 지도 없을 때(오프라인) 폴백
   host.innerHTML='<canvas style="width:100%;height:100%"></canvas>';
   const cv=host.querySelector('canvas'); const {ctx,w,h}=fitCanvas(cv);
   ctx.clearRect(0,0,w,h);
@@ -1065,23 +1066,22 @@ function renderReport(id){
 }
 function drawRepMap(d){
   const host=$('#repMap');
-  if(window.L && d.coord && d.coord[0]){
-    if(repLmap){ repLmap.remove(); repLmap=null; }
+  if(naverOK() && d.coord && d.coord[0]){
     host.innerHTML='';
-    repLmap=L.map(host,{zoomControl:false, attributionControl:false, scrollWheelZoom:false});
-    repLmap.setView(d.coord, 15);
-    L.tileLayer(OSM_TILE,{maxZoom:19}).addTo(repLmap);
+    repNMap=makeNMap(host, d.coord, 15);
     const seal=css('--seal');
-    L.circle(d.coord,{radius:400,color:seal,weight:1,fillColor:seal,fillOpacity:0.06}).addTo(repLmap);
-    L.circleMarker(d.coord,{radius:7,color:'#fff',weight:2,fillColor:seal,fillOpacity:1}).addTo(repLmap);
+    new naver.maps.Circle({ map:repNMap, center:nLatLng(d.coord), radius:400,
+      strokeColor:seal, strokeWeight:1, fillColor:seal, fillOpacity:0.08 });
+    new naver.maps.Marker({ position:nLatLng(d.coord), map:repNMap,
+      icon:{ content:'<div style="width:16px;height:16px;border-radius:50%;background:'+seal+';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>', anchor:new naver.maps.Point(8,8) }});
     const m=d.map||{}, lm=d.landmarks||{};
     const addL=(brg,dist,txt)=>{ const p=llOffset(d.coord[0],d.coord[1],dist,brg);
-      L.marker(p,{icon:L.divIcon({className:'',iconSize:[1,1],html:`<div class="maplabel">${txt}</div>`})}).addTo(repLmap); };
+      new naver.maps.Marker({ position:nLatLng(p), map:repNMap,
+        icon:{ content:`<div class="maplabel">${txt}</div>`, anchor:new naver.maps.Point(0,0) }}); };
     if(m.ridge && lm.back) addL(m.ridge.bearing, 750, '⛰️ '+lm.back);
     if(m.water && lm.water) addL((m.facing||180), 380, '💧 '+lm.water);
     if(lm.left) addL(((m.facing||180)+90)%360, 500, lm.left);
     if(lm.right) addL(((m.facing||180)-90+360)%360, 500, lm.right);
-    setTimeout(()=>repLmap.invalidateSize(),150);
   } else {
     host.innerHTML='<canvas style="width:100%;height:100%"></canvas>';
     drawTerrain(host.querySelector('canvas'), d, 1);

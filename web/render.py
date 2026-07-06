@@ -203,9 +203,13 @@ def build_data() -> dict:
 
 
 def render() -> Path:
+    import os
+
+    naver_key = os.environ.get("NAVER_MAP_CLIENT_ID") or "f3uixmqkl0"
     data = build_data()
     html = TEMPLATE.read_text(encoding="utf-8")
     html = html.replace("__DATA__", json.dumps(data, ensure_ascii=False))
+    html = html.replace("__NAVER_KEY__", naver_key)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     return OUT
