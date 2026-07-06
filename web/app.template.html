@@ -933,9 +933,10 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
     <div class="eyebrow">공유 카드</div>
     <h2 style="font-size:20px; margin:8px 0 14px">터의 인장을 나눠보세요</h2>
     <div class="sharecard" id="shareCard"></div>
+    <div class="demo-note" style="margin:12px 0 0">카톡·인스타로 카드 이미지가 그대로 공유돼요</div>
     <div class="share-actions">
-      <button class="btn ghost" onclick="closeSheet('shareSheet')">닫기</button>
-      <button class="btn seal" onclick="toast('데모에서는 저장이 비활성화되어 있어요 🙂')">이미지 저장</button>
+      <button class="btn ghost" onclick="saveShareImage()">이미지 저장</button>
+      <button class="btn seal" onclick="shareResult()">💬 공유하기</button>
     </div>
   </div>
 </div>
@@ -1304,7 +1305,7 @@ function finishScan(id){
 }
 
 /* 홈 검색·지도 탭 → 실제 엔진(/api/assess). 탭 즉시 로딩 표시(무반응 방지). */
-async function assessLive(qs){
+async function assessLive(qs, label){
   beginScan();
   const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), 22000);
   try{
@@ -1313,6 +1314,8 @@ async function assessLive(qs){
     if(!res.ok) throw new Error('server');
     const d=await res.json();
     if(d.error) throw new Error(d.error);
+    // 검색·지오코딩으로 온 실제 주소를 리포트에 표시(‘지도에서 선택한 자리’ 대신)
+    if(label){ d.addr=label; d.addrShort=(dongOf(label)||label); }
     DATA['_live']=d; finishScan('_live'); return true;
   }catch(_){
     clearTimeout(to); endScan();
@@ -1320,6 +1323,7 @@ async function assessLive(qs){
     return false;
   }
 }
+function dongOf(addr){ const m=(addr||'').match(/([가-힣]+[동리가])(?:\s|$|\d)/); return m?m[1]:''; }
 function toast(msg){
   let t=document.getElementById('toast');
   if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t); }
@@ -1333,7 +1337,7 @@ function searchAddr(){
   if(inp) inp.blur();                // 모바일 키보드 닫기
 
   let done=false;
-  const serverFallback=()=>{ if(done) return; done=true; assessLive('address='+encodeURIComponent(q)); };
+  const serverFallback=()=>{ if(done) return; done=true; assessLive('address='+encodeURIComponent(q), q); };
   // 지오코더가 없거나 콜백이 4초 안에 안 오면 서버 지오코딩으로 폴백
   const fbTimer=setTimeout(serverFallback, 4000);
 
@@ -1347,13 +1351,16 @@ function searchAddr(){
       const ok = (status===naver.maps.Service.Status.OK);
       const list = ok && resp && resp.v2 && resp.v2.addresses;
       const a = list && list.length ? list[0] : null;
-      if(a && a.y && a.x){ done=true; assessCoord(parseFloat(a.y), parseFloat(a.x)); }
-      else serverFallback();          // 결과 없음 → 서버 지오코딩
+      if(a && a.y && a.x){
+        done=true;
+        const label=a.roadAddress || a.jibunAddress || q;   // 네이버가 정규화한 실제 주소
+        assessCoord(parseFloat(a.y), parseFloat(a.x), label);
+      } else serverFallback();          // 결과 없음 → 서버 지오코딩
     });
   }catch(_){ clearTimeout(fbTimer); serverFallback(); }
 }
-function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
-  assessLive('lat='+lat.toFixed(6)+'&lon='+lon.toFixed(6));
+function assessCoord(lat, lon, label){   // 지도 탭·검색 → 그 좌표 풍수
+  assessLive('lat='+lat.toFixed(6)+'&lon='+lon.toFixed(6), label);
 }
 function openHotspot(h){   // 명당 마커 탭 → 미리 축적된 리포트 즉시, 없으면 실시간
   const idx=RANK_BY_NAME[h.name];
@@ -1622,7 +1629,9 @@ async function runCompat(){
 /* ============================================================
    공유 카드
    ============================================================ */
+let SHARE_PCT=null;
 function openShare(pct){
+  SHARE_PCT=pct;
   const d=DATA[CUR]; const tb=d.terbti||{}; const tip=(d.advice&&d.advice[0])||null;
   const th=tbTheme(tb.code), rar=tbRarity(tb.code);
   const card=$('#shareCard');
@@ -1641,6 +1650,81 @@ function openShare(pct){
   </div>`;
   closeSheet('compatSheet');
   $('#shareSheet').classList.add('active');
+}
+
+/* 공유 카드를 실제 PNG로 그린다(1080×1350) — 카톡·인스타에 이미지 그대로 공유 */
+const SHARE_FONT="'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif";
+function wrapCenter(x,text,cx,y,maxW,lh){
+  let line='', lines=[];
+  for(const ch of (text||'')){ const t=line+ch;
+    if(x.measureText(t).width>maxW && line){ lines.push(line); line=ch; } else line=t; }
+  if(line) lines.push(line);
+  lines.forEach((l,i)=>x.fillText(l,cx,y+i*lh));
+  return lines.length;
+}
+function makeShareCanvas(d){
+  const tb=d.terbti||{}, th=tbTheme(tb.code), rar=tbRarity(tb.code), tip=(d.advice&&d.advice[0]);
+  const W=1080,H=1350, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const x=cv.getContext('2d');
+  const g=x.createLinearGradient(0,0,W*0.6,H); g.addColorStop(0,th.c1); g.addColorStop(1,th.c2);
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='#fff';
+  x.textBaseline='alphabetic';
+  // 상단 바
+  x.globalAlpha=.9; x.font='700 34px '+SHARE_FONT;
+  x.textAlign='left'; x.fillText('智官 · 지관',72,96);
+  x.textAlign='right'; x.fillText(`${rar.t} · 상위 ${rar.p}%`,W-72,96); x.globalAlpha=1;
+  // 이모지
+  x.textAlign='center'; x.font='250px '+SHARE_FONT; x.fillText(tb.emoji||'🏠',W/2,500);
+  // 유형명
+  x.font='800 128px '+SHARE_FONT; x.fillText(tb.name||('「'+d.grade+'」'),W/2,660);
+  x.globalAlpha=.95; x.font='600 46px '+SHARE_FONT; x.fillText(tb.tag||d.liner||'',W/2,730); x.globalAlpha=1;
+  // 점수
+  x.font='700 62px '+SHARE_FONT;
+  x.fillText(`${d.site_score}점 · ${d.grade}`+(SHARE_PCT!=null?`  ·  궁합 ${SHARE_PCT}%`:''),W/2,830);
+  // 조언 박스
+  if(tip){
+    x.fillStyle='rgba(255,255,255,.18)'; roundRect(x,80,890,W-160,210,30); x.fill();
+    x.fillStyle='#fff'; x.font='800 48px '+SHARE_FONT; x.fillText(`${tip.icon} ${tip.title}`,W/2,965);
+    x.globalAlpha=.94; x.font='500 38px '+SHARE_FONT; wrapCenter(x,tip.action,W/2,1025,W-240,50); x.globalAlpha=1;
+  }
+  // 푸터
+  x.globalAlpha=.85; x.font='600 36px '+SHARE_FONT; x.fillText('지관에서 우리집 터 보기 · jigwan.kr',W/2,H-64); x.globalAlpha=1;
+  return cv;
+}
+function canvasBlob(cv){ return new Promise(r=>cv.toBlob(r,'image/png',0.95)); }
+function shareText(d){
+  const tb=d.terbti||{}, rar=tbRarity(tb.code);
+  return `우리 집은 ${tb.name||d.grade} ${tb.emoji||''} (${rar.t}·상위 ${rar.p}%) · ${d.site_score}점\n지관에서 우리집 터 보기`;
+}
+async function shareResult(){
+  const d=DATA[CUR];
+  try{
+    const blob=await canvasBlob(makeShareCanvas(d));
+    const file=new File([blob],'jigwan-terbti.png',{type:'image/png'});
+    const txt=shareText(d);
+    const url=(location.origin&&location.origin.indexOf('http')===0)?location.origin:'https://jigwan.kr';
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], text:txt}); return;   // 카톡·인스타 등 네이티브 시트
+    }
+    if(navigator.share){ await navigator.share({title:'지관', text:txt, url}); return; }
+    // 폴백: 이미지 저장 + 링크 복사
+    saveBlob(blob); copyLink(url);
+  }catch(e){ if(String(e&&e.name)!=='AbortError') toast('공유를 취소했어요.'); }
+}
+function saveShareImage(){
+  const d=DATA[CUR];
+  canvasBlob(makeShareCanvas(d)).then(b=>{ saveBlob(b); toast('이미지를 저장했어요 · 카톡·인스타에 올려보세요!'); });
+}
+function saveBlob(blob){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='jigwan-terbti.png'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function copyLink(url){
+  url=url||location.href;
+  if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>toast('링크를 복사했어요!')).catch(()=>toast(url));
+  else toast(url);
 }
 
 /* ============================================================
