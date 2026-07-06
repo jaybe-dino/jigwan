@@ -999,11 +999,14 @@ function llOffset(lat,lon,dist,brg){
 }
 
 function sizeHomeMap(){
-  // dvh 대신 실제 픽셀 높이를 직접 지정 — iOS Safari 등에서 로드 시점에 100dvh가
-  // 0으로 잡혀 네이버 지도가 0크기로 생성돼 흰 화면이 되는 것을 방지(리포트 지도처럼 확정 높이).
+  // 실제 픽셀 높이를 직접 지정. 진단 결과 mapwrapH=783인데 hostH=0 →
+  // 네이버가 #homeMap의 position을 바꿔 inset:0 높이 늘림이 무효화돼 0으로 접힘.
+  // 그래서 지도 host(#homeMap)에 픽셀 높이를 '직접' 박아 확실히 크기를 준다.
   const mw=document.querySelector('.mapwrap.fullmap');
+  const host=document.getElementById('homeMap');
   const hpx=(window.innerHeight||document.documentElement.clientHeight||600);
   if(mw) mw.style.height=hpx+'px';
+  if(host){ host.style.height=hpx+'px'; host.style.width='100%'; }
 }
 function drawHomeMap(){
   const host=$('#homeMap');
