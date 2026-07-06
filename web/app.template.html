@@ -159,6 +159,19 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   font-weight:800; font-size:11.5px; padding:5px 10px 5px 8px; border-radius:999px;
   box-shadow:0 3px 10px color-mix(in srgb,var(--seal) 42%,transparent); transform:translate(-50%,-50%); }
 .hotpin .st{ font-size:12px; }
+/* 선택한 자리 핀 (검색·탭·명당 선택 시) */
+.selpin{ position:relative; transform:translate(-50%,-100%); text-align:center; }
+.selpin-b{ display:inline-block; background:linear-gradient(180deg,var(--seal-ink),var(--seal)); color:#fff;
+  font-weight:800; font-size:12.5px; padding:6px 12px; border-radius:13px; white-space:nowrap;
+  box-shadow:0 6px 18px color-mix(in srgb,var(--seal) 48%,transparent); }
+.selpin-b b{ font-variant-numeric:tabular-nums; font-size:15px; margin-right:1px; }
+.selpin-tip{ display:block; width:12px; height:12px; margin:-4px auto 0; border-radius:0 0 3px 0;
+  background:var(--seal); transform:rotate(45deg); box-shadow:3px 3px 8px color-mix(in srgb,var(--seal) 45%,transparent); }
+.selpin-ring{ position:absolute; left:50%; bottom:-3px; width:14px; height:14px; border-radius:50%;
+  transform:translate(-50%,50%); border:2px solid var(--seal); opacity:.7;
+  animation:selpulse 1.7s ease-out infinite; pointer-events:none; }
+@keyframes selpulse{ from{ transform:translate(-50%,50%) scale(.5); opacity:.75; }
+  to{ transform:translate(-50%,50%) scale(2.4); opacity:0; } }
 .map-hint{ margin-top:8px; background:var(--panel); color:var(--ink-soft); font-size:12px; font-weight:600;
   padding:8px 12px; border-radius:12px; box-shadow:var(--shadow); text-align:center; }
 .map-bottom{ position:absolute; left:14px; right:14px; bottom:86px; z-index:5;
@@ -167,6 +180,9 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .map-bottom .mb-title{ font-family:var(--font-serif); font-size:18px; font-weight:700; }
 .map-bottom .mb-sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.45; }
 .map-bottom .trend{ padding:11px 0 0; }
+/* 결과 패널 열리면 안내 카드는 접어 지도·선택 핀에 집중 */
+body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .25s, transform .25s; }
+.map-bottom{ transition:opacity .25s, transform .25s; }
 .fs-legend{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
 .fs-legend span{ font-size:11.5px; font-weight:700; color:var(--ink-soft);
   background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line);
@@ -983,8 +999,25 @@ function hexA(hex,a){ // hex or var → rgba
 }
 
 // 직방/네이버풍 클린 라이트 베이스맵 (CartoDB Positron, 무료·키 불필요)
-var homeNMap=null, repNMap=null;   // var: 인증 재시도 시 window에서 리셋 가능
+var homeNMap=null, repNMap=null, homeSel=null;   // var: 인증 재시도 시 window에서 리셋 가능
 function naverOK(){ return !!(window.naver && naver.maps && !window.__naverAuthFail); }
+
+/* 선택한 자리를 홈 지도에 핀+점수로 표시하고 그쪽으로 부드럽게 이동 */
+function setHomeSelection(d){
+  if(!naverOK() || !homeNMap || !d || !d.coord || !d.coord[0]) return;
+  if(homeSel){ homeSel.setMap(null); homeSel=null; }
+  const gr = d.grade || '';
+  homeSel = new naver.maps.Marker({
+    position:nLatLng(d.coord), map:homeNMap, zIndex:1000,
+    icon:{ content:
+      `<div class="selpin"><div class="selpin-b"><b>${d.site_score}</b>점 · ${gr}</div>`+
+      `<span class="selpin-ring"></span><span class="selpin-tip"></span></div>`,
+      anchor:new naver.maps.Point(0,0) }
+  });
+  const target=nLatLng(d.coord);
+  try{ if(homeNMap.getZoom()<13) homeNMap.setZoom(14,true); homeNMap.panTo(target); }
+  catch(_){ homeNMap.setCenter(target); }
+}
 function nLatLng(a){ return new naver.maps.LatLng(a[0], a[1]); }
 function makeNMap(host, center, zoom){
   return new naver.maps.Map(host, { center:nLatLng(center), zoom,
@@ -1108,6 +1141,7 @@ function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
    ============================================================ */
 function renderReport(id){
   const d=DATA[id]; CUR=id; openPanel('report');
+  setHomeSelection(d);   // 선택한 자리를 배경 지도에 핀+점수로 표시
   $('#rAddr').textContent=d.addr;
   animateNum($('#rScore'), d.site_score, 700);
   $('#rGrade').textContent=d.grade;
@@ -1564,32 +1598,4 @@ addEventListener('orientationchange', ()=>setTimeout(()=>{ sizeHomeMap();
   if(homeNMap&&naverOK()) naver.maps.Event.trigger(homeNMap,'resize'); }, 250));
 // 전체 로드 완료 후 한 번 더 — naver 스크립트/레이아웃 지연으로 빈 지도가 남는 것 방지
 addEventListener('load', ()=>{ sizeHomeMap(); drawHomeMap(); });
-
-/* === 임시 진단 오버레이 (지도 안 뜨는 원인 파악용 · 해결되면 제거) ===
-   화면 좌하단에 지도 상태를 찍어줌. 스크린샷 한 장이면 원인이 특정된다. */
-(function(){
-  function box(){ let d=document.getElementById('mapDbg');
-    if(!d){ d=document.createElement('div'); d.id='mapDbg';
-      d.style.cssText='position:fixed;left:8px;bottom:150px;z-index:9999;'
-        +'font:11px/1.5 ui-monospace,Menlo,monospace;background:rgba(0,0,0,.85);color:#4ade80;'
-        +'padding:9px 11px;border-radius:9px;max-width:92vw;white-space:pre-wrap;'
-        +'box-shadow:0 4px 16px rgba(0,0,0,.45)';
-      (document.body||document.documentElement).appendChild(d); }
-    return d; }
-  function snap(tag){
-    var mw=document.querySelector('.mapwrap.fullmap');
-    var host=document.getElementById('homeMap');
-    var imgs=host?host.querySelectorAll('img').length:0;
-    var cvs=host?host.querySelectorAll('canvas').length:0;
-    box().textContent='[진단 '+tag+']  탭하면 갱신\n'
-      +'naver='+(!!window.naver)+'  maps='+!!(window.naver&&window.naver.maps)+'\n'
-      +'authFail='+window.__naverAuthFail+'  triedAlt='+window.__naverTriedAlt+'\n'
-      +'homeNMap생성='+!!window.homeNMap+'\n'
-      +'mapwrapH='+(mw?mw.offsetHeight:'-')+'  hostH='+(host?host.offsetHeight:'-')+'\n'
-      +'host자식='+(host?host.children.length:'-')+'  img타일='+imgs+'  canvas='+cvs+'\n'
-      +'innerH='+window.innerHeight+'  UA='+(/iPhone|iPad/.test(navigator.userAgent)?'iOS':'기타'); }
-  window.__snap=snap;
-  [500,1500,3000,5000].forEach(function(t){ setTimeout(function(){ snap('t'+t); }, t); });
-  document.addEventListener('click', function(){ snap('tap'); }, true);
-})();
 </script>
