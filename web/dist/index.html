@@ -1020,8 +1020,18 @@ function drawHomeMap(){
     });
     // 지도 아무 데나 탭 → 그 좌표의 풍수 (전국 어디든)
     naver.maps.Event.addListener(homeNMap,'click', e=> assessCoord(e.coord.lat(), e.coord.lng()));
-    // 레이아웃 안정 후 타일 강제 렌더 (초기 빈 지도 방지)
-    [200,600,1200].forEach(t=>setTimeout(()=>{ if(homeNMap && naverOK()) naver.maps.Event.trigger(homeNMap,'resize'); }, t));
+    // 초기 빈 지도 방지 — 컨테이너가 아직 페인트되기 전 생성되면 타일이 안 그려진다.
+    // 크기 재계산(resize)만으론 리페인트가 안 될 때가 있어 중심을 다시 세팅해 강제 렌더.
+    window.__homeReady=false;
+    naver.maps.Event.addListener(homeNMap,'idle',()=>{ window.__homeReady=true; });
+    naver.maps.Event.addListener(homeNMap,'dragstart',()=>{ window.__homeReady=true; });
+    function kickHome(){
+      if(!homeNMap || !naverOK()) return;
+      naver.maps.Event.trigger(homeNMap,'resize');
+      if(!window.__homeReady) homeNMap.setCenter(nLatLng([36.6,127.8]));
+    }
+    requestAnimationFrame(()=>requestAnimationFrame(kickHome));
+    [120,350,700,1400,2400,3600].forEach(t=>setTimeout(kickHome,t));
   } else {
     canvasHomeMap(host);
   }
