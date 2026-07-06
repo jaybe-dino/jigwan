@@ -96,6 +96,118 @@ def _bibo(a: SiteAssessment) -> Optional[dict]:
     return None
 
 
+# ── 터BTI: 집을 한 유형의 '캐릭터'로 (공유용) ──────────────────────────────
+TERBTI = {
+    "geumgo": {"emoji": "🏦", "name": "금고집", "tag": "돈이 새지 않는 터",
+               "desc": "뒤가 든든하고 재물 기운이 고여, 통장이 지켜지는 자리예요."},
+    "river":  {"emoji": "🌊", "name": "강가집", "tag": "기회가 흘러드는 터",
+               "desc": "물길이 감싸 재물과 기회가 자연스레 들어오는 자리예요."},
+    "screen": {"emoji": "🛡️", "name": "병풍집", "tag": "든든하게 지켜주는 터",
+               "desc": "뒷산이 병풍처럼 받쳐 안정감이 큰 자리예요."},
+    "sun":    {"emoji": "☀️", "name": "햇살집", "tag": "볕과 이름이 드는 터",
+               "desc": "좌향이 좋아 볕이 잘 들고 명예 기운이 사는 자리예요."},
+    "forest": {"emoji": "🌳", "name": "숲속집", "tag": "건강이 자라는 터",
+               "desc": "주변 생기·녹지가 좋아 몸과 마음이 편해지는 자리예요."},
+    "harbor": {"emoji": "⛵", "name": "나루터집", "tag": "사람이 오가는 터",
+               "desc": "길과 맞닿아 사람·재물의 왕래가 활발한 자리예요."},
+    "beacon": {"emoji": "🗼", "name": "등대집", "tag": "이름이 빛나는 터",
+               "desc": "명예·인정의 기운이 도드라지는 자리예요."},
+    "fort":   {"emoji": "🏔️", "name": "요새집", "tag": "안정 최강의 터",
+               "desc": "사방이 감싸 흔들림 없이 안정된 자리예요."},
+    "wind":   {"emoji": "🍃", "name": "바람집", "tag": "탁 트인 개방형 터",
+               "desc": "시원하게 열렸지만 기운이 흩어지기 쉬워 비보가 필요한 자리예요."},
+    "gem":    {"emoji": "💎", "name": "원석집", "tag": "다듬으면 빛나는 터",
+               "desc": "지금은 약하나 비보로 다스리면 살아나는 잠재력의 자리예요."},
+}
+
+
+def _ratio(R, code):
+    r = R.get(code)
+    if not r or not r.applicable or r.max_score <= 0:
+        return None
+    return r.score / r.max_score
+
+
+def _terbti(a: SiteAssessment, R) -> dict:
+    g = a.gauges
+    grade = a.grade.value
+    r01, r03, r05, r08 = _ratio(R, "R01"), _ratio(R, "R03"), _ratio(R, "R05"), _ratio(R, "R08")
+    back = r01 is not None and r01 >= 0.6
+    water = r03 is not None and r03 >= 0.6
+    top = max(g, key=g.get)
+    if grade == "비보지":
+        code = "gem"
+    elif grade == "평지" and (r01 is None or r01 < 0.4) and not water:
+        code = "wind"
+    elif water and top == "재물":
+        code = "river"
+    elif back and water:
+        code = "fort"
+    elif back and top == "재물":
+        code = "geumgo"
+    elif top == "명예" and (r08 is not None and r08 >= 0.6):
+        code = "beacon"
+    elif r08 is not None and r08 >= 0.7:
+        code = "sun"
+    elif top == "건강":
+        code = "forest"
+    elif r05 is not None and r05 >= 0.6:
+        code = "harbor"
+    elif back:
+        code = "screen"
+    else:
+        code = "sun"
+    t = dict(TERBTI[code])
+    t["code"] = code
+    t["stats"] = g
+    return t
+
+
+def _advice(a: SiteAssessment, R) -> list:
+    """집의 약점·강점에 맞춘 구체적 개운 처방(비보). 실천 가능한 한 문장 액션."""
+    g = a.gauges
+    grade = a.grade.value
+    r01, r03, r05 = _ratio(R, "R01"), _ratio(R, "R03"), _ratio(R, "R05")
+    tips = []
+
+    def add(icon, title, action, why):
+        tips.append({"icon": icon, "title": title, "action": action, "why": why})
+
+    if r03 is None or r03 < 0.5:
+        add("🪴", "창가에 나무를 두세요",
+            "창가에 키 큰 화분이나 물꽂이(수경) 식물을 두기.",
+            "가까이 물길이 약할 때, 창가의 물·초록이 부족한 재물 기운을 대신 불러옵니다.")
+    if r01 is not None and r01 < 0.5:
+        add("🛏️", "등 뒤를 든든하게",
+            "침대·책상 머리를 벽에 딱 붙이고, 등 뒤가 창이면 블라인드·높은 가구로 막기.",
+            "뒤가 허하면 불안·소모가 커요. 등을 받치면 안정과 집중이 살아납니다.")
+    if r05 is not None and r05 < 0.5:
+        add("🌿", "현관 기운을 부드럽게",
+            "현관 안쪽에 화분이나 가림막(파티션)을 두기.",
+            "곧게 들이치는 도로 기운을 초록이 흩어 부드럽게 바꿉니다.")
+    if g.get("재물", 50) < 58:
+        add("💡", "재물 자리를 밝히세요",
+            "집의 남동쪽 모서리에 밝은 조명 + 잎 넓은 초록 식물 두기.",
+            "남동은 재물이 자라는 방위 — 빛과 생기가 돈 기운을 키웁니다.")
+    if g.get("건강", 50) < 58:
+        add("🌅", "아침 기운을 들이세요",
+            "동쪽 창을 자주 열어 아침 햇빛·바람을 들이고 초록 식물 두기.",
+            "동쪽의 아침 기운이 몸의 생기를 돌립니다.")
+    if g.get("관계", 50) < 58:
+        add("🖼️", "관계에 온기를 더하세요",
+            "거실 남서쪽에 가족·연인 사진과 따뜻한 색 조명 두기.",
+            "남서는 관계·화합의 방위 — 온기가 사이를 데웁니다.")
+    if grade in ("천하명당", "명당", "길지"):
+        add("✨", "좋은 기운을 지키세요",
+            "현관을 밝고 깨끗하게, 신발은 정리해 두기.",
+            "좋은 터일수록 입구가 깨끗해야 기운이 그대로 머뭅니다.")
+    # 기본 개운 루틴(항상 하나)
+    add("🧂", "기본 개운 루틴",
+        "현관 모서리에 굵은소금 한 접시, 주 1회 전체 환기.",
+        "묵은 기운을 걷어내는 가장 쉬운 비보예요.")
+    return tips[:4]
+
+
 def _price(seed: int, up: bool) -> dict:
     """데모용 실거래가 시계열(국토부 병기 자리)."""
     base = 9 + seed % 5
@@ -131,6 +243,9 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         # 궁합 계산에 쓰는 실제 집의 좌향·사택 (없으면 기본값)
         "facing": r08m.get("facing_deg", 180.0),
         "houseSect": r08m.get("sect", "동사택"),
+        # 터BTI(집 유형) + 구체 풍수 조언(개운 처방)
+        "terbti": _terbti(a, R),
+        "advice": _advice(a, R),
         # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.
         # 공유 카드(addrShort)만 §11 낙인방지로 행정동까지 마스킹.
         "addr": a.address,

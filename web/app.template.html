@@ -318,6 +318,45 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .ichip.good{ color:var(--gun); background:color-mix(in srgb,var(--gun) 13%,transparent); }
 .ichip.warn{ color:var(--seal); background:color-mix(in srgb,var(--seal) 12%,transparent); }
 
+/* 터BTI 카드 (집 유형 · 공유용) */
+.terbti-card{ margin:14px 18px; padding:18px; border-radius:var(--radius);
+  background:linear-gradient(150deg, color-mix(in srgb,var(--seal) 12%, var(--panel)), var(--panel));
+  box-shadow:var(--shadow),inset 0 0 0 1px color-mix(in srgb,var(--seal) 16%,transparent); }
+.tb-top{ display:flex; align-items:center; gap:14px; }
+.tb-emoji{ width:58px; height:58px; flex:none; border-radius:16px; background:var(--panel);
+  display:grid; place-items:center; font-size:32px; box-shadow:var(--shadow); }
+.tb-name small{ display:block; font-size:11px; font-weight:700; color:var(--seal); letter-spacing:.02em; }
+.tb-name b{ font-family:var(--font-serif); font-size:24px; letter-spacing:-.01em; }
+.tb-name span{ display:block; font-size:12.5px; color:var(--ink-soft); font-weight:600; margin-top:1px; }
+.tb-desc{ font-size:13.5px; line-height:1.6; color:var(--ink); margin-top:12px; }
+.tb-stats{ display:flex; flex-direction:column; gap:7px; margin-top:13px; }
+.tb-stat{ display:flex; align-items:center; gap:9px; font-size:12px; font-weight:700; color:var(--ink-soft); }
+.tb-stat span{ width:30px; }
+.tb-bar{ flex:1; height:7px; border-radius:4px; background:var(--panel-2); overflow:hidden; }
+.tb-bar > i{ display:block; height:100%; border-radius:4px; }
+.tb-stat b{ width:24px; text-align:right; color:var(--ink); }
+
+/* 풍수 조언 · 개운 처방 */
+.advice-list{ display:flex; flex-direction:column; gap:12px; }
+.advice{ display:flex; gap:12px; align-items:flex-start; }
+.ad-ic{ width:38px; height:38px; flex:none; border-radius:11px; background:var(--panel-2);
+  display:grid; place-items:center; font-size:19px; }
+.ad-body{ min-width:0; }
+.ad-body > b{ font-size:14.5px; font-weight:800; }
+.ad-act{ font-size:13px; color:var(--seal); font-weight:700; margin-top:3px; line-height:1.45; }
+.ad-why{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+
+/* 공유 카드 — 터BTI 버전 */
+.share-tb{ align-items:center; text-align:center; }
+.share-tb .sc-emoji{ font-size:74px; margin-top:auto; line-height:1; }
+.share-tb .sc-type{ font-family:var(--font-serif); font-size:34px; margin-top:8px; }
+.share-tb .sc-tag{ font-size:14px; opacity:.9; margin-top:2px; }
+.share-tb .sc-num{ font-family:var(--font-serif); font-size:22px; color:var(--seal-ink); margin-top:12px; font-variant-numeric:tabular-nums; }
+.share-tb .sc-num small{ font-size:14px; opacity:.85; }
+.share-tb .sc-tip{ margin-top:14px; background:rgba(255,255,255,.12); border-radius:14px; padding:12px 14px; width:100%; }
+.share-tb .sc-tip b{ display:block; font-size:14px; }
+.share-tb .sc-tip span{ display:block; font-size:12.5px; opacity:.85; margin-top:3px; line-height:1.45; }
+
 /* 근거 레이어 아코디언 */
 .evtabs{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
 .evtab{ font-size:12px; font-weight:700; padding:6px 11px; border-radius:999px;
@@ -675,6 +714,9 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
       </div>
     </div>
 
+    <!-- 터BTI (집 유형 · 공유용) -->
+    <div class="terbti-card" id="terbtiCard"></div>
+
     <!-- 이 집, 한마디로 (해석 중심) -->
     <div class="interp-card" id="interpCard"></div>
 
@@ -696,6 +738,12 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
     <div class="card">
       <div class="hd"><h3>이 집 기운</h3><span class="sub">돈 운 위주로</span></div>
       <div class="gauges" id="gauges"></div>
+    </div>
+
+    <!-- 풍수 조언 · 개운 처방 (구체 실천) -->
+    <div class="card">
+      <div class="hd"><h3>풍수 조언 · 개운 처방</h3><span class="sub">오늘 바로 실천</span></div>
+      <div id="adviceList" class="advice-list"></div>
     </div>
 
     <!-- 풍수 오버레이 맵 — 주변 산·강·사신사·배산임수 -->
@@ -1294,6 +1342,32 @@ function renderReport(id){
     $('#dataSrc').innerHTML = html;
   }
 
+  // 터BTI (집 유형)
+  const tb=d.terbti;
+  const tc=$('#terbtiCard');
+  if(tb){
+    const AXCOL={재물:'var(--jae)',건강:'var(--gun)',관계:'var(--gwan)',명예:'var(--myeong)'};
+    const stats=Object.keys(tb.stats||{}).map(k=>
+      `<div class="tb-stat"><span>${k}</span><div class="tb-bar"><i style="width:${tb.stats[k]}%;background:${AXCOL[k]}"></i></div><b class="tnum">${tb.stats[k]}</b></div>`).join('');
+    tc.innerHTML=`<div class="tb-top">
+        <div class="tb-emoji">${tb.emoji}</div>
+        <div class="tb-name"><small>우리 집 유형</small><b>${tb.name}</b><span>${tb.tag}</span></div>
+      </div>
+      <div class="tb-desc">${tb.desc}</div>
+      <div class="tb-stats">${stats}</div>
+      <button class="btn seal" style="margin-top:14px" onclick="openShare(null)">🔮 내 집 유형·조언 공유하기</button>`;
+    tc.style.display='block';
+  } else { tc.style.display='none'; }
+
+  // 풍수 조언 · 개운 처방 (구체 실천)
+  const al=$('#adviceList');
+  const adv=d.advice||[];
+  al.innerHTML = adv.length ? adv.map(t=>
+    `<div class="advice"><div class="ad-ic">${t.icon}</div>
+       <div class="ad-body"><b>${t.title}</b><div class="ad-act">✔ ${t.action}</div>
+       <div class="ad-why">${t.why}</div></div></div>`).join('')
+    : '<div class="muted" style="font-size:13px">이 집은 큰 처방 없이도 무난한 자리예요.</div>';
+
   // AI 지관의 해석 (해석 중심)
   const ic = $('#interpCard');
   const ip = d.interp || {body:'', strengths:[], cautions:[]};
@@ -1340,11 +1414,11 @@ function renderReport(id){
   CATS.forEach(c=>{ const t=el('div','evtab',c); t.onclick=()=>filterRules(c,t); tabs.appendChild(t); });
   renderRules(d, null);
 
-  // 비보
+  // 비보(직충살·비보지 등 뚜렷한 살) — 조언 리스트와 중복되지 않게 '핵심 처방'만 강조
   const slot=$('#biboSlot'); slot.innerHTML='';
-  if(d.bibo){
+  if(d.bibo && d.grade==='비보지'){
     const b=el('div','bibo');
-    b.innerHTML=`<div class="k">오늘의 비보 · 裨補</div><h3>${d.bibo.title}</h3>
+    b.innerHTML=`<div class="k">핵심 비보 · 裨補</div><h3>${d.bibo.title}</h3>
       <p>${d.bibo.body}</p><div class="do">✦ ${d.bibo.action}</div>`;
     slot.appendChild(b);
   }
@@ -1495,15 +1569,15 @@ async function runCompat(){
    공유 카드
    ============================================================ */
 function openShare(pct){
-  const d=DATA[CUR];
+  const d=DATA[CUR]; const tb=d.terbti||{}; const tip=(d.advice&&d.advice[0])||null;
   const card=$('#shareCard');
-  card.innerHTML=`<div class="in">
-    <div class="top"><span>智官 · 지관</span><span>${d.addrShort}</span></div>
-    <div class="stamp"><div class="seal-stamp" style="width:120px;height:120px;transform:rotate(-5deg)">
-      <div class="g" style="font-size:${d.gradeSeal.length>1?'22px':'30px'}">${d.gradeSeal}</div><div class="k">地官</div></div></div>
-    <div class="bignum">${d.site_score}<span style="font-size:26px">점</span></div>
-    <div class="gr">「${d.grade}」${pct!=null?` · 궁합 ${pct}%`:''}</div>
-    <div class="liner">${d.liner}</div>
+  card.innerHTML=`<div class="in share-tb">
+    <div class="top"><span>智官 · 지관</span><span>${d.addrShort||''}</span></div>
+    <div class="sc-emoji">${tb.emoji||'🏠'}</div>
+    <div class="sc-type">${tb.name||('「'+d.grade+'」')}</div>
+    <div class="sc-tag">${tb.tag||d.liner||''}</div>
+    <div class="sc-num">${d.site_score}<small>점 · ${d.grade}</small>${pct!=null?` · 궁합 ${pct}%`:''}</div>
+    ${tip?`<div class="sc-tip"><b>${tip.icon} ${tip.title}</b><span>${tip.action}</span></div>`:''}
     <div class="foot"><div>지관에서 우리집 터 보기<br>jigwan.kr</div><div class="qr"></div></div>
   </div>`;
   closeSheet('compatSheet');
