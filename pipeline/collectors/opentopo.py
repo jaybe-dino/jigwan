@@ -24,7 +24,7 @@ class OpenTopoElevation:
 
     def _fetch(self, pts: Sequence[Tuple[float, float]]) -> List[float]:
         loc = "|".join(f"{lat:.6f},{lon:.6f}" for lat, lon in pts)
-        data = self._http(self._url, params={"locations": loc}, timeout=20)
+        data = self._http(self._url, params={"locations": loc}, timeout=10)
         out = []
         for r in data.get("results") or []:
             e = r.get("elevation")

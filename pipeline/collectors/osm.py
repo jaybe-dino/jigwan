@@ -49,9 +49,8 @@ class OsmCollectors:
         try:
             ring = self.overpass.building_footprint(loc)
             if len(ring) >= 3:
-                roads = self.overpass.roads(loc, 60)
-                toward = roads[0].points[len(roads[0].points) // 2].as_tuple() if roads else None
-                info.facing_deg = facing_from_footprint([p.as_tuple() for p in ring], toward)
+                # 도로 추가 조회는 생략(지연 감소) — 건물 외곽선 주축만으로 좌향 추정
+                info.facing_deg = facing_from_footprint([p.as_tuple() for p in ring], None)
         except Exception:
             pass
         try:

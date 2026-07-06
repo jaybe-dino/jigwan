@@ -24,7 +24,7 @@ class NominatimGeocoder:
             params={"q": address, "format": "json", "limit": 1,
                     "countrycodes": "kr", "accept-language": "ko"},
             headers={"User-Agent": UA},
-            timeout=15,
+            timeout=8,
         )
         if not data:
             raise ValueError(f"주소를 찾을 수 없습니다: {address}")

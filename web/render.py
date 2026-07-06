@@ -308,12 +308,35 @@ def build_compat(facing: float, house_sect: str, year: int, month: int, day: int
     }
 
 
+COORD_CACHE = ROOT / "coord_cache.json"
+
+
 def build_from_coord(lat: float, lon: float) -> dict:
-    """지도에서 찍은 좌표 → UI 데이터. 전국 어디든 탭하면 그 자리 풍수."""
+    """지도에서 찍은 좌표 → UI 데이터. 전국 어디든 탭하면 그 자리 풍수.
+    같은 자리(≈11m) 재조회는 파일 캐시로 즉시 반환(속도·부하 절감)."""
     from pipeline.assemble import assess_coord_auto
 
+    key = f"{lat:.4f},{lon:.4f}"
+
+    def _read_cache():
+        try:
+            return json.loads(COORD_CACHE.read_text(encoding="utf-8")) if COORD_CACHE.exists() else {}
+        except Exception:
+            return {}
+
+    cache = _read_cache()
+    if key in cache:
+        return cache[key]
+
     a = assess_coord_auto(lat, lon)
-    return shape_assessment(a, up=True, share_dong="이 자리", accuracy=55)
+    d = shape_assessment(a, up=True, share_dong="이 자리", accuracy=55)
+    try:
+        cache = _read_cache()
+        cache[key] = d
+        COORD_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+    return d
 
 
 # 전국 명당(名堂) — 예로부터 풍수 좋기로 이름난 실제 터. 빌드 시 실제 지형으로 실측해 랭킹을 미리 축적.

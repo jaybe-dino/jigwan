@@ -1277,14 +1277,15 @@ function startScan(id){
 
 // 탭 즉시 반응: 데이터 오기 전부터 로딩 스캔을 띄운다(진행바 90%까지 점근)
 const LOAD_PH={ map:{facing:180, facingLabel:'', ridge:null, dragon:false, water:null, roadSal:null, legend:''} };
+const LOAD_MSGS=['주변 지형을 살피는 중…','산과 물길을 확인하는 중…','도로·주변 시설을 읽는 중…','좌향과 국세를 재는 중…','거의 다 됐어요…'];
 function beginScan(){
   endScan(); $('#scan').classList.add('active');
-  $('#scanStep').textContent='주변 지형을 살피는 중…';
   const cv=$('#scanMap'); const t0=performance.now();
   (function frame(now){
-    const t=(now-t0)/1000; const p=1-Math.exp(-t*1.1);   // 0 → ~1 점근
-    drawTerrain(cv, LOAD_PH, 0.05);                        // 등고선만(로딩)
-    $('#scanFill').style.width=Math.min(90, p*90)+'%';
+    const t=(now-t0)/1000; const p=1-Math.exp(-t*0.5);    // 천천히 점근(실측 대기 반영)
+    drawTerrain(cv, LOAD_PH, 0.05);                         // 등고선만(로딩)
+    $('#scanFill').style.width=Math.min(93, p*93)+'%';
+    $('#scanStep').textContent=LOAD_MSGS[Math.min(LOAD_MSGS.length-1, Math.floor(t/3.5))];
     scanRAF=requestAnimationFrame(frame);
   })(t0);
 }
@@ -1307,7 +1308,7 @@ function finishScan(id){
 /* 홈 검색·지도 탭 → 실제 엔진(/api/assess). 탭 즉시 로딩 표시(무반응 방지). */
 async function assessLive(qs, label){
   beginScan();
-  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), 22000);
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), 45000);
   try{
     const res=await fetch('/api/assess?'+qs, {signal:ctrl.signal});
     clearTimeout(to);

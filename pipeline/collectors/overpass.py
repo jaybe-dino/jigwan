@@ -36,7 +36,7 @@ def _post(query: str, http=get_json) -> dict:
     last = None
     for ep in ENDPOINTS:
         try:
-            return http(ep, params={"data": query}, timeout=40)
+            return http(ep, params={"data": query}, timeout=13)   # 빠른 실패 → 다음 미러
         except Exception as e:  # 타임아웃·429·5xx → 다음 미러
             last = e
             continue
@@ -63,7 +63,7 @@ class OverpassClient:
 
     def _q(self, body: str) -> List[dict]:
         try:
-            data = _post(f"[out:json][timeout:25];({body});out geom center 300;", self._http)
+            data = _post(f"[out:json][timeout:12];({body});out geom center 300;", self._http)
             return data.get("elements") or []
         except Exception:
             return []  # 네트워크/타임아웃 시 판정을 끊지 않고 빈 결과
