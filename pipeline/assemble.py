@@ -6,6 +6,9 @@
 
 from __future__ import annotations
 
+import os
+import time
+
 from engine.models import Building, Precision, SiteFeatures
 from engine.scoring import SiteAssessment, assess_site
 from pipeline.collectors.base import Collectors
@@ -13,19 +16,28 @@ from pipeline.collectors.base import Collectors
 DEFAULT_RADIUS_M = 1500.0  # 현무/사신사 최대 반경에 맞춤
 
 
+def _deadline() -> float:
+    # 실측 총 시간 예산(초). 초과하면 남은 수집은 건너뛰고 부분 데이터로 즉시 응답.
+    return time.time() + float(os.environ.get("JIGWAN_ASSESS_BUDGET", "22"))
+
+
+def _within(deadline: float, fn, default):
+    """예산 안이면 수집을 시도하고, 초과했거나 실패하면 기본값(빈 데이터)."""
+    if time.time() > deadline:
+        return default
+    try:
+        return fn()
+    except Exception:
+        return default
+
+
 def assemble_features(
     address: str, collectors: Collectors, radius_m: float = DEFAULT_RADIUS_M
 ) -> SiteFeatures:
-    info = collectors.building(address)
+    info = collectors.building(address)  # 주소 지오코딩 실패는 그대로 전파(잘못된 주소 알림)
     loc = info.location
-    # 실제 지형지물 이름(산·강) — 수집기가 제공하면 해석에 반영
-    landmarks = None
+    dl = _deadline()
     lm_fn = getattr(collectors, "landmarks", None)
-    if callable(lm_fn):
-        try:
-            landmarks = lm_fn(loc)
-        except Exception:
-            landmarks = None
     return SiteFeatures(
         address=address,
         building=Building(
@@ -34,14 +46,14 @@ def assemble_features(
             ground_elevation_m=info.ground_elevation_m,
             floors=info.floors,
         ),
-        dem=collectors.dem(loc, radius_m),
-        streams=collectors.streams(loc, radius_m),
-        roads=collectors.roads(loc, 200.0),
-        rails_overpasses=collectors.rails_overpasses(loc, 500.0),
-        pois=collectors.pois(loc, 500.0),
-        historical=collectors.historical(loc),
+        dem=_within(dl, lambda: collectors.dem(loc, radius_m), []),
+        streams=_within(dl, lambda: collectors.streams(loc, radius_m), []),
+        roads=_within(dl, lambda: collectors.roads(loc, 200.0), []),
+        rails_overpasses=_within(dl, lambda: collectors.rails_overpasses(loc, 500.0), []),
+        pois=_within(dl, lambda: collectors.pois(loc, 500.0), []),
+        historical=_within(dl, lambda: collectors.historical(loc), None),
         precision=Precision(dong_position=None),
-        landmarks=landmarks,
+        landmarks=_within(dl, lambda: lm_fn(loc) if callable(lm_fn) else None, None),
     )
 
 
@@ -50,27 +62,25 @@ def assemble_at(lat: float, lon: float, collectors, radius_m: float = DEFAULT_RA
     from engine.models import LatLon
 
     loc = LatLon(lat, lon)
+    dl = _deadline()
     get_at = getattr(collectors, "building_at", None)
-    info = get_at(loc) if callable(get_at) else collectors.building("")
+    info = _within(dl, lambda: get_at(loc) if callable(get_at) else collectors.building(""), None)
+    if info is None:  # 건물 정보 실패/지연 → 기본값으로라도 진행
+        from pipeline.collectors.base import BuildingInfo
+        info = BuildingInfo(location=loc, facing_deg=180.0, ground_elevation_m=0.0)
     loc = info.location
-    landmarks = None
     lm_fn = getattr(collectors, "landmarks", None)
-    if callable(lm_fn):
-        try:
-            landmarks = lm_fn(loc)
-        except Exception:
-            landmarks = None
     return SiteFeatures(
         address="지도에서 선택한 자리",
         building=Building(loc, info.facing_deg, info.ground_elevation_m, info.floors),
-        dem=collectors.dem(loc, radius_m),
-        streams=collectors.streams(loc, radius_m),
-        roads=collectors.roads(loc, 200.0),
-        rails_overpasses=collectors.rails_overpasses(loc, 500.0),
-        pois=collectors.pois(loc, 500.0),
-        historical=collectors.historical(loc),
+        dem=_within(dl, lambda: collectors.dem(loc, radius_m), []),
+        streams=_within(dl, lambda: collectors.streams(loc, radius_m), []),
+        roads=_within(dl, lambda: collectors.roads(loc, 200.0), []),
+        rails_overpasses=_within(dl, lambda: collectors.rails_overpasses(loc, 500.0), []),
+        pois=_within(dl, lambda: collectors.pois(loc, 500.0), []),
+        historical=_within(dl, lambda: collectors.historical(loc), None),
         precision=Precision(dong_position=None),
-        landmarks=landmarks,
+        landmarks=_within(dl, lambda: lm_fn(loc) if callable(lm_fn) else None, None),
     )
 
 
