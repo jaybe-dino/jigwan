@@ -125,7 +125,12 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
     """SiteAssessment → UI 데이터 계약(dict). 프론트(웹·Next.js)의 유일한 입력."""
     d = a.to_dict()
     grade = a.grade.value
+    R = {r.code: r for r in a.results}
+    r08m = R["R08"].metrics if "R08" in R else {}
     return {
+        # 궁합 계산에 쓰는 실제 집의 좌향·사택 (없으면 기본값)
+        "facing": r08m.get("facing_deg", 180.0),
+        "houseSect": r08m.get("sect", "동사택"),
         # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.
         # 공유 카드(addrShort)만 §11 낙인방지로 행정동까지 마스킹.
         "addr": a.address,

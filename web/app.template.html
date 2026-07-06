@@ -1451,9 +1451,10 @@ function closeSheet(id){ $('#'+id).classList.remove('active'); }
 function elFor(el){ const m={목:'🌳 나무',화:'🔥 불',토:'⛰️ 흙',금:'⚙️ 쇠',수:'💧 물'}; return m[el]||el; }
 async function runCompat(){
   const d=DATA[CUR];
-  const r08=(d.results||[]).find(r=>r.code==='R08')||{metrics:{}};
-  const facing=(r08.metrics&&r08.metrics.facing_deg)||180;
-  const houseSect=(r08.metrics&&r08.metrics.sect)||'동사택';
+  // 실제 집의 좌향·사택(shape_assessment가 상단에 노출). 없으면 R08 metrics, 그다음 기본값.
+  const r08=(d.results||[]).find(r=>r.code==='R08')||{};
+  const facing=(d.facing!=null?d.facing:((r08.metrics&&r08.metrics.facing_deg)!=null?r08.metrics.facing_deg:180));
+  const houseSect=d.houseSect||(r08.metrics&&r08.metrics.sect)||'동사택';
   const y=+$('#yy').value, m=+$('#mm').value, day=+$('#dd').value;
   const hourV=$('#hh').value;
   const qs=`facing=${facing}&sect=${encodeURIComponent(houseSect)}&y=${y}&m=${m}&d=${day}&male=${SEX}`+(hourV!==''?`&hour=${hourV}`:'');
