@@ -318,23 +318,31 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .ichip.good{ color:var(--gun); background:color-mix(in srgb,var(--gun) 13%,transparent); }
 .ichip.warn{ color:var(--seal); background:color-mix(in srgb,var(--seal) 12%,transparent); }
 
-/* 터BTI 카드 (집 유형 · 공유용) */
-.terbti-card{ margin:14px 18px; padding:18px; border-radius:var(--radius);
-  background:linear-gradient(150deg, color-mix(in srgb,var(--seal) 12%, var(--panel)), var(--panel));
-  box-shadow:var(--shadow),inset 0 0 0 1px color-mix(in srgb,var(--seal) 16%,transparent); }
-.tb-top{ display:flex; align-items:center; gap:14px; }
-.tb-emoji{ width:58px; height:58px; flex:none; border-radius:16px; background:var(--panel);
-  display:grid; place-items:center; font-size:32px; box-shadow:var(--shadow); }
-.tb-name small{ display:block; font-size:11px; font-weight:700; color:var(--seal); letter-spacing:.02em; }
-.tb-name b{ font-family:var(--font-serif); font-size:24px; letter-spacing:-.01em; }
-.tb-name span{ display:block; font-size:12.5px; color:var(--ink-soft); font-weight:600; margin-top:1px; }
-.tb-desc{ font-size:13.5px; line-height:1.6; color:var(--ink); margin-top:12px; }
-.tb-stats{ display:flex; flex-direction:column; gap:7px; margin-top:13px; }
-.tb-stat{ display:flex; align-items:center; gap:9px; font-size:12px; font-weight:700; color:var(--ink-soft); }
-.tb-stat span{ width:30px; }
-.tb-bar{ flex:1; height:7px; border-radius:4px; background:var(--panel-2); overflow:hidden; }
-.tb-bar > i{ display:block; height:100%; border-radius:4px; }
-.tb-stat b{ width:24px; text-align:right; color:var(--ink); }
+/* 터BTI 카드 — 유형별 전용 색·일러스트 */
+.terbti-card{ position:relative; margin:14px 18px; border-radius:var(--radius); overflow:hidden;
+  color:#fff; box-shadow:var(--shadow); }
+.terbti-card.rare{ box-shadow:0 0 0 2px rgba(255,255,255,.55), 0 10px 32px rgba(0,0,0,.22); }
+.tb-art{ position:absolute; inset:0; opacity:.9; pointer-events:none; }
+.tb-inner{ position:relative; z-index:1; padding:18px;
+  background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.16)); }
+.tb-rar{ display:inline-block; font-size:11px; font-weight:800; letter-spacing:.02em;
+  background:rgba(255,255,255,.26); padding:5px 11px; border-radius:999px; margin-bottom:13px; }
+.terbti-card.rare .tb-rar{ background:rgba(255,255,255,.9); color:#1b1f27; }
+.terbti-card .tb-top{ display:flex; align-items:center; gap:14px; }
+.tb-emoji{ width:60px; height:60px; flex:none; border-radius:16px; background:rgba(255,255,255,.92);
+  display:grid; place-items:center; font-size:34px; box-shadow:0 4px 12px rgba(0,0,0,.16); }
+.tb-name small{ display:block; font-size:11px; font-weight:800; opacity:.85; letter-spacing:.03em; }
+.tb-name b{ font-family:var(--font-serif); font-size:26px; letter-spacing:-.01em; text-shadow:0 1px 6px rgba(0,0,0,.18); }
+.tb-name span{ display:block; font-size:13px; font-weight:700; opacity:.94; margin-top:1px; }
+.tb-desc{ font-size:13.5px; line-height:1.6; margin-top:12px; opacity:.97; text-shadow:0 1px 5px rgba(0,0,0,.14); }
+.tb-stats{ display:flex; flex-direction:column; gap:7px; margin-top:14px; }
+.tb-stat{ display:flex; align-items:center; gap:9px; font-size:12px; font-weight:800; }
+.tb-stat span{ width:30px; opacity:.95; }
+.tb-bar{ flex:1; height:7px; border-radius:4px; background:rgba(255,255,255,.28); overflow:hidden; }
+.tb-bar > i{ display:block; height:100%; border-radius:4px; background:rgba(255,255,255,.95); }
+.tb-stat b{ width:24px; text-align:right; }
+.tb-share{ margin-top:15px; background:rgba(255,255,255,.96); color:#1b1f27; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+.tb-share:active{ transform:scale(.98); }
 
 /* 풍수 조언 · 개운 처방 */
 .advice-list{ display:flex; flex-direction:column; gap:12px; }
@@ -346,16 +354,21 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .ad-act{ font-size:13px; color:var(--seal); font-weight:700; margin-top:3px; line-height:1.45; }
 .ad-why{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
 
-/* 공유 카드 — 터BTI 버전 */
-.share-tb{ align-items:center; text-align:center; }
-.share-tb .sc-emoji{ font-size:74px; margin-top:auto; line-height:1; }
-.share-tb .sc-type{ font-family:var(--font-serif); font-size:34px; margin-top:8px; }
-.share-tb .sc-tag{ font-size:14px; opacity:.9; margin-top:2px; }
-.share-tb .sc-num{ font-family:var(--font-serif); font-size:22px; color:var(--seal-ink); margin-top:12px; font-variant-numeric:tabular-nums; }
-.share-tb .sc-num small{ font-size:14px; opacity:.85; }
-.share-tb .sc-tip{ margin-top:14px; background:rgba(255,255,255,.12); border-radius:14px; padding:12px 14px; width:100%; }
-.share-tb .sc-tip b{ display:block; font-size:14px; }
-.share-tb .sc-tip span{ display:block; font-size:12.5px; opacity:.85; margin-top:3px; line-height:1.45; }
+/* 공유 카드 — 터BTI 버전(유형색 배경 + 일러스트) */
+.share-tb{ position:absolute; inset:0; padding:0; }
+.sc-art{ position:absolute; inset:0; opacity:.92; }
+.sc-fg{ position:absolute; inset:0; padding:24px; display:flex; flex-direction:column; align-items:center;
+  text-align:center; color:#fff; background:linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.24)); }
+.sc-fg .top{ width:100%; display:flex; justify-content:space-between; font-size:12px; letter-spacing:.05em; opacity:.92; }
+.sc-emoji{ font-size:76px; margin-top:auto; line-height:1; filter:drop-shadow(0 5px 12px rgba(0,0,0,.22)); }
+.sc-type{ font-family:var(--font-serif); font-size:36px; margin-top:8px; text-shadow:0 2px 12px rgba(0,0,0,.2); }
+.sc-tag{ font-size:14px; opacity:.95; margin-top:2px; }
+.sc-num{ font-family:var(--font-serif); font-size:22px; margin-top:12px; font-variant-numeric:tabular-nums; text-shadow:0 1px 8px rgba(0,0,0,.18); }
+.sc-num small{ font-size:14px; opacity:.9; }
+.sc-tip{ margin-top:14px; background:rgba(255,255,255,.18); border-radius:14px; padding:12px 14px; width:100%; backdrop-filter:blur(2px); }
+.sc-tip b{ display:block; font-size:14px; }
+.sc-tip span{ display:block; font-size:12.5px; opacity:.92; margin-top:3px; line-height:1.45; }
+.sc-fg .foot{ margin-top:auto; width:100%; display:flex; justify-content:space-between; align-items:end; font-size:11px; opacity:.82; }
 
 /* 근거 레이어 아코디언 */
 .evtabs{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
@@ -955,6 +968,41 @@ const HOTSPOTS = (DATA.hotspots && DATA.hotspots.length) ? DATA.hotspots : [
 const RANK_BY_NAME = {};
 (DATA.ranking||[]).forEach((d,i)=>{ if(d.rankName) RANK_BY_NAME[d.rankName]=i; });
 
+/* ====== 터BTI 유형별 테마(배경색·일러스트·희귀도) ====== */
+const TB_THEME = {
+  geumgo:{c1:'#FBBF24',c2:'#B45309',motif:'coins'}, river:{c1:'#38BDF8',c2:'#2563EB',motif:'water'},
+  screen:{c1:'#34D399',c2:'#047857',motif:'mtn'},   sun:{c1:'#FDBA74',c2:'#EA580C',motif:'sun'},
+  forest:{c1:'#4ADE80',c2:'#15803D',motif:'tree'},  harbor:{c1:'#818CF8',c2:'#4338CA',motif:'boat'},
+  beacon:{c1:'#C084FC',c2:'#7E22CE',motif:'tower'}, fort:{c1:'#94A3B8',c2:'#334155',motif:'fort'},
+  wind:{c1:'#5EEAD4',c2:'#0D9488',motif:'wind'},    gem:{c1:'#F0ABFC',c2:'#A21CAF',motif:'gem'}
+};
+const TB_RARITY = {
+  river:{t:'레어',p:6},  gem:{t:'희귀',p:10}, beacon:{t:'희귀',p:9},  geumgo:{t:'희귀',p:12},
+  forest:{t:'보통',p:20}, sun:{t:'보통',p:22}, harbor:{t:'보통',p:25},
+  fort:{t:'흔함',p:30},  wind:{t:'흔함',p:33}, screen:{t:'흔함',p:35}
+};
+function tbTheme(code){ return TB_THEME[code]||TB_THEME.sun; }
+function tbRarity(code){ return TB_RARITY[code]||{t:'보통',p:20}; }
+function tbArt(code){
+  const W='rgba(255,255,255,.95)', L='rgba(255,255,255,.5)', D='rgba(255,255,255,.26)';
+  const house='<g><rect x="41" y="60" width="28" height="24" rx="3" fill="'+W+'"/>'
+    +'<path d="M38 62 L55 48 L72 62 Z" fill="'+W+'"/><rect x="50" y="70" width="10" height="14" rx="1.5" fill="'+D+'"/></g>';
+  const M={
+    coins:'<circle cx="80" cy="64" r="11" fill="'+L+'"/><circle cx="71" cy="73" r="11" fill="'+W+'"/>',
+    water:'<path d="M-4 76 q12 -8 24 0 t24 0 t24 0 t24 0 t24 0" stroke="'+L+'" stroke-width="4" fill="none"/><path d="M-4 86 q12 -8 24 0 t24 0 t24 0 t24 0 t24 0" stroke="'+D+'" stroke-width="4" fill="none"/>',
+    mtn:'<path d="M-4 86 L26 42 L52 86 Z" fill="'+L+'"/><path d="M38 86 L72 34 L104 86 Z" fill="'+D+'"/>',
+    fort:'<path d="M-8 88 L20 46 L44 88 Z" fill="'+D+'"/><path d="M28 88 L58 36 L88 88 Z" fill="'+L+'"/><path d="M64 88 L92 50 L118 88 Z" fill="'+D+'"/>',
+    sun:'<circle cx="78" cy="28" r="17" fill="'+L+'"/>',
+    tree:'<circle cx="20" cy="58" r="14" fill="'+L+'"/><rect x="18" y="64" width="4" height="20" fill="'+D+'"/><circle cx="86" cy="64" r="11" fill="'+D+'"/><rect x="84" y="68" width="4" height="16" fill="'+D+'"/>',
+    boat:'<path d="M6 74 h30 l-6 10 h-18 Z" fill="'+L+'"/><rect x="21" y="56" width="2.5" height="18" fill="'+W+'"/><path d="M23.5 56 l13 9 l-13 4 Z" fill="'+W+'"/>',
+    tower:'<path d="M72 86 L76 40 L86 40 L90 86 Z" fill="'+L+'"/><circle cx="81" cy="36" r="7" fill="'+W+'"/>',
+    wind:'<path d="M4 42 q22 -9 38 0 q-7 9 -16 4" stroke="'+L+'" stroke-width="3.5" fill="none"/><path d="M8 60 q28 -9 48 0 q-9 10 -20 4" stroke="'+D+'" stroke-width="3.5" fill="none"/>',
+    gem:'<g transform="translate(78,32)"><path d="M0 -15 L13 -4 L0 17 L-13 -4 Z" fill="'+W+'"/><path d="M-13 -4 L13 -4 L0 17 Z" fill="'+L+'"/><path d="M0 -15 L0 17" stroke="'+D+'" stroke-width="1"/></g>'
+  };
+  const m=M[tbTheme(code).motif]||M.mtn;
+  return '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%">'+m+house+'</svg>';
+}
+
 /* ====== 테마 토글 ====== */
 $('#theme').onclick = ()=>{
   const r=document.documentElement;
@@ -1342,20 +1390,26 @@ function renderReport(id){
     $('#dataSrc').innerHTML = html;
   }
 
-  // 터BTI (집 유형)
+  // 터BTI (집 유형) — 유형별 전용 색·일러스트·희귀도
   const tb=d.terbti;
   const tc=$('#terbtiCard');
   if(tb){
-    const AXCOL={재물:'var(--jae)',건강:'var(--gun)',관계:'var(--gwan)',명예:'var(--myeong)'};
+    const th=tbTheme(tb.code), rar=tbRarity(tb.code);
     const stats=Object.keys(tb.stats||{}).map(k=>
-      `<div class="tb-stat"><span>${k}</span><div class="tb-bar"><i style="width:${tb.stats[k]}%;background:${AXCOL[k]}"></i></div><b class="tnum">${tb.stats[k]}</b></div>`).join('');
-    tc.innerHTML=`<div class="tb-top">
-        <div class="tb-emoji">${tb.emoji}</div>
-        <div class="tb-name"><small>우리 집 유형</small><b>${tb.name}</b><span>${tb.tag}</span></div>
-      </div>
-      <div class="tb-desc">${tb.desc}</div>
-      <div class="tb-stats">${stats}</div>
-      <button class="btn seal" style="margin-top:14px" onclick="openShare(null)">🔮 내 집 유형·조언 공유하기</button>`;
+      `<div class="tb-stat"><span>${k}</span><div class="tb-bar"><i style="width:${tb.stats[k]}%"></i></div><b class="tnum">${tb.stats[k]}</b></div>`).join('');
+    tc.style.background=`linear-gradient(150deg, ${th.c1}, ${th.c2})`;
+    tc.classList.add('themed'); tc.classList.toggle('rare', rar.p<=12);
+    tc.innerHTML=`<div class="tb-art">${tbArt(tb.code)}</div>
+      <div class="tb-inner">
+        <div class="tb-rar">✨ ${rar.t} 유형 · 상위 ${rar.p}%</div>
+        <div class="tb-top">
+          <div class="tb-emoji">${tb.emoji}</div>
+          <div class="tb-name"><small>우리 집 유형</small><b>${tb.name}</b><span>${tb.tag}</span></div>
+        </div>
+        <div class="tb-desc">${tb.desc}</div>
+        <div class="tb-stats">${stats}</div>
+        <button class="btn tb-share" onclick="openShare(null)">🔮 내 집 유형·조언 공유하기</button>
+      </div>`;
     tc.style.display='block';
   } else { tc.style.display='none'; }
 
@@ -1570,15 +1624,20 @@ async function runCompat(){
    ============================================================ */
 function openShare(pct){
   const d=DATA[CUR]; const tb=d.terbti||{}; const tip=(d.advice&&d.advice[0])||null;
+  const th=tbTheme(tb.code), rar=tbRarity(tb.code);
   const card=$('#shareCard');
+  card.style.background=`linear-gradient(160deg, ${th.c1}, ${th.c2})`;
   card.innerHTML=`<div class="in share-tb">
-    <div class="top"><span>智官 · 지관</span><span>${d.addrShort||''}</span></div>
-    <div class="sc-emoji">${tb.emoji||'🏠'}</div>
-    <div class="sc-type">${tb.name||('「'+d.grade+'」')}</div>
-    <div class="sc-tag">${tb.tag||d.liner||''}</div>
-    <div class="sc-num">${d.site_score}<small>점 · ${d.grade}</small>${pct!=null?` · 궁합 ${pct}%`:''}</div>
-    ${tip?`<div class="sc-tip"><b>${tip.icon} ${tip.title}</b><span>${tip.action}</span></div>`:''}
-    <div class="foot"><div>지관에서 우리집 터 보기<br>jigwan.kr</div><div class="qr"></div></div>
+    <div class="sc-art">${tbArt(tb.code)}</div>
+    <div class="sc-fg">
+      <div class="top"><span>智官 · 지관</span><span>${rar.t} · 상위 ${rar.p}%</span></div>
+      <div class="sc-emoji">${tb.emoji||'🏠'}</div>
+      <div class="sc-type">${tb.name||('「'+d.grade+'」')}</div>
+      <div class="sc-tag">${tb.tag||d.liner||''}</div>
+      <div class="sc-num">${d.site_score}<small>점 · ${d.grade}</small>${pct!=null?` · 궁합 ${pct}%`:''}</div>
+      ${tip?`<div class="sc-tip"><b>${tip.icon} ${tip.title}</b><span>${tip.action}</span></div>`:''}
+      <div class="foot"><div>지관에서 우리집 터 보기<br>jigwan.kr</div><div class="qr"></div></div>
+    </div>
   </div>`;
   closeSheet('compatSheet');
   $('#shareSheet').classList.add('active');
