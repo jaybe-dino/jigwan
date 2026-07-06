@@ -330,12 +330,15 @@ def build_from_coord(lat: float, lon: float) -> dict:
 
     a = assess_coord_auto(lat, lon)
     d = shape_assessment(a, up=True, share_dong="이 자리", accuracy=55)
-    try:
-        cache = _read_cache()
-        cache[key] = d
-        COORD_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
-    except Exception:
-        pass
+    # 실측이 실제로 데이터를 받은 경우에만 캐시(고도/하천 0이면 일시적 실패일 수 있어 재시도 여지 남김)
+    src = d.get("sources", {})
+    if (src.get("고도점", 0) or 0) > 0 or (src.get("하천", 0) or 0) > 0:
+        try:
+            cache = _read_cache()
+            cache[key] = d
+            COORD_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
     return d
 
 

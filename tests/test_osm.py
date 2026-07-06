@@ -51,10 +51,11 @@ def test_overpass_waterways_and_peaks():
 
 def test_overpass_mirror_fallback_recovers():
     """첫 미러가 실패해도 다음 미러로 하천을 찾아낸다(‘조용한 실패→물길 없음’ 방지)."""
+    from pipeline.collectors.overpass import ENDPOINTS
     calls = []
     def http(url, params=None, headers=None, timeout=10):
         calls.append(url)
-        if "overpass-api.de" in url:
+        if url == ENDPOINTS[0]:   # 첫 미러 실패 → 다음 미러로
             raise RuntimeError("timeout")
         return {"elements": [
             {"type": "way", "id": 1, "tags": {"waterway": "stream", "name": "신림천"},
