@@ -307,6 +307,16 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .notice{ margin:6px 18px 30px; font-size:11px; color:var(--ink-faint); line-height:1.6;
   padding:12px 14px; background:var(--panel-2); border-radius:12px; }
 
+/* ---------- 리포트 바텀시트 (지도 위로 올라옴, 직방식) ---------- */
+.rsheet{ position:fixed; inset:0; z-index:45; display:none; }
+.rsheet.open{ display:block; }
+.rscrim{ position:absolute; inset:0; background:rgba(20,24,31,.35); animation:fade .25s both; }
+.rpanel{ position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:100%; max-width:460px;
+  height:90vh; background:var(--panel); border-radius:20px 20px 0 0; overflow-y:auto;
+  box-shadow:0 -8px 40px rgba(20,24,31,.2); animation:up .34s cubic-bezier(.2,.9,.3,1) both; }
+.rgrip{ width:40px; height:4px; border-radius:3px; background:var(--line); margin:9px auto 0; }
+.rpanel .backlink{ cursor:pointer; }
+
 /* ---------- 바텀시트 (궁합·공유) ---------- */
 .sheet{ position:fixed; inset:0; z-index:60; display:none; }
 .sheet.active{ display:block; }
@@ -487,7 +497,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   <section class="view active" id="home">
     <div class="topbar">
       <div class="brand">
-        <div class="mark">智</div>
+        <div class="mark">지</div>
         <div><b>지관</b><span>이사 갈 집, 터 보기</span></div>
       </div>
       <button class="iconbtn" id="theme" title="테마">◑</button>
@@ -526,12 +536,15 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
     </div>
   </div>
 
-  <!-- ============ 리포트 ============ -->
-  <section class="view" id="report">
+  <!-- ============ 리포트 (지도 위 바텀시트) ============ -->
+  <div class="rsheet" id="reportSheet">
+    <div class="rscrim" onclick="closeReport()"></div>
+    <section class="rpanel" id="report">
+      <div class="rgrip"></div>
     <div class="rep-hero">
-      <div class="backlink" onclick="nav('home')">‹ 지도로</div>
+      <div class="backlink" onclick="closeReport()">✕ 닫기</div>
       <div class="rep-head">
-        <div class="seal-stamp"><div class="g" id="rSealGrade">—</div><div class="k">地官</div></div>
+        <div class="seal-stamp"><div class="g" id="rSealGrade">—</div></div>
         <div class="who">
           <div class="addr" id="rAddr">—</div>
           <div class="score tnum"><span id="rScore">0</span><small>점</small></div>
@@ -613,7 +626,8 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       본 서비스는 전통 풍수지리·명리 이론에 기반한 <b>참고·오락 목적</b> 콘텐츠로,
       부동산 투자 권유·자문이 아닙니다. 단지·매물별 점수는 개인 조회 결과로만 제공됩니다.
     </div>
-  </section>
+    </section>
+  </div>
 
   <!-- ============ S8 매물 비교 ============ -->
   <section class="view" id="compare">
@@ -737,8 +751,8 @@ const DATA = __DATA__;
 const $ = s => document.querySelector(s);
 const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
 const AXIS = [
-  {key:'재물', el:'金', cls:'g-jae'}, {key:'건강', el:'木', cls:'g-gun'},
-  {key:'관계', el:'水', cls:'g-gwan'}, {key:'명예', el:'火', cls:'g-myeong'}
+  {key:'재물', el:'', cls:'g-jae'}, {key:'건강', el:'', cls:'g-gun'},
+  {key:'관계', el:'', cls:'g-gwan'}, {key:'명예', el:'', cls:'g-myeong'}
 ];
 const CATS = ['형기','도로살','건물','환경'];
 // 코드 → 친근한 이름 (전문용어 대신 · engine.interpret.FRIENDLY와 일치)
@@ -752,7 +766,7 @@ $('#theme').onclick = ()=>{
   const now = r.getAttribute('data-theme') ||
     (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   r.setAttribute('data-theme', now==='dark'?'light':'dark');
-  drawHomeMap(); if($('#report').classList.contains('active')) drawRepMap(DATA[CUR]);
+  drawHomeMap(); if($('#reportSheet').classList.contains('open')) drawRepMap(DATA[CUR]);
 };
 
 /* ====== 화면 전환 ====== */
@@ -766,6 +780,7 @@ function show(id){
   window.scrollTo(0,0); const ph=$('#phone'); if(ph) ph.scrollTop=0;
 }
 function nav(id){
+  closeReport();
   if(id==='compare') renderCompare();
   if(id==='monthly') renderMonthly();
   if(id==='mypage') renderMypage();
@@ -982,11 +997,13 @@ function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
 /* ============================================================
    리포트 렌더
    ============================================================ */
+function openReport(){ $('#reportSheet').classList.add('open'); }
+function closeReport(){ $('#reportSheet').classList.remove('open'); }
 function renderReport(id){
-  const d=DATA[id]; CUR=id; show('report');
+  const d=DATA[id]; CUR=id; openReport();
   $('#rAddr').textContent=d.addr;
   animateNum($('#rScore'), d.site_score, 700);
-  $('#rGrade').textContent='「'+d.grade+'」';
+  $('#rGrade').textContent=d.grade;
   $('#rSealGrade').textContent=d.grade.length>=4? d.grade.slice(0,2): d.grade[0];
   $('#rSealGrade').style.fontSize = d.grade.length>=3?'18px':'26px';
   $('#rSealGrade').textContent = d.gradeSeal;
@@ -998,7 +1015,7 @@ function renderReport(id){
   const ip = d.interp || {body:'', strengths:[], cautions:[]};
   const chips = (ip.strengths||[]).map(s=>`<span class="ichip good">👍 ${s.name}</span>`).join('')
     + (ip.cautions||[]).map(c=>`<span class="ichip warn">🔧 ${c.name}</span>`).join('');
-  ic.innerHTML = `<div class="who"><span class="av">智</span> 이 집, 한마디로</div>
+  ic.innerHTML = `<div class="who"><span class="av">지</span> 이 집, 한마디로</div>
     <div class="body">${ip.body||''}</div>
     ${chips?`<div class="interp-chips">${chips}</div>`:''}`;
 
@@ -1283,7 +1300,7 @@ function runPrecision(){
 
   // 리포트 정확도 90% 반영
   DATA[CUR].accuracy=90; DATA[CUR].precise=true;
-  if($('#report').classList.contains('active')){
+  if($('#reportSheet').classList.contains('open')){
     $('#accFill').style.width='90%'; $('#accPct').textContent='90'; $('#rPrecise').hidden=false;
   }
   $('#precisionInput').style.display='none';
