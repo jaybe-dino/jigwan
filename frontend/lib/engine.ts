@@ -9,7 +9,7 @@ const pexec = promisify(execFile);
 // frontend/ 의 상위(리포지토리 루트)에서 python 실행
 const REPO_ROOT = path.join(process.cwd(), "..");
 
-async function run(args: string[]): Promise<SiteReport> {
+async function runRaw(args: string[]): Promise<any> {
   const { stdout } = await pexec("python3", ["engine_cli.py", ...args], {
     cwd: REPO_ROOT,
     maxBuffer: 8 * 1024 * 1024,
@@ -17,13 +17,21 @@ async function run(args: string[]): Promise<SiteReport> {
   });
   const data = JSON.parse(stdout);
   if (data && data.error) throw new Error(data.error);
-  return data as SiteReport;
+  return data;
 }
 
 export function assessAddress(address: string): Promise<SiteReport> {
-  return run([address]);
+  return runRaw([address]) as Promise<SiteReport>;
 }
 
 export function assessCoord(lat: number, lon: number): Promise<SiteReport> {
-  return run(["--coord", String(lat), String(lon)]);
+  return runRaw(["--coord", String(lat), String(lon)]) as Promise<SiteReport>;
+}
+
+export function computeCompat(p: {
+  facing: number; sect: string; y: number; m: number; d: number; male: boolean; hour?: number | null;
+}): Promise<any> {
+  const args = ["--compat", String(p.facing), p.sect, String(p.y), String(p.m), String(p.d), p.male ? "1" : "0"];
+  args.push(p.hour == null ? "-" : String(p.hour));
+  return runRaw(args);
 }

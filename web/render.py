@@ -151,7 +151,6 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "legend": _map_hints(a)["legend"],
         "coord": [a.coord[0], a.coord[1]],  # 지도 중심 (실좌표)
         "landmarks": a.landmarks,             # 실제 산·강 이름
-        "price": _price(seed=a.site_score, up=up),
         "bibo": _bibo(a),
         "liner": LINER.get(grade, ""),
     }
@@ -171,6 +170,21 @@ def build_from_address(address: str) -> dict:
 
     a = assess_address_auto(address)
     return shape_assessment(a, up=True, share_dong=_extract_dong(address), accuracy=62)
+
+
+def build_compat(facing: float, house_sect: str, year: int, month: int, day: int,
+                 is_male: bool, hour=None) -> dict:
+    """실제 사주(만세력) 기반 궁합 — 데모 아님."""
+    from engine.rulebook.compat import compute_compat
+
+    r = compute_compat(facing, house_sect, year, month, day, is_male, hour)
+    return {
+        "percent": r.percent, "caption": r.caption,
+        "ohaeng_delta": r.ohaeng_delta, "sect_delta": r.sect_delta,
+        "house_element": r.house_element, "yongsin": r.yongsin,
+        "user_sect": r.user_sect, "house_sect": r.house_sect,
+        "match_sect": r.match_sect, "pillars": r.saju_pillars, "time_known": r.time_known,
+    }
 
 
 def build_from_coord(lat: float, lon: float) -> dict:

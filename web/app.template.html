@@ -333,6 +333,10 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .dob{ display:flex; gap:8px; margin-top:8px; }
 .dob select{ flex:1; padding:12px 10px; border-radius:11px; background:var(--panel);
   box-shadow:inset 0 0 0 1px var(--line); color:var(--ink); font-family:inherit; font-size:14px; -webkit-appearance:none; appearance:none; }
+.segbtns{ display:flex; gap:8px; margin-top:8px; }
+.segbtns .seg{ flex:1; padding:12px; border-radius:11px; background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line);
+  font-weight:700; font-size:14px; color:var(--ink-soft); }
+.segbtns .seg.on{ background:var(--seal); color:#fff; box-shadow:none; }
 .check{ display:flex; align-items:center; gap:9px; margin-top:14px; font-size:13px; font-weight:600; color:var(--ink-soft); }
 .check input{ width:18px; height:18px; accent-color:var(--seal); }
 
@@ -518,7 +522,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
         <div class="mb-title">이 집, 나랑 잘 맞을까?</div>
         <div class="mb-sub">주소를 검색하거나 지도를 눌러 그 자리를 봐요 · 생년월일 넣으면 궁합까지</div>
         <div class="trend">
-          <div class="chip"><span class="dot"></span>지금 이사철 인기</div>
+          <div class="chip"><span class="dot"></span>예시로 보기</div>
           <div class="chip" onclick="startScan('myeongdang')">종로구 평창동 · <b>82점</b></div>
           <div class="chip" onclick="startScan('biboji')">동대문구 전농동 · <b>49점</b></div>
         </div>
@@ -597,19 +601,6 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       <div id="rules"></div>
     </div>
 
-    <!-- 실거래가 -->
-    <div class="card">
-      <div class="hd"><h3>실거래가 추이</h3><span class="sub">국토부 공개 API</span></div>
-      <div class="price">
-        <div>
-          <div class="now tnum" id="priceNow">—</div>
-          <div class="chg up" id="priceChg">—</div>
-        </div>
-        <svg class="spark" id="spark" viewBox="0 0 200 46" preserveAspectRatio="none"></svg>
-      </div>
-      <div class="price-src">최근 24개월 전용 84㎡ 실거래 · 참고용 병기</div>
-    </div>
-
     <!-- 비보 카드 (조건부) -->
     <div id="biboSlot"></div>
 
@@ -680,10 +671,20 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
           <select id="yy"></select><select id="mm"></select><select id="dd"></select>
         </div>
       </div>
-      <label class="check"><input type="checkbox" id="noTime"> 태어난 시간을 몰라요 (삼주 분석으로 진행)</label>
-      <div style="height:18px"></div>
+      <div class="field">
+        <label>성별</label>
+        <div class="segbtns" id="sexBtns">
+          <button class="seg on" data-sex="1" onclick="pickSex(this)">남자</button>
+          <button class="seg" data-sex="0" onclick="pickSex(this)">여자</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>태어난 시간 (모르면 비워두면 삼주로 봐요)</label>
+        <select id="hh" style="width:100%; padding:12px 10px; border-radius:11px; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line); color:var(--ink); font-family:inherit; font-size:14px; -webkit-appearance:none; appearance:none; margin-top:8px"></select>
+      </div>
+      <div style="height:16px"></div>
       <button class="btn seal" onclick="runCompat()">궁합 보기</button>
-      <div class="demo-note" style="margin-top:12px">※ 궁합 산출(만세력)은 M3 구현 예정 — 데모는 예시값입니다</div>
+      <div class="demo-note" style="margin-top:12px">실제 만세력(사주)으로 계산합니다</div>
     </div>
     <div id="compatResult" style="display:none"></div>
   </div>
@@ -722,7 +723,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
       </div>
 
       <button class="btn seal" onclick="runPrecision()">양택삼요 분석하기</button>
-      <div class="demo-note" style="margin-top:12px">※ 가택구성법(문·주·조 8괘) 상세 판정은 백엔드 연동 시 정밀화 — 데모는 예시 처방</div>
+      <div class="demo-note" style="margin-top:12px">현관 방위 + 안방·주방 배치로 문·주·조 궁합을 봅니다</div>
     </div>
     <div id="precisionResult" style="display:none"></div>
   </div>
@@ -1051,12 +1052,6 @@ function renderReport(id){
   CATS.forEach(c=>{ const t=el('div','evtab',c); t.onclick=()=>filterRules(c,t); tabs.appendChild(t); });
   renderRules(d, null);
 
-  // 실거래가
-  $('#priceNow').textContent=d.price.now;
-  const chg=$('#priceChg'); chg.textContent=d.price.chg;
-  chg.className='chg '+(d.price.dir);
-  drawSpark(d.price.series);
-
   // 비보
   const slot=$('#biboSlot'); slot.innerHTML='';
   if(d.bibo){
@@ -1144,43 +1139,51 @@ function fillDob(){
   for(let m=1;m<=12;m++) mm.appendChild(new Option(m+'월',m));
   for(let dv=1;dv<=31;dv++) dd.appendChild(new Option(dv+'일',dv));
   yy.value=1990; mm.value=5; dd.value=15;
+  const hh=$('#hh'); if(hh && !hh.options.length){
+    hh.appendChild(new Option('시간 모름',''));
+    for(let h=0;h<24;h++) hh.appendChild(new Option(String(h).padStart(2,'0')+':00', h));
+  }
 }
+let SEX='1';
+function pickSex(btn){ SEX=btn.dataset.sex; document.querySelectorAll('#sexBtns .seg').forEach(s=>s.classList.toggle('on', s===btn)); }
 function openCompat(){ $('#compatInput').style.display='block'; $('#compatResult').style.display='none';
   $('#compatSheet').classList.add('active'); }
 function closeSheet(id){ $('#'+id).classList.remove('active'); }
-function runCompat(){
+function elFor(el){ const m={목:'🌳 나무',화:'🔥 불',토:'⛰️ 흙',금:'⚙️ 쇠',수:'💧 물'}; return m[el]||el; }
+async function runCompat(){
   const d=DATA[CUR];
-  // 데모용 결정적 궁합 산출 (실제 만세력은 M3). 생년으로 값을 흔든다.
+  const r08=(d.results||[]).find(r=>r.code==='R08')||{metrics:{}};
+  const facing=(r08.metrics&&r08.metrics.facing_deg)||180;
+  const houseSect=(r08.metrics&&r08.metrics.sect)||'동사택';
   const y=+$('#yy').value, m=+$('#mm').value, day=+$('#dd').value;
-  const seed=(y*31+m*7+day)%100;
-  const ohaeng = ((seed%13)-6)*3;           // ±18
-  const sect  = (seed%2? 1:-1)*(10+seed%11); // ±20
-  const pct = Math.max(4, Math.min(97, 50+ohaeng+sect));
-  const sects = d.results.find(r=>r.code==='R08');
-  const houseSect = sects && sects.tier ? sects.tier : '동사택';
-  const mySect = seed%2? '동사택':'서사택';
-  const match = mySect===houseSect;
-  const cap = pct>=80?'천생연분의 터': pct>=60?'제법 잘 맞는 터': pct>=45?'무난한 궁합': '비보로 다스릴 궁합';
+  const hourV=$('#hh').value;
+  const qs=`facing=${facing}&sect=${encodeURIComponent(houseSect)}&y=${y}&m=${m}&d=${day}&male=${SEX}`+(hourV!==''?`&hour=${hourV}`:'');
+  const btn=event&&event.target; if(btn){ btn.textContent='보는 중…'; btn.disabled=true; }
+  let c;
+  try{ const res=await fetch('/api/compat?'+qs); c=await res.json(); if(c.error) throw new Error(c.error); }
+  catch(_){ alert('궁합 서버에 연결되지 않았어요(배포본에서 동작).'); if(btn){btn.textContent='궁합 보기'; btn.disabled=false;} return; }
+  const oh=c.ohaeng_delta, match=c.match_sect, pct=c.percent;
+  const pil=c.pillars||{}; const sajuStr=[pil['년'],pil['월'],pil['일'],pil['시']].filter(Boolean).join(' ');
   $('#compatInput').style.display='none';
   const box=$('#compatResult'); box.style.display='block';
   box.innerHTML=`
     <div class="compat-res">
       <div class="eyebrow" style="justify-content:center">${d.addr} · 궁합</div>
       <div class="pct tnum" style="margin-top:10px"><span id="cpct">0</span><small>%</small></div>
-      <div class="cap">${cap}</div>
+      <div class="cap">${c.caption}</div>
+      <div class="faint" style="margin-top:6px">내 사주 ${sajuStr}${c.time_known?'':' (삼주)'}</div>
     </div>
     <div class="compat-line">
-      <div class="box"><div class="t">오행 매칭 (11a)</div>
-        <div class="v" style="color:${ohaeng>=0?'var(--gun)':'var(--seal)'}">${ohaeng>=0?'상생 +':'상극 '}${ohaeng}</div>
-        <div class="d">용신 기운이 이 터의 오행과 ${ohaeng>=0?'어울립니다':'부딪힙니다'}</div></div>
-      <div class="box"><div class="t">본명궁 (11b)</div>
-        <div class="v" style="color:${match?'var(--gun)':'var(--seal)'}">${mySect} · ${match?'일치':'불일치'}</div>
-        <div class="d">이 집은 ${houseSect} — ${match?'같은 계열이라 편안':'맞춰줄 비보 필요'}</div></div>
+      <div class="box"><div class="t">오행 궁합</div>
+        <div class="v" style="color:${oh>=0?'var(--gun)':'var(--seal)'}">${oh>=0?'상생 +':''}${oh}</div>
+        <div class="d">내 용신 ${elFor(c.yongsin)} ↔ 집 기운 ${elFor(c.house_element)}</div></div>
+      <div class="box"><div class="t">방향 궁합</div>
+        <div class="v" style="color:${match?'var(--gun)':'var(--seal)'}">${match?'잘 맞음':'안 맞음'}</div>
+        <div class="d">나는 ${c.user_sect}, 이 집은 ${c.house_sect}</div></div>
     </div>
     <div class="bibo" style="margin:16px 0 8px">
-      <div class="k">궁합 비보</div><h3>${match?'침대 머리를 생기 방위로':'현관에 붉은 소품 하나'}</h3>
-      <p>${match?'잘 맞는 터입니다. 안방 침대 머리를 동남(생기) 쪽으로 두면 기운이 더 살아납니다.'
-              :'궁합이 부딪히는 자리는 비보로 다스립니다. 현관 왼쪽 붉은 소품이 도로살과 상극 기운을 눌러줍니다.'}</p>
+      <div class="k">궁합 한줄</div><h3>${match?'방향이 잘 맞는 집':'맞춰가면 좋은 집'}</h3>
+      <p>${oh>=0?'내 기운을 살려주는 집이에요. ':'부딪히는 기운은 밝은 조명·화초로 다스리면 좋아요. '}${match?'집 방향도 나와 같은 계열이라 편안합니다.':'집 방향은 나와 다른 계열이라, 안방을 내 길한 쪽에 두면 좋아요.'}</p>
     </div>
     <button class="btn seal" onclick="openShare(${pct})">공유 카드 만들기</button>
     <div style="height:8px"></div>

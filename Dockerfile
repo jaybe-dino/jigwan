@@ -6,12 +6,15 @@ FROM node:20-bookworm-slim
 
 # 풍수 엔진용 Python (표준 라이브러리만 사용 → pip 설치 불필요)
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3 \
+ && apt-get install -y --no-install-recommends python3 python3-pip \
  && ln -sf /usr/bin/python3 /usr/local/bin/python3 \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . .
+
+# 실제 만세력(사주) 라이브러리 설치 — 궁합 계산용
+RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 # 전체 프로토타입(web/dist)을 렌더해 Next public/으로 복사 → '/'에서 서빙
 RUN python3 -m web.render \
