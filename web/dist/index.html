@@ -85,6 +85,7 @@ body{
 /* 화면 전환 — 한 번에 하나의 .view만 보인다(모바일). 데스크톱은 #home 좌측 고정 + 우측 뷰 스왑 */
 .view{ display:none; animation:fade .35s ease both; }
 .view.active{ display:block; }
+#home.view{ animation:none; }   /* 배경 지도는 진입 애니메이션 없이 즉시(트랜스폼 중 타일 렌더 오류 방지) */
 @keyframes fade{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
 @media (prefers-reduced-motion:reduce){ .view{animation:none} }
 /* 뷰 공통 상단 바 */
@@ -165,6 +166,10 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 .map-bottom .mb-title{ font-family:var(--font-serif); font-size:18px; font-weight:700; }
 .map-bottom .mb-sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.45; }
 .map-bottom .trend{ padding:11px 0 0; }
+.fs-legend{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
+.fs-legend span{ font-size:11.5px; font-weight:700; color:var(--ink-soft);
+  background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line);
+  border-radius:999px; padding:5px 10px; white-space:nowrap; }
 .searchcard{ position:absolute; left:14px; right:14px; top:58px; z-index:5; }
 .search{ background:var(--panel); border-radius:18px; box-shadow:var(--shadow);
   display:flex; align-items:center; gap:10px; padding:15px 16px; }
@@ -569,8 +574,11 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
       </div>
 
       <div class="map-bottom">
-        <div class="mb-title">나랑 터가 잘 맞나?</div>
-        <div class="mb-sub">전국 명당을 지도에서 보고 · 검색·탭으로 그 자리 풍수를 확인 · 생년월일 넣으면 궁합까지</div>
+        <div class="mb-title">전국 풍수 지도 · 나랑 터가 잘 맞나?</div>
+        <div class="mb-sub">지도의 <b>명당(★)</b>은 예로부터 이름난 좋은 터. 아무 자리나 눌러도 그곳을 실측해 풍수를 읽어드려요.</div>
+        <div class="fs-legend">
+          <span>⛰️ 배산임수</span><span>💧 물길</span><span>🛣️ 도로살</span><span>🧭 좌향</span><span>🎂 나와 궁합</span>
+        </div>
         <div class="trend">
           <div class="chip"><span class="dot"></span>예시로 보기</div>
           <div class="chip" onclick="startScan('myeongdang')">종로구 평창동 · <b>82점</b></div>
@@ -994,6 +1002,7 @@ function drawHomeMap(){
   document.querySelectorAll('.pin').forEach(p=>p.remove());
   if(naverOK()){
     if(homeNMap){ naver.maps.Event.trigger(homeNMap,'resize'); return; }
+    host.innerHTML='';   // 인증 재시도 등으로 남은 이전 지도 DOM 제거 (안 하면 빈 지도가 겹쳐 렌더 안 됨)
     // 전국이 한눈에 — 명당 마커를 배경으로 (검색·탭하면 확대 감정)
     homeNMap=makeNMap(host,[36.6,127.8],7);
     // 예시 점수 마커 두 곳(합성 지형 데이터)
@@ -1011,6 +1020,8 @@ function drawHomeMap(){
     });
     // 지도 아무 데나 탭 → 그 좌표의 풍수 (전국 어디든)
     naver.maps.Event.addListener(homeNMap,'click', e=> assessCoord(e.coord.lat(), e.coord.lng()));
+    // 레이아웃 안정 후 타일 강제 렌더 (초기 빈 지도 방지)
+    [200,600,1200].forEach(t=>setTimeout(()=>{ if(homeNMap && naverOK()) naver.maps.Event.trigger(homeNMap,'resize'); }, t));
   } else {
     canvasHomeMap(host);
   }
@@ -1532,4 +1543,6 @@ const isDesktop = ()=> matchMedia('(min-width:1000px)').matches;
 fillDob(); drawHomeMap();
 // 지도 우선: 열자마자 전국 명당 지도가 배경. 검색/탭/명당 마커로 감정을 시작한다.
 addEventListener('resize', ()=>{ drawHomeMap(); if(curPanel==='report') drawRepMap(DATA[CUR]); });
+// 전체 로드 완료 후 한 번 더 — naver 스크립트/레이아웃 지연으로 빈 지도가 남는 것 방지
+addEventListener('load', ()=>{ drawHomeMap(); });
 </script>
