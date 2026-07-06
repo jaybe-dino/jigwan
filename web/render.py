@@ -151,6 +151,7 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "legend": _map_hints(a)["legend"],
         "coord": [a.coord[0], a.coord[1]],  # 지도 중심 (실좌표)
         "landmarks": a.landmarks,             # 실제 산·강 이름
+        "sources": a.sources,                 # 실측 데이터 개수(투명성)
         "bibo": _bibo(a),
         "liner": LINER.get(grade, ""),
     }

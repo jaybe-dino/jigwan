@@ -62,6 +62,7 @@ class SiteAssessment:
     results: List[RuleResult] = field(default_factory=list)
     coord: tuple = (0.0, 0.0)  # (lat, lon) — 지도 중심
     landmarks: Dict[str, str] = field(default_factory=dict)  # 실제 지형지물 이름
+    sources: Dict[str, int] = field(default_factory=dict)   # 실측 데이터 개수(투명성)
 
     @property
     def needs_bibo(self) -> bool:
@@ -112,6 +113,11 @@ def assess_site(
     score_int = int(round(final))
 
     loc = features.building.location
+    sources = {
+        "고도점": len(features.dem), "하천": len(features.streams),
+        "도로": len(features.roads), "주변시설": len(features.pois),
+        "산·강이름": len(features.landmarks or {}),
+    }
     return SiteAssessment(
         address=features.address,
         site_score=score_int,
@@ -121,4 +127,5 @@ def assess_site(
         results=results,
         coord=(loc.lat, loc.lon),
         landmarks=features.landmarks or {},
+        sources=sources,
     )
