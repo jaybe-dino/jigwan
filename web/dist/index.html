@@ -1232,9 +1232,15 @@ function renderReport(id){
   // 실측 데이터 출처 (투명성 — 진짜 데이터가 잡혔는지 눈으로 확인)
   const sc=d.sources||{};
   const isDemo = (d.addr||'').indexOf('평창동')>=0 || (d.addr||'').indexOf('전농동')>=0;
-  $('#dataSrc').innerHTML = isDemo
-    ? '📊 예시 데이터입니다. 지도를 탭하거나 주소를 검색하면 <b>실측 데이터</b>로 분석해요.'
-    : `📊 실측: 고도 ${sc['고도점']||0}점 · 하천 ${sc['하천']||0} · 도로 ${sc['도로']||0} · 주변시설 ${sc['주변시설']||0} · 산/강이름 ${sc['산·강이름']||0}`;
+  if(isDemo){
+    $('#dataSrc').innerHTML = '📊 예시 데이터입니다. 지도를 탭하거나 주소를 검색하면 <b>실측 데이터</b>로 분석해요.';
+  }else{
+    let html = `📊 실측: 고도 ${sc['고도점']||0}점 · 하천 ${sc['하천']||0} · 도로 ${sc['도로']||0} · 주변시설 ${sc['주변시설']||0} · 산/강이름 ${sc['산·강이름']||0}`;
+    // 정확도 관리: 특정 지형 데이터가 0이면 '없음'이라 단정하지 않고 데이터 한계를 밝힌다.
+    const gaps=[]; if(!(sc['하천']>0)) gaps.push('하천'); if(!(sc['고도점']>0)) gaps.push('지형');
+    if(gaps.length) html += `<br><span style="color:var(--warn)">⚠️ ${gaps.join('·')} 데이터가 이번엔 안 잡혔어요 — 실제로 있으면 결과가 달라질 수 있어, ‘없음’이 아니라 <b>미확인</b>으로 봐주세요.</span>`;
+    $('#dataSrc').innerHTML = html;
+  }
 
   // AI 지관의 해석 (해석 중심)
   const ic = $('#interpCard');

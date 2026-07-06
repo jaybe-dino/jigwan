@@ -49,6 +49,34 @@ def test_overpass_waterways_and_peaks():
     assert peaks and peaks[0][1] == "북한산" and peaks[0][2] == 836.0
 
 
+def test_overpass_mirror_fallback_recovers():
+    """첫 미러가 실패해도 다음 미러로 하천을 찾아낸다(‘조용한 실패→물길 없음’ 방지)."""
+    calls = []
+    def http(url, params=None, headers=None, timeout=10):
+        calls.append(url)
+        if "overpass-api.de" in url:
+            raise RuntimeError("timeout")
+        return {"elements": [
+            {"type": "way", "id": 1, "tags": {"waterway": "stream", "name": "신림천"},
+             "geometry": [{"lat": 37.48, "lon": 126.92}, {"lat": 37.481, "lon": 126.921}]}
+        ]}
+    c = OverpassClient(http=http)
+    ways = c.waterways(LatLon(37.48, 126.92), 1500)
+    assert len(calls) == 2 and ways and ways[0].name == "신림천"
+
+
+def test_overpass_waterways_include_area_water():
+    """면(natural=water)으로 매핑된 물도 하천으로 잡는다."""
+    resp = {"elements": [
+        {"type": "way", "id": 9, "tags": {"natural": "water", "name": "호수"},
+         "geometry": [{"lat": 37.5, "lon": 127.0}, {"lat": 37.5, "lon": 127.001},
+                      {"lat": 37.501, "lon": 127.001}]}
+    ]}
+    c = OverpassClient(http=stub(resp))
+    ways = c.waterways(LatLon(37.5, 127.0), 800)
+    assert len(ways) == 1 and ways[0].name == "호수"
+
+
 def test_osm_landmarks_assigns_back_mountain():
     # 남향(180) 집 → 배면=북(0°). 북쪽 봉우리가 back에 배정돼야.
     peak_resp = {"elements": [
