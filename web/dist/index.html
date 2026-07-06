@@ -131,7 +131,8 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 /* ---------- 홈: 지도 ---------- */
 .mapwrap{ position:relative; height:340px; background:var(--panel-2);
   border-bottom:1px solid var(--line); overflow:hidden; }
-.mapwrap canvas{ position:absolute; inset:0; width:100%; height:100%; }
+/* 폴백 캔버스에만 적용 — 네이버 지도의 내부 canvas 레이어를 건드리면 안 됨(빈 지도 원인) */
+.mapwrap canvas.fallcv{ position:absolute; inset:0; width:100%; height:100%; }
 #homeMap{ position:absolute; inset:0; }
 .leaflet-container{ background:var(--panel-2); font-family:var(--font-sans); }
 .mappin{ background:var(--panel); color:var(--ink); font-weight:800; font-size:13px;
@@ -1046,7 +1047,7 @@ function drawHomeMap(){
   }
 }
 function canvasHomeMap(host){   // 네이버 지도 없을 때(오프라인) 폴백
-  host.innerHTML='<canvas style="width:100%;height:100%"></canvas>';
+  host.innerHTML='<canvas class="fallcv" style="width:100%;height:100%"></canvas>';
   const cv=host.querySelector('canvas'); const {ctx,w,h}=fitCanvas(cv);
   ctx.clearRect(0,0,w,h);
   ctx.strokeStyle=css('--line'); ctx.globalAlpha=.7;
