@@ -196,11 +196,89 @@ def build_from_coord(lat: float, lon: float) -> dict:
     return shape_assessment(a, up=True, share_dong="이 자리", accuracy=55)
 
 
+# 전국 명당(名堂) — 예로부터 풍수 좋기로 이름난 실제 터. 빌드 시 실제 지형으로 실측해 랭킹을 미리 축적.
+HOTSPOTS = [
+    {"name": "평창동", "sub": "서울 종로", "why": "북한산 배산임수", "lat": 37.6119, "lon": 126.9740},
+    {"name": "성북동", "sub": "서울 성북", "why": "북악·응봉 감쌈", "lat": 37.5957, "lon": 126.9985},
+    {"name": "부암동", "sub": "서울 종로", "why": "인왕산 자락", "lat": 37.5926, "lon": 126.9660},
+    {"name": "한남동", "sub": "서울 용산", "why": "남산 남향·한강", "lat": 37.5340, "lon": 127.0000},
+    {"name": "남연군 묘", "sub": "예산 덕산", "why": "가야산 대명당", "lat": 36.6689, "lon": 126.8430},
+    {"name": "하회마을", "sub": "안동", "why": "낙동강 물돌이", "lat": 36.5390, "lon": 128.5180},
+    {"name": "양동마을", "sub": "경주", "why": "설창산 물(勿)자형", "lat": 35.9987, "lon": 129.2559},
+    {"name": "닭실마을", "sub": "봉화", "why": "금계포란형", "lat": 36.9430, "lon": 128.7360},
+    {"name": "회룡포", "sub": "예천", "why": "내성천 물돌이", "lat": 36.5860, "lon": 128.2760},
+    {"name": "선교장", "sub": "강릉", "why": "시루봉 배산", "lat": 37.7870, "lon": 128.8840},
+    {"name": "외암마을", "sub": "아산", "why": "설화산 배산임수", "lat": 36.7360, "lon": 126.9160},
+    {"name": "한옥마을", "sub": "전주", "why": "승암산·전주천", "lat": 35.8150, "lon": 127.1530},
+]
+
+# 실측 결과 캐시 — 한 번 계산하면 재빌드 시 재사용(무료 API 부하·빌드시간 절감)
+RANK_CACHE = ROOT / "hotspots_cache.json"
+
+
+def build_ranking() -> list:
+    """전국 명당을 실제 지형(산·강·도로)으로 실측 → 점수순 랭킹을 '미리' 만든다.
+    빌드 시 1회 계산해 캐시. 개별 실패는 건너뛰고 부분 결과라도 반환(빌드는 절대 실패 안 함)."""
+    import os
+
+    if os.environ.get("JIGWAN_SKIP_RANKING"):
+        return []
+
+    cache: Dict[str, Any] = {}
+    if RANK_CACHE.exists():
+        try:
+            cache = json.loads(RANK_CACHE.read_text(encoding="utf-8"))
+        except Exception:
+            cache = {}
+
+    import time
+
+    from pipeline.assemble import assess_coord_auto
+
+    budget_s = float(os.environ.get("JIGWAN_RANK_BUDGET", "360"))  # 빌드 시 최대 소요(초)
+    t0 = time.time()
+
+    out = []
+    for h in HOTSPOTS:
+        key = f"{h['lat']:.4f},{h['lon']:.4f}"
+        d = cache.get(key)
+        if d is None:
+            if time.time() - t0 > budget_s:
+                print("  · 시간 예산 초과 — 나머지 명당 실측 생략(다음 빌드에서 이어감)")
+                break
+            try:
+                a = assess_coord_auto(h["lat"], h["lon"])
+                d = shape_assessment(a, up=True, share_dong=h["name"], accuracy=58)
+                cache[key] = d
+                print(f"  ✓ 명당 실측 {h['name']}: {d['site_score']}점")
+            except Exception as e:  # 네트워크·데이터 실패 → 건너뜀
+                print(f"  · 명당 실측 건너뜀 {h['name']}: {e}")
+                continue
+        d = dict(d)
+        d["rankName"], d["rankSub"], d["why"] = h["name"], h["sub"], h.get("why", "")
+        out.append(d)
+
+    try:
+        RANK_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
+    out.sort(key=lambda x: x.get("site_score", 0), reverse=True)
+    return out
+
+
 def build_data() -> dict:
-    return {
+    data = {
         "myeongdang": build_site(myeongdang_site, up=True, share_dong="성산동"),
         "biboji": build_site(biboji_site, up=False, share_dong="전농동"),
+        "hotspots": HOTSPOTS,
     }
+    try:
+        data["ranking"] = build_ranking()
+    except Exception as e:
+        print("랭킹 빌드 실패:", e)
+        data["ranking"] = []
+    return data
 
 
 def render() -> Path:

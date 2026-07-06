@@ -173,6 +173,8 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
   font-weight:800; font-size:11.5px; padding:5px 10px 5px 8px; border-radius:999px;
   box-shadow:0 3px 10px color-mix(in srgb,var(--seal) 42%,transparent); transform:translate(-50%,-50%); }
 .hotpin .st{ font-size:12px; }
+.hotpin .hsc{ font-variant-numeric:tabular-nums; background:rgba(255,255,255,.28); border-radius:8px;
+  padding:1px 6px; margin-left:2px; font-size:11px; }
 /* 선택한 자리 핀 (검색·탭·명당 선택 시) */
 .selpin{ position:relative; transform:translate(-50%,-100%); text-align:center; }
 .selpin-b{ display:inline-block; background:linear-gradient(180deg,var(--seal-ink),var(--seal)); color:#fff;
@@ -888,22 +890,16 @@ const FRIENDLY = {R01:'뒷산의 받침',R02:'양옆의 감쌈',R03:'물길',R04
   R06:'휜 도로',R07:'고가·철로',R08:'집의 방향',R09:'층수 기운',R10:'주변 환경'};
 let CUR = 'myeongdang';
 
-/* 전국 명당(名堂) — 예로부터 풍수 좋기로 이름난 실제 터. 탭하면 그 자리를 실측 감정.
-   랭킹은 이 목록을 실제 지형(산·강·도로 등)으로 측정해 매긴다. */
-const HOTSPOTS = [
-  {name:'평창동',   sub:'서울 종로',   lat:37.6119, lon:126.9740, why:'북한산 배산임수'},
-  {name:'성북동',   sub:'서울 성북',   lat:37.5957, lon:126.9985, why:'북악·응봉 감쌈'},
-  {name:'부암동',   sub:'서울 종로',   lat:37.5926, lon:126.9660, why:'인왕산 자락'},
-  {name:'한남동',   sub:'서울 용산',   lat:37.5340, lon:127.0000, why:'남산 남향·한강'},
-  {name:'남연군 묘', sub:'예산 덕산',   lat:36.6689, lon:126.8430, why:'가야산 대명당'},
-  {name:'하회마을',  sub:'안동',        lat:36.5390, lon:128.5180, why:'낙동강 물돌이'},
-  {name:'양동마을',  sub:'경주',        lat:35.9987, lon:129.2559, why:'설창산 물(勿)자형'},
-  {name:'닭실마을',  sub:'봉화',        lat:36.9430, lon:128.7360, why:'금계포란형'},
-  {name:'회룡포',   sub:'예천',        lat:36.5860, lon:128.2760, why:'내성천 육지 속 섬'},
-  {name:'선교장',   sub:'강릉',        lat:37.7870, lon:128.8840, why:'시루봉 배산'},
-  {name:'외암마을',  sub:'아산',        lat:36.7360, lon:126.9160, why:'설화산 배산임수'},
-  {name:'한옥마을',  sub:'전주',        lat:35.8150, lon:127.1530, why:'승암산·전주천'}
+/* 전국 명당(名堂) — 서버가 빌드 시 주입(DATA.hotspots). 랭킹은 실측 후 미리 축적(DATA.ranking). */
+const HOTSPOTS = (DATA.hotspots && DATA.hotspots.length) ? DATA.hotspots : [
+  {name:'평창동', sub:'서울 종로', lat:37.6119, lon:126.9740, why:'북한산 배산임수'},
+  {name:'성북동', sub:'서울 성북', lat:37.5957, lon:126.9985, why:'북악·응봉 감쌈'},
+  {name:'하회마을', sub:'안동', lat:36.5390, lon:128.5180, why:'낙동강 물돌이'},
+  {name:'양동마을', sub:'경주', lat:35.9987, lon:129.2559, why:'설창산 물자형'}
 ];
+// 미리 축적된 실측 리포트를 명당 이름으로 조회 (마커 탭 시 즉시 상세)
+const RANK_BY_NAME = {};
+(DATA.ranking||[]).forEach((d,i)=>{ if(d.rankName) RANK_BY_NAME[d.rankName]=i; });
 
 /* ====== 테마 토글 ====== */
 $('#theme').onclick = ()=>{
@@ -1114,11 +1110,13 @@ function drawHomeMap(){
         icon:{ content:`<div class="mappin"><span class="sc">${d.site_score}</span>점</div>`, anchor:new naver.maps.Point(30,34) }});
       naver.maps.Event.addListener(mk,'click',()=>startScan(id));
     });
-    // 전국 명당 마커 — 탭하면 그 자리를 실측 감정
+    // 전국 명당 마커 — 탭하면 미리 축적된 실측 리포트를 즉시(없으면 실시간 감정)
     HOTSPOTS.forEach(h=>{
+      const idx=RANK_BY_NAME[h.name];
+      const sc=(idx!=null && DATA.ranking[idx])? `<span class="hsc">${DATA.ranking[idx].site_score}</span>` : '';
       const mk=new naver.maps.Marker({ position:nLatLng([h.lat,h.lon]), map:homeNMap,
-        icon:{ content:`<div class="hotpin"><span class="st">★</span>${h.name}</div>`, anchor:new naver.maps.Point(0,0) }});
-      naver.maps.Event.addListener(mk,'click',()=>assessCoord(h.lat,h.lon));
+        icon:{ content:`<div class="hotpin"><span class="st">★</span>${h.name}${sc}</div>`, anchor:new naver.maps.Point(0,0) }});
+      naver.maps.Event.addListener(mk,'click',()=>openHotspot(h));
     });
     // 지도 아무 데나 탭 → 그 좌표의 풍수 (전국 어디든)
     naver.maps.Event.addListener(homeNMap,'click', e=> assessCoord(e.coord.lat(), e.coord.lng()));
@@ -1208,6 +1206,12 @@ function searchAddr(){
 }
 function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
   assessLive('lat='+lat.toFixed(6)+'&lon='+lon.toFixed(6));
+}
+function openHotspot(h){   // 명당 마커 탭 → 미리 축적된 리포트 즉시, 없으면 실시간
+  const idx=RANK_BY_NAME[h.name];
+  if(idx!=null && DATA.ranking && DATA.ranking[idx]){
+    DATA['_rank'+idx]=DATA.ranking[idx]; renderReport('_rank'+idx);
+  } else { assessCoord(h.lat, h.lon); }
 }
 
 /* ============================================================
@@ -1567,6 +1571,22 @@ function runPrecision(){
 const RANK = { started:false, done:false, items:[] };
 function renderRank(){
   const body=$('#rankBody');
+  // ① 빌드 시 실측·축적된 랭킹이 있으면 즉시 표시 (측정 대기 없음)
+  if(DATA.ranking && DATA.ranking.length){
+    let html=`<div class="rank-note">전국 이름난 명당을 <b>실제 지형(산·강·도로)</b>으로 실측해 미리 순위를 매겼습니다. 탭하면 그 자리 상세 풍수를 봐요.</div><div class="rank-list">`;
+    DATA.ranking.forEach((d,i)=>{
+      const key='_rank'+i; DATA[key]=d;
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+      html+=`<button class="rank-row" onclick="renderReport('${key}')">
+        <span class="rank-no ${i<3?'top':''}">${medal}</span>
+        <span class="rank-info"><b>${d.rankName||d.addr}</b><small>${d.rankSub||''}${d.why?' · '+d.why:''}</small></span>
+        <span class="rank-sc"><b class="tnum">${d.site_score}</b><i>${d.grade}</i></span></button>`;
+    });
+    html+=`</div><div class="demo-note" style="margin-top:14px">실제 지형 데이터로 미리 실측·축적한 순위입니다</div>`;
+    body.innerHTML=html;
+    return;
+  }
+  // ② (로컬/프리뷰 등 축적본이 없을 때) 실시간 측정 폴백
   if(!RANK.started){
     RANK.started=true;
     RANK.items = HOTSPOTS.map(h=>Object.assign({}, h, {score:null, grade:null, d:null, state:'wait'}));
