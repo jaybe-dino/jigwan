@@ -1233,24 +1233,28 @@ function toast(msg){
 function searchAddr(){
   const inp=$('#homeSearch'); const q=(inp && inp.value || '').trim();
   if(!q){ inp && inp.focus(); return; }
-  // 네이버 지오코더(클라이언트)로 한국 주소를 정확히 좌표 변환 → 그 자리 실측 감정.
-  // 지오코더가 없거나 실패하면 서버 지오코딩으로 폴백.
-  if(naverOK() && naver.maps.Service && naver.maps.Service.geocode){
-    try{
-      naver.maps.Service.geocode({ query:q }, function(status, resp){
-        const ok = status===naver.maps.Service.Status.OK;
-        const list = ok && resp && resp.v2 && resp.v2.addresses;
-        if(list && list.length){
-          const a=list[0];
-          assessCoord(parseFloat(a.y), parseFloat(a.x));
-        }else{
-          assessLive('address='+encodeURIComponent(q));
-        }
-      });
-      return;
-    }catch(_){ /* 폴백 */ }
-  }
-  assessLive('address='+encodeURIComponent(q));
+  beginScan();                       // 즉시 로딩 표시(검색이 멈춘 것처럼 보이지 않게)
+  if(inp) inp.blur();                // 모바일 키보드 닫기
+
+  let done=false;
+  const serverFallback=()=>{ if(done) return; done=true; assessLive('address='+encodeURIComponent(q)); };
+  // 지오코더가 없거나 콜백이 4초 안에 안 오면 서버 지오코딩으로 폴백
+  const fbTimer=setTimeout(serverFallback, 4000);
+
+  const hasGeocoder = naverOK() && naver.maps.Service && typeof naver.maps.Service.geocode==='function';
+  if(!hasGeocoder){ clearTimeout(fbTimer); serverFallback(); return; }
+
+  try{
+    naver.maps.Service.geocode({ query:q }, function(status, resp){
+      if(done) return;
+      clearTimeout(fbTimer);
+      const ok = (status===naver.maps.Service.Status.OK);
+      const list = ok && resp && resp.v2 && resp.v2.addresses;
+      const a = list && list.length ? list[0] : null;
+      if(a && a.y && a.x){ done=true; assessCoord(parseFloat(a.y), parseFloat(a.x)); }
+      else serverFallback();          // 결과 없음 → 서버 지오코딩
+    });
+  }catch(_){ clearTimeout(fbTimer); serverFallback(); }
 }
 function assessCoord(lat, lon){   // 지도 탭 → 그 좌표 풍수
   assessLive('lat='+lat.toFixed(6)+'&lon='+lon.toFixed(6));
