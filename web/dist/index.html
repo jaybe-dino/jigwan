@@ -998,9 +998,17 @@ function llOffset(lat,lon,dist,brg){
   return [la2*180/Math.PI, lo2*180/Math.PI];
 }
 
+function sizeHomeMap(){
+  // dvh 대신 실제 픽셀 높이를 직접 지정 — iOS Safari 등에서 로드 시점에 100dvh가
+  // 0으로 잡혀 네이버 지도가 0크기로 생성돼 흰 화면이 되는 것을 방지(리포트 지도처럼 확정 높이).
+  const mw=document.querySelector('.mapwrap.fullmap');
+  const hpx=(window.innerHeight||document.documentElement.clientHeight||600);
+  if(mw) mw.style.height=hpx+'px';
+}
 function drawHomeMap(){
   const host=$('#homeMap');
   document.querySelectorAll('.pin').forEach(p=>p.remove());
+  sizeHomeMap();
   if(naverOK()){
     if(homeNMap){ naver.maps.Event.trigger(homeNMap,'resize'); return; }
     host.innerHTML='';   // 인증 재시도 등으로 남은 이전 지도 DOM 제거 (안 하면 빈 지도가 겹쳐 렌더 안 됨)
@@ -1021,26 +1029,11 @@ function drawHomeMap(){
     });
     // 지도 아무 데나 탭 → 그 좌표의 풍수 (전국 어디든)
     naver.maps.Event.addListener(homeNMap,'click', e=> assessCoord(e.coord.lat(), e.coord.lng()));
-    // 초기 빈 지도 방지 — 컨테이너가 아직 페인트되기 전 생성되면 타일 격자가 잘못 잡혀
-    // 흰 화면으로 남는다. resize/refresh로 먼저 시도하고, 그래도 렌더(idle)가 없으면
-    // 리포트 지도처럼 '깨끗이 다시 생성'한다(가장 확실).
-    window.__homeReady=false;
-    naver.maps.Event.addListener(homeNMap,'idle',()=>{ window.__homeReady=true; });
-    naver.maps.Event.addListener(homeNMap,'dragstart',()=>{ window.__homeReady=true; });
-    function kickHome(){
-      if(!homeNMap || !naverOK()) return;
-      try{ naver.maps.Event.trigger(homeNMap,'resize'); }catch(_){}
-      try{ if(homeNMap.refresh) homeNMap.refresh(true); }catch(_){}
-      if(!window.__homeReady){ try{ homeNMap.setCenter(nLatLng([36.6,127.8])); }catch(_){} }
-    }
-    requestAnimationFrame(()=>requestAnimationFrame(kickHome));
-    [120,350,700].forEach(t=>setTimeout(kickHome,t));
-    // 워치독: 일정 시간 내 렌더 안 되면 지도 인스턴스를 통째로 재생성
-    [1100,2200,3600].forEach(t=>setTimeout(()=>{
-      if(window.__homeReady || !naverOK()) return;
-      if((window.__homeTries=(window.__homeTries||0)+1) > 4) return;
-      homeNMap=null; host.innerHTML='';   // 실패한 인스턴스 제거 후 새로 생성
-      drawHomeMap();
+    // 컨테이너 높이 확정 후 여러 번 크기 재계산 → 타일 강제 로드(초기 빈 지도 방지)
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      sizeHomeMap(); if(homeNMap&&naverOK()) naver.maps.Event.trigger(homeNMap,'resize'); }));
+    [60,250,600,1200,2400].forEach(t=>setTimeout(()=>{
+      if(homeNMap && naverOK()){ sizeHomeMap(); naver.maps.Event.trigger(homeNMap,'resize'); }
     }, t));
   } else {
     canvasHomeMap(host);
@@ -1560,9 +1553,12 @@ function renderMypage(){
 
 /* ====== 초기화 ====== */
 const isDesktop = ()=> matchMedia('(min-width:1000px)').matches;
-fillDob(); drawHomeMap();
+fillDob(); sizeHomeMap(); drawHomeMap();
 // 지도 우선: 열자마자 전국 명당 지도가 배경. 검색/탭/명당 마커로 감정을 시작한다.
-addEventListener('resize', ()=>{ drawHomeMap(); if(curPanel==='report') drawRepMap(DATA[CUR]); });
+addEventListener('resize', ()=>{ sizeHomeMap(); drawHomeMap(); if(curPanel==='report') drawRepMap(DATA[CUR]); });
+// 화면 회전·주소창 표시 변화 시 높이 재동기화
+addEventListener('orientationchange', ()=>setTimeout(()=>{ sizeHomeMap();
+  if(homeNMap&&naverOK()) naver.maps.Event.trigger(homeNMap,'resize'); }, 250));
 // 전체 로드 완료 후 한 번 더 — naver 스크립트/레이아웃 지연으로 빈 지도가 남는 것 방지
-addEventListener('load', ()=>{ drawHomeMap(); });
+addEventListener('load', ()=>{ sizeHomeMap(); drawHomeMap(); });
 </script>
