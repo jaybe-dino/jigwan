@@ -14,7 +14,7 @@ async function runRaw(args: string[]): Promise<any> {
     cwd: REPO_ROOT,
     maxBuffer: 8 * 1024 * 1024,
     env: process.env,
-    timeout: 42_000, // 지연 시 파이썬 프로세스 종료(좀비 방지)
+    timeout: 50_000, // 지연 시 파이썬 프로세스 종료(좀비 방지)
     killSignal: "SIGKILL",
   });
   const data = JSON.parse(stdout);

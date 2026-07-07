@@ -1335,7 +1335,7 @@ function finishScan(id){
 /* 홈 검색·지도 탭 → 실제 엔진(/api/assess). 탭 즉시 로딩 표시(무반응 방지). */
 async function assessLive(qs, label){
   beginScan();
-  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), 45000);
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(), 52000);
   try{
     const res=await fetch('/api/assess?'+qs, {signal:ctrl.signal});
     clearTimeout(to);

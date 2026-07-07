@@ -29,17 +29,28 @@ POI_TAGS = [
 ]
 
 
-def _post(query: str, http=get_json) -> dict:
+def _post(query: str, http=get_json, timeout: float = 12) -> dict:
     # Overpass는 POST가 표준이나 get_json은 GET. data 파라미터로 GET 허용됨.
     # 미러를 순서대로 시도 — 하나라도 성공하면 반환, 모두 실패해야 예외.
     last = None
     for ep in ENDPOINTS:
         try:
-            return http(ep, params={"data": query}, timeout=8)   # 빠른 실패 → 다음 미러
+            return http(ep, params={"data": query}, timeout=timeout)
         except Exception as e:  # 타임아웃·429·5xx → 다음 미러
             last = e
             continue
     raise last if last is not None else RuntimeError("overpass: all mirrors failed")
+
+
+ROAD_SET = {"motorway", "trunk", "primary", "secondary", "tertiary", "residential"}
+WATER_WAYS = {"river", "stream", "canal", "drain", "riverbank"}
+
+
+def _road_width(tags: dict) -> float:
+    lanes = tags.get("lanes")
+    if tags.get("width", "").replace(".", "").isdigit():
+        return float(tags["width"])
+    return int(lanes) * 3.0 if (lanes or "").isdigit() else 6.0
 
 
 def _center(el: dict) -> Optional[LatLon]:
@@ -60,12 +71,71 @@ class OverpassClient:
     def __init__(self, http=get_json):
         self._http = http
 
-    def _q(self, body: str) -> List[dict]:
+    def _q(self, body: str, timeout: float = 12) -> List[dict]:
         try:
-            data = _post(f"[out:json][timeout:10];({body});out geom center 300;", self._http)
+            data = _post(f"[out:json][timeout:{int(timeout)}];({body});out geom center 300;",
+                         self._http, timeout=timeout + 3)
             return data.get("elements") or []
         except Exception:
             return []  # 네트워크/타임아웃 시 판정을 끊지 않고 빈 결과
+
+    def bundle(self, c: LatLon, water_r=1500, road_r=220, rail_r=500,
+               poi_r=500, peak_r=4000) -> dict:
+        """모든 지형지물을 '한 번의' Overpass 요청으로 — 6회 개별 호출 대비 실패율·지연 급감.
+        넉넉한 타임아웃(18s) 하나로 처리하고, 태그로 분류해 돌려준다."""
+        poi_parts = "".join(
+            f'nwr[{t.split("=")[0]}~"{t.split("=")[1]}"](around:{poi_r},{c.lat},{c.lon});'
+            for t, _ in POI_TAGS)
+        body = (
+            f'way[waterway~"river|stream|canal|drain|riverbank"](around:{water_r},{c.lat},{c.lon});'
+            f'way[natural=water](around:{water_r},{c.lat},{c.lon});'
+            f'way["water"](around:{water_r},{c.lat},{c.lon});'
+            f'way[highway~"motorway|trunk|primary|secondary|tertiary|residential"](around:{road_r},{c.lat},{c.lon});'
+            f'way[railway~"rail|light_rail|subway"](around:{rail_r},{c.lat},{c.lon});'
+            + poi_parts
+            + f'node[natural~"peak|hill"](around:{peak_r},{c.lat},{c.lon});'
+            f'way[building](around:22,{c.lat},{c.lon});'
+        )
+        els = self._q(body, timeout=15)
+        streams: List[StreamSegment] = []
+        roads: List[RoadSegment] = []
+        rails: List[RailOverpass] = []
+        pois: List[POI] = []
+        peaks: List[Tuple[LatLon, str, float]] = []
+        ring: List[LatLon] = []
+        seen_w = set()
+        for e in els:
+            tags = e.get("tags") or {}
+            wtag = tags.get("waterway")
+            if (wtag in WATER_WAYS) or tags.get("natural") == "water" or "water" in tags:
+                pts = _line(e)
+                if len(pts) >= 2 and e.get("id") not in seen_w:
+                    seen_w.add(e.get("id"))
+                    streams.append(StreamSegment(points=pts, name=tags.get("name")))
+            elif tags.get("highway") in ROAD_SET:
+                pts = _line(e)
+                if len(pts) >= 2:
+                    roads.append(RoadSegment(points=pts, width_m=_road_width(tags), name=tags.get("name")))
+            elif tags.get("railway") in ("rail", "light_rail", "subway"):
+                pts = _line(e)
+                if pts:
+                    near = min(pts, key=lambda p: haversine(c.as_tuple(), p.as_tuple()))
+                    rails.append(RailOverpass(kind="rail", nearest=near, height_diff_m=0.0))
+            elif tags.get("natural") in ("peak", "hill"):
+                loc = _center(e)
+                if loc and tags.get("name"):
+                    ele = float(tags["ele"]) if (tags.get("ele", "").replace(".", "").isdigit()) else 0.0
+                    peaks.append((loc, tags["name"], ele))
+            elif tags.get("building"):
+                if not ring:
+                    ring = _line(e)
+            else:
+                loc = _center(e)
+                cat = _match_cat(tags)
+                if loc and cat:
+                    pois.append(POI(point=loc, category=cat, name=tags.get("name")))
+        return {"streams": streams, "roads": roads, "rails": rails,
+                "pois": pois, "peaks": peaks, "ring": ring}
 
     def waterways(self, c: LatLon, r: float) -> List[StreamSegment]:
         # 하천 선(waterway) + 면으로 매핑된 물(natural=water, 복개·개천·호안 포함)까지 폭넓게.

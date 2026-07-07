@@ -34,6 +34,20 @@ class OsmCollectors:
         self.elev = OpenTopoElevation()
         self.overpass = OverpassClient()
         self._facing = 180.0
+        self._bundle_key = None
+        self._bundle = None
+
+    def _get_bundle(self, loc: LatLon) -> dict:
+        """모든 Overpass 데이터를 '한 번'에 받아 캐시 — 한 감정당 Overpass 1회."""
+        key = (round(loc.lat, 5), round(loc.lon, 5))
+        if self._bundle_key == key and self._bundle is not None:
+            return self._bundle
+        try:
+            self._bundle = self.overpass.bundle(loc)
+        except Exception:
+            self._bundle = {"streams": [], "roads": [], "rails": [], "pois": [], "peaks": [], "ring": []}
+        self._bundle_key = key
+        return self._bundle
 
     def building(self, address: str) -> BuildingInfo:
         info = self.geocoder.geocode(address)
@@ -45,11 +59,10 @@ class OsmCollectors:
 
     def _resolve(self, loc: LatLon) -> BuildingInfo:
         info = BuildingInfo(location=loc, facing_deg=180.0, ground_elevation_m=0.0)
-        # 좌향: 실제 건물 외곽선 주축 → 도로 쪽을 향하도록
+        # 좌향: 통합 번들의 건물 외곽선 주축 (추가 호출 없음)
         try:
-            ring = self.overpass.building_footprint(loc)
+            ring = self._get_bundle(loc).get("ring") or []
             if len(ring) >= 3:
-                # 도로 추가 조회는 생략(지연 감소) — 건물 외곽선 주축만으로 좌향 추정
                 info.facing_deg = facing_from_footprint([p.as_tuple() for p in ring], None)
         except Exception:
             pass
@@ -69,16 +82,16 @@ class OsmCollectors:
         return [ElevationSample(point=p, elevation_m=e) for p, e in zip(pts, elevs)]
 
     def streams(self, center: LatLon, radius_m: float) -> List[StreamSegment]:
-        return self.overpass.waterways(center, radius_m)
+        return self._get_bundle(center).get("streams", [])
 
     def roads(self, center: LatLon, radius_m: float) -> List[RoadSegment]:
-        return self.overpass.roads(center, radius_m)
+        return self._get_bundle(center).get("roads", [])
 
     def rails_overpasses(self, center: LatLon, radius_m: float) -> List[RailOverpass]:
-        return self.overpass.rails(center, radius_m)
+        return self._get_bundle(center).get("rails", [])
 
     def pois(self, center: LatLon, radius_m: float) -> List[POI]:
-        return self.overpass.pois(center, radius_m)
+        return self._get_bundle(center).get("pois", [])
 
     def historical(self, location: LatLon) -> Optional[HistoricalLand]:
         return None
@@ -86,10 +99,8 @@ class OsmCollectors:
     def landmarks(self, center: LatLon) -> Dict[str, str]:
         """실제 산봉우리·하천 이름을 방위별로 배정 (해석에 그대로 노출)."""
         out: Dict[str, str] = {}
-        try:
-            peaks = self.overpass.peaks(center, 4000)
-        except Exception:
-            peaks = []
+        bundle = self._get_bundle(center)
+        peaks = bundle.get("peaks", [])
         f = self._facing
         sectors = {"back": (f + 180) % 360, "left": (f + 90) % 360,
                    "right": (f - 90) % 360, "front": f % 360}
@@ -103,13 +114,9 @@ class OsmCollectors:
                         best = (d, name)
             if best:
                 out[key] = best[1]
-        try:
-            waters = self.overpass.waterways(center, 800)
-            named = [w for w in waters if w.name]
-            if named:
-                nearest = min(named, key=lambda w: min(
-                    haversine(center.as_tuple(), p.as_tuple()) for p in w.points))
-                out["water"] = nearest.name
-        except Exception:
-            pass
+        named = [w for w in bundle.get("streams", []) if w.name]
+        if named:
+            nearest = min(named, key=lambda w: min(
+                haversine(center.as_tuple(), p.as_tuple()) for p in w.points))
+            out["water"] = nearest.name
         return out
