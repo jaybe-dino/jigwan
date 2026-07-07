@@ -389,6 +389,9 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .rule:first-child{ border-top:none; }
 .rule .rh{ display:flex; align-items:center; gap:9px; margin-bottom:7px; }
 .rule .nm{ font-weight:800; font-size:15px; letter-spacing:-.01em; }
+.rule .rscore{ margin-left:auto; font-size:11px; font-weight:700; color:var(--ink-faint);
+  font-variant-numeric:tabular-nums; background:var(--panel-2); padding:3px 8px; border-radius:999px; }
+.rule .rscore + .verdict{ margin-left:8px; }
 .rule .verdict{ margin-left:auto; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:999px; }
 .rule .verdict.good{ color:var(--gun); background:color-mix(in srgb,var(--gun) 13%,transparent); }
 .rule .verdict.ok{ color:var(--warn); background:color-mix(in srgb,var(--warn) 15%,transparent); }
@@ -786,10 +789,18 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
       </div>
     </div>
 
+    <!-- 표고 단면 (배산임수) -->
+    <div class="card" id="sectionCard" style="display:none">
+      <div class="hd"><h3>터의 표고 단면</h3><span class="sub">앞(득수) ← 집 → 뒤(현무)</span></div>
+      <div id="sectionChart"></div>
+      <div id="sectionNote" style="font-size:12px; color:var(--ink-soft); margin-top:8px"></div>
+    </div>
+
     <!-- 실측 프로필 (수치·지형지물) -->
     <div class="card">
-      <div class="hd"><h3>실측 프로필</h3><span class="sub">이 터의 실제 측정값</span></div>
+      <div class="hd"><h3>실측 프로필</h3><span class="sub" id="profRegion">이 터의 실제 측정값</span></div>
       <div id="profileList" class="profile-list"></div>
+      <div id="confLine" style="font-size:12px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft)"></div>
     </div>
 
     <!-- 근거 레이어 -->
@@ -1485,13 +1496,29 @@ function renderReport(id){
     ? ('실측: '+names.join(' · '))
     : '뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다';
 
+  // 표고 단면 (배산임수 시각화)
+  const secCard=$('#sectionCard'); const sec=d.section||[];
+  if(sec.length>=2 && (Math.max(...sec.map(p=>p.e))-Math.min(...sec.map(p=>p.e)))>=3){
+    $('#sectionChart').innerHTML=drawSection(sec);
+    const back=(d.landmarks||{}).back, water=(d.landmarks||{}).water;
+    const backPt=sec[sec.length-1], frontPt=sec[0];
+    $('#sectionNote').innerHTML=`뒤 ${back?('<b>'+back+'</b> '):''}표고 <b>${Math.round(backPt.e)}m</b> · 집 <b>${Math.round((sec.find(p=>p.t===0)||{e:0}).e)}m</b> · 앞 ${water?('<b>'+water+'</b> '):''}${Math.round(frontPt.e)}m — 뒤가 높고 앞이 트일수록 배산임수 길격입니다.`;
+    secCard.style.display='block';
+  } else { secCard.style.display='none'; }
+
   // 실측 프로필 — 실제 측정 수치·지형지물 (신빙성)
+  $('#profRegion').textContent = (d.region||'') + ' · 실측값';
   const pl=$('#profileList'); const prof=d.profile||[];
   pl.innerHTML = prof.map(p=>{
     const cls=p.ok>0?'good':(p.ok<0?'bad':'neu');
     return `<div class="prow"><div class="pk">${p.k}</div>
       <div class="pv"><b class="${cls}">${p.v}</b><span>${p.d}</span></div></div>`;
   }).join('');
+  // 데이터 신뢰도
+  const cf=d.confidence||{tier:'—',got:0,total:5,pct:0};
+  const cfCol=cf.tier==='높음'?'var(--gun)':(cf.tier==='보통'?'var(--warn)':'var(--seal)');
+  $('#confLine').innerHTML=`🔎 데이터 신뢰도 <b style="color:${cfCol}">${cf.tier}</b> · 실측 항목 ${cf.got}/${cf.total} (${cf.pct}%)`
+    + (cf.tier==='낮음'?' <span class="faint">— 데이터가 얇아 점수는 참고용</span>':'');
 
   // 근거 레이어 탭
   const tabs=$('#evtabs'); tabs.innerHTML='';
@@ -1547,6 +1574,31 @@ function drawRepMap(d){
   }
 }
 
+/* 표고 단면 SVG — 앞(−t)←집(0)→뒤(+t) */
+function drawSection(sec){
+  const W=320,H=140,pad=10,base=H-22;
+  const ts=sec.map(p=>p.t), es=sec.map(p=>p.e);
+  const tmin=Math.min(...ts), tmax=Math.max(...ts), emin=Math.min(...es), emax=Math.max(...es);
+  const tr=(tmax-tmin)||1, er=(emax-emin)||1;
+  const X=t=>pad+(t-tmin)/tr*(W-2*pad);
+  const Y=e=>base-(e-emin)/er*(base-pad);
+  let line='M'+X(sec[0].t).toFixed(1)+','+Y(sec[0].e).toFixed(1);
+  sec.forEach((p,i)=>{ if(i) line+=' L'+X(p.t).toFixed(1)+','+Y(p.e).toFixed(1); });
+  const area=line+` L${X(tmax).toFixed(1)},${base} L${X(tmin).toFixed(1)},${base} Z`;
+  const site=sec.find(p=>p.t===0)||{t:0,e:emin};
+  const x0=X(0), y0=Y(site.e);
+  const gun=css('--gun'), seal=css('--seal'), faint=css('--ink-faint');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:140px">
+    <path d="${area}" fill="${gun}" opacity="0.14"/>
+    <path d="${line}" fill="none" stroke="${gun}" stroke-width="2.2" stroke-linejoin="round"/>
+    <line x1="${x0.toFixed(1)}" y1="${pad}" x2="${x0.toFixed(1)}" y2="${base}" stroke="${seal}" stroke-width="1.3" stroke-dasharray="3 3" opacity=".7"/>
+    <circle cx="${x0.toFixed(1)}" cy="${y0.toFixed(1)}" r="4.5" fill="${seal}" stroke="#fff" stroke-width="1.5"/>
+    <text x="${pad}" y="${H-6}" font-size="10" fill="${faint}">← 앞(득수)</text>
+    <text x="${W-pad}" y="${H-6}" font-size="10" fill="${faint}" text-anchor="end">뒤(현무) →</text>
+    <text x="${x0.toFixed(1)}" y="${(y0-9).toFixed(1)}" font-size="10" font-weight="800" fill="${seal}" text-anchor="middle">집</text>
+  </svg>`;
+}
+
 function renderRules(d, cat){
   const box=$('#rules'); box.innerHTML='';
   d.results.filter(r=>!cat||r.category===cat).forEach(r=>{
@@ -1556,12 +1608,14 @@ function renderRules(d, cat){
     else if(pct<0.55){ vk='bad'; vt='아쉬워요'; }
     else if(pct<0.75){ vk='ok'; vt='보통'; }
     const row=el('div','rule'+(r.applicable?'':' na'));
+    const scoreChip = r.applicable && r.max_score
+      ? `<span class="rscore">배점 ${(+r.score).toFixed(1)}/${r.max_score}</span>` : '';
     row.innerHTML=`
       <div class="rh"><span class="nm">${FRIENDLY[r.code]||r.name}</span>
-        <span class="verdict ${vk}">${vt}</span></div>
+        ${scoreChip}<span class="verdict ${vk}">${vt}</span></div>
       <div class="plain">${r.plain||r.evidence}</div>
       <details class="proof"><summary>전문 근거·수치 보기</summary>
-        <div class="ev">${r.evidence}<span class="th">▪ ${r.theory}${r.tier?' · '+r.tier:''}</span></div>
+        <div class="ev">${r.evidence}<span class="th">▪ ${r.theory}${r.tier?' · '+r.tier:''}${r.name?' · '+r.name:''}</span></div>
       </details>`;
     box.appendChild(row);
   });

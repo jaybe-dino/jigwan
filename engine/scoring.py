@@ -63,6 +63,7 @@ class SiteAssessment:
     coord: tuple = (0.0, 0.0)  # (lat, lon) — 지도 중심
     landmarks: Dict[str, str] = field(default_factory=dict)  # 실제 지형지물 이름
     sources: Dict[str, int] = field(default_factory=dict)   # 실측 데이터 개수(투명성)
+    section: List[dict] = field(default_factory=list)       # 배산임수 표고 단면(앞←집→뒤)
 
     @property
     def needs_bibo(self) -> bool:
@@ -128,4 +129,32 @@ def assess_site(
         coord=(loc.lat, loc.lon),
         landmarks=features.landmarks or {},
         sources=sources,
+        section=_elev_section(features),
     )
+
+
+def _elev_section(features: SiteFeatures) -> List[dict]:
+    """앞←집→뒤 방향 표고 단면(배산임수 시각화용). DEM 샘플을 좌향축에 투영.
+
+    t: 집 기준 축 위치(m, 뒤=+/앞=−), e: 표고(m). 능선을 보이게 같은 t는 최고값.
+    """
+    from engine.geo import angle_diff, bearing, haversine
+
+    b = features.building
+    back_deg = (b.facing_deg + 180.0) % 360.0
+    o = b.location.as_tuple()
+    agg: Dict[int, float] = {0: round(b.ground_elevation_m, 1)}
+    for s in features.dem or []:
+        p = s.point.as_tuple()
+        d = haversine(o, p)
+        brg = bearing(o, p)
+        if angle_diff(brg, back_deg) <= 32:      # 뒤쪽
+            t = int(round(d))
+        elif angle_diff(brg, b.facing_deg) <= 32:  # 앞쪽
+            t = -int(round(d))
+        else:
+            continue
+        e = round(s.elevation_m, 1)
+        if t not in agg or e > agg[t]:
+            agg[t] = e
+    return [{"t": t, "e": agg[t]} for t in sorted(agg)]

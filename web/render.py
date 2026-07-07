@@ -135,6 +135,33 @@ def _compass(deg) -> str:
     return names[int(((deg % 360) + 22.5) // 45) % 8]
 
 
+_SAN_HANJA = {"자": "子", "계": "癸", "축": "丑", "간": "艮", "인": "寅", "갑": "甲",
+              "묘": "卯", "을": "乙", "진": "辰", "손": "巽", "사": "巳", "병": "丙",
+              "오": "午", "정": "丁", "미": "未", "곤": "坤", "신": "申", "경": "庚",
+              "유": "酉", "술": "戌", "건": "乾", "해": "亥", "임": "壬"}
+
+
+def _hanja(k) -> str:
+    return f"{k}({_SAN_HANJA[k]})" if k in _SAN_HANJA else (k or "")
+
+
+def _region(addr: str) -> str:
+    """주소에서 시·구·동을 뽑아 지역명으로. (예: '종로구 평창동')"""
+    toks = (addr or "").replace(",", " ").split()
+    gu = next((t for t in toks if t.endswith(("구", "군")) and len(t) >= 2), "")
+    if not gu:
+        gu = next((t for t in toks if t.endswith("시") and len(t) >= 2), "")
+    dong = next((t for t in toks if t.endswith(("동", "읍", "면", "리", "가")) and len(t) >= 2), "")
+    return " ".join(x for x in [gu, dong] if x) or "이 지역"
+
+
+def _confidence(sources: dict) -> dict:
+    keys = ["고도점", "하천", "도로", "주변시설", "산·강이름"]
+    got = sum(1 for k in keys if (sources.get(k, 0) or 0) > 0)
+    tier = "높음" if got >= 4 else ("보통" if got >= 2 else "낮음")
+    return {"tier": tier, "pct": int(got / len(keys) * 100), "got": got, "total": len(keys)}
+
+
 def _profile(a: SiteAssessment, R, lm: dict) -> list:
     """실측 프로필 — 실제 측정 수치·지형지물 이름으로 '전문 감정'다운 신뢰감을 준다.
     각 항목: {k: 요소, v: 핵심값, d: 세부수치, ok: 길흉(1/0/-1)}"""
@@ -145,11 +172,11 @@ def _profile(a: SiteAssessment, R, lm: dict) -> list:
     r08 = R["R08"].metrics if "R08" in R else {}
     out = []
 
-    # 좌향
+    # 좌향 — 24산(한자 병기)
     if "facing_deg" in r08:
         fd = r08["facing_deg"]
-        out.append({"k": "좌향(坐向)", "v": f"{r08.get('jwa','')}좌 {r08.get('hyang','')}향",
-                    "d": f"{_compass(fd)}향 {round(fd)}° · {r08.get('sect','')}", "ok": 1})
+        out.append({"k": "좌향(坐向)", "v": f"{_hanja(r08.get('jwa',''))}좌 {_hanja(r08.get('hyang',''))}향",
+                    "d": f"{_compass(fd)}향 {round(fd)}° · 24산 · {r08.get('sect','')}", "ok": 1})
 
     # 현무 — 뒷산
     if (r01.get("max_gain_m", 0) or 0) > 0:
@@ -309,6 +336,9 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "terbti": _terbti(a, R),
         "advice": _advice(a, R),
         "profile": _profile(a, R, a.landmarks or {}),  # 실측 프로필(수치·지형지물)
+        "section": a.section,                            # 배산임수 표고 단면
+        "region": _region(a.address),                    # 지역명(구·동)
+        "confidence": _confidence(a.sources),            # 데이터 충실도(신뢰도)
         # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.
         # 공유 카드(addrShort)만 §11 낙인방지로 행정동까지 마스킹.
         "addr": a.address,
