@@ -128,6 +128,68 @@ def _ratio(R, code):
     return r.score / r.max_score
 
 
+def _compass(deg) -> str:
+    if deg is None:
+        return ""
+    names = ["북", "북동", "동", "남동", "남", "남서", "서", "북서"]
+    return names[int(((deg % 360) + 22.5) // 45) % 8]
+
+
+def _profile(a: SiteAssessment, R, lm: dict) -> list:
+    """실측 프로필 — 실제 측정 수치·지형지물 이름으로 '전문 감정'다운 신뢰감을 준다.
+    각 항목: {k: 요소, v: 핵심값, d: 세부수치, ok: 길흉(1/0/-1)}"""
+    r01 = R["R01"].metrics if "R01" in R else {}
+    r02 = R["R02"].metrics if "R02" in R else {}
+    r03 = R["R03"].metrics if "R03" in R else {}
+    r05 = R["R05"].metrics if "R05" in R else {}
+    r08 = R["R08"].metrics if "R08" in R else {}
+    out = []
+
+    # 좌향
+    if "facing_deg" in r08:
+        fd = r08["facing_deg"]
+        out.append({"k": "좌향(坐向)", "v": f"{r08.get('jwa','')}좌 {r08.get('hyang','')}향",
+                    "d": f"{_compass(fd)}향 {round(fd)}° · {r08.get('sect','')}", "ok": 1})
+
+    # 현무 — 뒷산
+    if (r01.get("max_gain_m", 0) or 0) > 0:
+        out.append({"k": "현무(뒷산)", "v": lm.get("back") or "뒤 능선",
+                    "d": f"{_compass(r01.get('bearing_deg'))}쪽 {int(r01.get('dist_m',0))}m · 표고 +{int(r01.get('max_gain_m',0))}m",
+                    "ok": 1})
+    else:
+        out.append({"k": "현무(뒷산)", "v": "받침 약함", "d": "등 뒤를 받치는 능선이 뚜렷하지 않음", "ok": -1})
+
+    # 청룡·백호
+    lg = int(r02.get("left_gain_m", 0) or 0)
+    rg = int(r02.get("right_gain_m", 0) or 0)
+    if lg or rg or lm.get("left") or lm.get("right"):
+        out.append({"k": "청룡·백호", "v": f"좌 {lm.get('left','—')} / 우 {lm.get('right','—')}",
+                    "d": f"좌 +{lg}m · 우 +{rg}m", "ok": 1 if (lg and rg) else 0})
+
+    # 득수 — 물길
+    if r03.get("dist_m") is not None:
+        emb = r03.get("embrace_sign", 0)
+        word = "환포(감싸 안음·길)" if emb >= 0 else "반궁(등짐·흉)"
+        out.append({"k": "득수(물길)", "v": lm.get("water") or "물길",
+                    "d": f"{int(r03['dist_m'])}m · {word}", "ok": 1 if emb >= 0 else -1})
+    else:
+        out.append({"k": "득수(물길)", "v": "미확인",
+                    "d": "가까운 하천 데이터가 잡히지 않음(없음 아님)", "ok": 0})
+
+    # 정면 도로 — 직충살
+    if r05.get("dist_m") is not None:
+        out.append({"k": "정면 도로", "v": "직충살 감지",
+                    "d": f"{int(r05['dist_m'])}m 앞 · 폭 {int(r05.get('width_m',0))}m", "ok": -1})
+    else:
+        out.append({"k": "정면 도로", "v": "곧은 충 없음", "d": "정면으로 찔러드는 도로 없음", "ok": 1})
+
+    # 주변 실측 개수
+    s = a.sources or {}
+    out.append({"k": "주변 실측", "v": f"시설 {s.get('주변시설',0)}곳",
+                "d": f"도로 {s.get('도로',0)} · 하천 {s.get('하천',0)} · 산/강이름 {s.get('산·강이름',0)}", "ok": 0})
+    return out
+
+
 def _terbti(a: SiteAssessment, R) -> dict:
     g = a.gauges
     grade = a.grade.value
@@ -246,6 +308,7 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         # 터BTI(집 유형) + 구체 풍수 조언(개운 처방)
         "terbti": _terbti(a, R),
         "advice": _advice(a, R),
+        "profile": _profile(a, R, a.landmarks or {}),  # 실측 프로필(수치·지형지물)
         # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.
         # 공유 카드(addrShort)만 §11 낙인방지로 행정동까지 마스킹.
         "addr": a.address,
@@ -263,6 +326,7 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
                 "applicable": r["applicable"], "evidence": r["evidence"],
                 "theory": r["theory"], "tier": r["tier"],
                 "plain": r.get("plain", ""),  # 쉬운 해석 (메인 노출)
+                "metrics": r.get("metrics", {}),  # 실측 수치(신빙성)
             }
             for r in d["results"]
         ],

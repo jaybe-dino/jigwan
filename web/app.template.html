@@ -370,6 +370,16 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .sc-tip span{ display:block; font-size:12.5px; opacity:.92; margin-top:3px; line-height:1.45; }
 .sc-fg .foot{ margin-top:auto; width:100%; display:flex; justify-content:space-between; align-items:end; font-size:11px; opacity:.82; }
 
+/* 실측 프로필 — 수치·지형지물 표 */
+.profile-list{ display:flex; flex-direction:column; }
+.prow{ display:flex; gap:12px; align-items:flex-start; padding:11px 2px; border-top:1px solid var(--line-soft); }
+.prow:first-child{ border-top:none; }
+.pk{ width:88px; flex:none; font-size:12.5px; font-weight:800; color:var(--ink-soft); padding-top:1px; }
+.pv{ flex:1; min-width:0; }
+.pv b{ font-size:14.5px; font-weight:800; letter-spacing:-.01em; word-break:keep-all; }
+.pv b.good{ color:var(--gun); } .pv b.bad{ color:var(--seal); } .pv b.neu{ color:var(--ink); }
+.pv span{ display:block; font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.5; font-variant-numeric:tabular-nums; }
+
 /* 근거 레이어 아코디언 */
 .evtabs{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
 .evtab{ font-size:12px; font-weight:700; padding:6px 11px; border-radius:999px;
@@ -774,6 +784,12 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
         </div>
         <div style="font-size:12px; color:var(--ink-soft)" id="mapLegend">뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다</div>
       </div>
+    </div>
+
+    <!-- 실측 프로필 (수치·지형지물) -->
+    <div class="card">
+      <div class="hd"><h3>실측 프로필</h3><span class="sub">이 터의 실제 측정값</span></div>
+      <div id="profileList" class="profile-list"></div>
     </div>
 
     <!-- 근거 레이어 -->
@@ -1468,6 +1484,14 @@ function renderReport(id){
   $('#mapLegend').textContent = names.length
     ? ('실측: '+names.join(' · '))
     : '뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다';
+
+  // 실측 프로필 — 실제 측정 수치·지형지물 (신빙성)
+  const pl=$('#profileList'); const prof=d.profile||[];
+  pl.innerHTML = prof.map(p=>{
+    const cls=p.ok>0?'good':(p.ok<0?'bad':'neu');
+    return `<div class="prow"><div class="pk">${p.k}</div>
+      <div class="pv"><b class="${cls}">${p.v}</b><span>${p.d}</span></div></div>`;
+  }).join('');
 
   // 근거 레이어 탭
   const tabs=$('#evtabs'); tabs.innerHTML='';
