@@ -155,6 +155,59 @@ def _region(addr: str) -> str:
     return " ".join(x for x in [gu, dong] if x) or "이 지역"
 
 
+def _clamp01(x: float) -> float:
+    return max(0.0, min(1.0, x))
+
+
+def _breakdown(code: str, m: dict, applicable: bool) -> list:
+    """각 판정을 세부 항목으로 분해(복합 점수 체계). 항목: {label, pct(0~100), note}."""
+    if not applicable or not m:
+        return []
+    b = []
+
+    def add(label, pct, note):
+        b.append({"label": label, "pct": int(round(max(0, min(100, pct)))), "note": note})
+
+    if code == "R01":  # 배산임수
+        g = m.get("max_gain_m", 0) or 0
+        d = m.get("dist_m")
+        add("능선 높이", _clamp01(g / 50) * 100, f"+{int(g)}m")
+        if d is not None:
+            add("근접성", _clamp01(1 - (d - 200) / 1300) * 100, f"{int(d)}m")
+    elif code == "R02":  # 사신사
+        lg = m.get("left_gain_m", 0) or 0
+        rg = m.get("right_gain_m", 0) or 0
+        bal = m.get("balance", 0) or 0
+        add("청룡(좌)", _clamp01(lg / 30) * 100, f"+{int(lg)}m")
+        add("백호(우)", _clamp01(rg / 30) * 100, f"+{int(rg)}m")
+        add("좌우 균형", bal * 100, f"{int(bal * 100)}%")
+    elif code == "R03":  # 물길
+        d = m.get("dist_m")
+        w = m.get("weight", 0) or 0
+        emb = m.get("embrace_sign", 0)
+        if d is not None:
+            add("근접성", w * 100, f"{int(d)}m")
+            add("환포/반궁", 100 if emb >= 0 else 25, "환포(길)" if emb >= 0 else "반궁(흉)")
+    elif code == "R05":  # 직충살
+        d = m.get("dist_m")
+        st = m.get("strength", 0) or 0
+        if d is not None:
+            add("직충 회피", (1 - st) * 100, f"{int(d)}m · 강도 {round(st, 2)}")
+    elif code == "R06":  # 반궁살
+        d = m.get("dist_m")
+        st = m.get("strength", 0) or 0
+        if d is not None:
+            add("반궁 회피", (1 - st) * 100, f"{int(d)}m")
+    elif code == "R08":  # 좌향
+        off = m.get("off_cardinal_deg")
+        if off is not None:
+            add("좌향 정격", _clamp01(1 - off / 22.5) * 100, f"정방위 편차 {round(off, 1)}°")
+    elif code == "R10":  # 주변환경
+        ns = m.get("net_score", 0) or 0
+        add("주변 길흉 균형", _clamp01(0.5 + ns) * 100, f"시설 {m.get('n_poi', 0)}곳")
+    return b
+
+
 def _confidence(sources: dict) -> dict:
     keys = ["고도점", "하천", "도로", "주변시설", "산·강이름"]
     got = sum(1 for k in keys if (sources.get(k, 0) or 0) > 0)
@@ -357,6 +410,7 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
                 "theory": r["theory"], "tier": r["tier"],
                 "plain": r.get("plain", ""),  # 쉬운 해석 (메인 노출)
                 "metrics": r.get("metrics", {}),  # 실측 수치(신빙성)
+                "breakdown": _breakdown(r["code"], r.get("metrics", {}), r["applicable"]),  # 세부 배점
             }
             for r in d["results"]
         ],
