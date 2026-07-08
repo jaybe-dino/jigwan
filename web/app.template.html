@@ -392,6 +392,14 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .rule .rscore{ margin-left:auto; font-size:11px; font-weight:700; color:var(--ink-faint);
   font-variant-numeric:tabular-nums; background:var(--panel-2); padding:3px 8px; border-radius:999px; }
 .rule .rscore + .verdict{ margin-left:8px; }
+/* 세부 배점 막대(복합 점수 세분화) */
+.subbars{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.sub{ display:flex; align-items:center; gap:9px; font-size:11.5px; }
+.sub .sl{ width:64px; flex:none; font-weight:700; color:var(--ink-soft); }
+.sub .sbar{ flex:1; height:6px; border-radius:4px; background:var(--panel-2); overflow:hidden; }
+.sub .sbar > i{ display:block; height:100%; border-radius:4px; background:var(--ink-faint); }
+.sub .sbar > i.good{ background:var(--gun); } .sub .sbar > i.ok{ background:var(--warn); } .sub .sbar > i.bad{ background:var(--seal); }
+.sub .sn{ flex:none; min-width:56px; text-align:right; color:var(--ink-faint); font-weight:700; font-variant-numeric:tabular-nums; }
 .rule .verdict{ margin-left:auto; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:999px; }
 .rule .verdict.good{ color:var(--gun); background:color-mix(in srgb,var(--gun) 13%,transparent); }
 .rule .verdict.ok{ color:var(--warn); background:color-mix(in srgb,var(--warn) 15%,transparent); }

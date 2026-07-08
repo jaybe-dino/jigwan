@@ -20,6 +20,8 @@ from engine.scoring import SiteAssessment, assess_site
 ROOT = Path(__file__).resolve().parent
 TEMPLATE = ROOT / "app.template.html"
 OUT = ROOT / "dist" / "index.html"
+VIRAL_TEMPLATE = ROOT / "viral.template.html"
+VIRAL_OUT = ROOT / "dist" / "v.html"
 
 # 등급 → 인장에 새길 짧은 글자
 GRADE_SEAL = {"천하명당": "최고", "명당": "명당", "길지": "좋음", "평지": "보통", "비보지": "주의"}
@@ -587,6 +589,12 @@ def render() -> Path:
     html = html.replace("__NAVER_KEY__", naver_key)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
+
+    # 바이럴 전용 페이지(/v) — 기본 서비스와 별개. 지도 데이터 주입 불필요.
+    if VIRAL_TEMPLATE.exists():
+        vhtml = VIRAL_TEMPLATE.read_text(encoding="utf-8").replace("__NAVER_KEY__", naver_key)
+        VIRAL_OUT.write_text(vhtml, encoding="utf-8")
+
     return OUT
 
 

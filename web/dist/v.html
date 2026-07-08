@@ -1,0 +1,312 @@
+<title>지관 · 나랑 터가 잘 맞을까? — 30초 풍수 궁합</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta property="og:title" content="지관 · 나랑 터가 잘 맞을까?">
+<meta property="og:description" content="주소랑 생일만 넣으면 30초 만에 우리 집 풍수 + 나랑의 궁합. 내 집은 무슨 유형?">
+<script>
+window.__naverTriedAlt=false;
+function navermap_authFailure(){
+  if(!window.__naverTriedAlt){ window.__naverTriedAlt=true;
+    var s=document.createElement('script');
+    s.src='https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=f3uixmqkl0&submodules=geocoder';
+    document.head.appendChild(s);
+  } else { window.__naverAuthFail=true; }
+}
+</script>
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=f3uixmqkl0&submodules=geocoder"></script>
+<style>
+:root{
+  --paper:#FFFFFF; --panel:#FFFFFF; --panel-2:#F4F5F7; --ink:#212429; --ink-soft:#6A7280; --ink-faint:#AAB0BA;
+  --line:#EBEDF0; --line-soft:#F2F3F5; --seal:#FF6A2C; --seal-ink:#FF7E45; --seal-deep:#EE560F;
+  --gun:#12B886; --gwan:#3B82F6; --warn:#F59F00;
+  --shadow:0 1px 3px rgba(20,24,31,.06),0 6px 20px rgba(20,24,31,.07);
+  --serif:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root{
+  --paper:#17191C; --panel:#1E2125; --panel-2:#282C31; --ink:#E9EBEE; --ink-soft:#A0A7B1; --ink-faint:#6E7681;
+  --line:#2E3238; --line-soft:#262A2F; --shadow:0 1px 3px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5); } }
+*{box-sizing:border-box} html,body{margin:0}
+body{ background:var(--panel-2); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; line-height:1.5; }
+.wrap{ max-width:480px; margin:0 auto; min-height:100vh; background:var(--paper); box-shadow:0 0 0 1px var(--line-soft); }
+.pad{ padding:22px 20px 40px; }
+h1{ font-family:var(--serif); font-weight:800; letter-spacing:-.02em; margin:0; }
+button{ font-family:inherit; cursor:pointer; border:none; }
+.btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(180deg,var(--seal-ink),var(--seal));
+  color:#fff; border-radius:16px; padding:16px; font-weight:800; font-size:16px; box-shadow:0 6px 18px color-mix(in srgb,var(--seal) 32%,transparent); transition:transform .08s; }
+.btn:active{ transform:scale(.98); } .btn[disabled]{ opacity:.6; }
+.btn.ghost{ background:var(--panel); color:var(--ink); box-shadow:inset 0 0 0 1px var(--line); }
+.brand{ display:flex; align-items:center; gap:9px; padding:16px 20px 0; }
+.brand .mark{ width:30px; height:30px; border-radius:8px; background:var(--seal); color:#fff; font-family:var(--serif); font-weight:800; font-size:18px; display:grid; place-items:center; }
+.brand b{ font-family:var(--serif); font-size:19px; } .brand span{ font-size:11px; color:var(--ink-faint); display:block; margin-top:-2px; }
+
+.hero{ text-align:center; padding:30px 20px 8px; }
+.hero .eyebrow{ font-size:12px; font-weight:800; color:var(--seal); letter-spacing:.02em; }
+.hero h1{ font-size:30px; margin:10px 0 8px; text-wrap:balance; }
+.hero p{ font-size:14px; color:var(--ink-soft); margin:0; }
+.refwelcome{ margin:16px 20px 0; background:color-mix(in srgb,var(--seal) 10%,var(--panel)); border-radius:14px; padding:13px 15px; font-size:13.5px; font-weight:700; color:var(--seal-deep); text-align:center; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--seal) 18%,transparent); }
+
+.field{ margin-top:16px; } .field label{ font-size:12.5px; font-weight:800; color:var(--ink-soft); }
+.inp{ width:100%; margin-top:8px; padding:15px 15px; border-radius:13px; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line);
+  color:var(--ink); font-family:inherit; font-size:15.5px; -webkit-appearance:none; appearance:none; }
+.dob{ display:flex; gap:8px; margin-top:8px; } .dob select{ flex:1; padding:14px 8px; border-radius:12px; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line); color:var(--ink); font-family:inherit; font-size:14.5px; -webkit-appearance:none; appearance:none; }
+.seg{ display:flex; gap:8px; margin-top:8px; } .seg button{ flex:1; padding:13px; border-radius:12px; background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line); font-weight:800; font-size:14.5px; color:var(--ink-soft); }
+.seg button.on{ background:var(--seal); color:#fff; box-shadow:none; }
+.note{ font-size:11.5px; color:var(--ink-faint); text-align:center; margin-top:14px; }
+.stat{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:18px; }
+.stat b{ color:var(--seal); }
+
+/* 로딩 */
+#load{ display:none; text-align:center; padding:60px 20px; } #load.on{ display:block; }
+.spin{ width:44px; height:44px; border-radius:50%; border:4px solid var(--panel-2); border-top-color:var(--seal); margin:0 auto 18px; animation:sp 1s linear infinite; }
+@keyframes sp{ to{ transform:rotate(360deg); } }
+
+/* 결과 */
+#result{ display:none; } #result.on{ display:block; }
+.tbcard{ position:relative; margin:0 0 16px; border-radius:20px; overflow:hidden; color:#fff; box-shadow:var(--shadow); }
+.tbart{ position:absolute; inset:0; opacity:.9; } .tbin{ position:relative; z-index:1; padding:22px; background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.18)); }
+.rar{ display:inline-block; font-size:11.5px; font-weight:800; background:rgba(255,255,255,.26); padding:5px 11px; border-radius:999px; }
+.tbtop{ display:flex; align-items:center; gap:14px; margin-top:14px; }
+.tbemoji{ width:66px; height:66px; flex:none; border-radius:18px; background:rgba(255,255,255,.92); display:grid; place-items:center; font-size:38px; box-shadow:0 4px 12px rgba(0,0,0,.16); }
+.tbname small{ display:block; font-size:11px; font-weight:800; opacity:.85; } .tbname b{ font-family:var(--serif); font-size:28px; text-shadow:0 1px 6px rgba(0,0,0,.18); } .tbname span{ display:block; font-size:13.5px; font-weight:700; opacity:.94; }
+.tbdesc{ font-size:14px; line-height:1.6; margin-top:13px; opacity:.97; }
+.bigrow{ display:flex; gap:12px; margin:0 0 16px; }
+.bigbox{ flex:1; background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:16px; text-align:center; }
+.bigbox .t{ font-size:12px; font-weight:800; color:var(--ink-faint); } .bigbox .v{ font-family:var(--serif); font-size:34px; margin-top:3px; } .bigbox .v small{ font-size:15px; color:var(--ink-soft); }
+.bigbox .s{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+.jae{ color:var(--seal); } .good{ color:var(--gun); }
+.advice{ background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:16px; margin-bottom:16px; }
+.advice .h{ font-size:13px; font-weight:800; color:var(--seal); margin-bottom:10px; }
+.ad{ display:flex; gap:11px; align-items:flex-start; padding:8px 0; }
+.ad .i{ width:34px; height:34px; flex:none; border-radius:10px; background:var(--panel-2); display:grid; place-items:center; font-size:17px; }
+.ad b{ font-size:14px; } .ad p{ margin:2px 0 0; font-size:12.5px; color:var(--seal); font-weight:700; }
+
+/* 초대 박스 */
+.invite{ background:linear-gradient(160deg,color-mix(in srgb,var(--seal) 12%,var(--panel)),var(--panel)); border-radius:18px; box-shadow:var(--shadow),inset 0 0 0 1px color-mix(in srgb,var(--seal) 16%,transparent); padding:18px; margin-bottom:16px; }
+.invite h3{ margin:0 0 4px; font-size:16px; font-family:var(--serif); } .invite p{ margin:0 0 13px; font-size:12.5px; color:var(--ink-soft); }
+.reflink{ display:flex; gap:8px; } .reflink input{ flex:1; padding:12px; border-radius:11px; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line); font-size:12.5px; color:var(--ink-soft); font-family:inherit; }
+.reflink button{ flex:none; padding:0 14px; border-radius:11px; background:var(--ink); color:var(--paper); font-weight:800; font-size:13px; }
+.invited{ margin-top:14px; } .invited .hd{ font-size:12.5px; font-weight:800; color:var(--ink-soft); margin-bottom:8px; }
+.ichip{ display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line); border-radius:999px; padding:6px 11px; margin:0 6px 6px 0; }
+.crown{ text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:10px; } .crown b{ color:var(--seal); }
+
+/* 도감 */
+.dex{ margin-bottom:16px; } .dex .hd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.dex h3{ margin:0; font-size:16px; font-family:var(--serif); } .dex .cnt{ font-size:12.5px; font-weight:800; color:var(--seal); }
+.dexgrid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.dexc{ border-radius:14px; padding:12px; color:#fff; position:relative; overflow:hidden; min-height:78px; }
+.dexc.locked{ background:var(--panel-2); color:var(--ink-faint); box-shadow:inset 0 0 0 1px var(--line); }
+.dexc .e{ font-size:26px; } .dexc .n{ font-weight:800; font-size:13.5px; margin-top:3px; } .dexc .g{ font-size:10.5px; opacity:.9; }
+.dexc.mine{ box-shadow:0 0 0 2px #fff, 0 6px 16px rgba(0,0,0,.2); }
+.dexc .badge{ position:absolute; top:8px; right:8px; font-size:9.5px; font-weight:800; background:rgba(255,255,255,.28); padding:2px 7px; border-radius:999px; }
+
+.share-row{ display:flex; gap:10px; margin-bottom:12px; } .share-row .btn{ flex:1; }
+.small{ font-size:11.5px; color:var(--ink-faint); text-align:center; line-height:1.6; }
+.small a{ color:var(--seal); }
+#toast{ position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--ink); color:var(--paper); font-size:13px; font-weight:700; padding:12px 18px; border-radius:14px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:.25s; z-index:99; }
+#toast.show{ opacity:1; transform:translate(-50%,0); }
+</style>
+
+<div class="wrap">
+  <div class="brand"><div class="mark">지</div><div><b>지관</b><span>나랑 터가 잘 맞나</span></div></div>
+
+  <!-- 입력 -->
+  <section id="intro">
+    <div class="hero">
+      <div class="eyebrow">30초 풍수 궁합</div>
+      <h1>나랑 이 집,<br>잘 맞을까?</h1>
+      <p>주소랑 생일만 넣으면 우리 집 풍수 + 나랑의 궁합 + 내 집 유형(터BTI)까지</p>
+    </div>
+    <div id="refWelcome" class="refwelcome" style="display:none"></div>
+    <div class="pad">
+      <div class="field">
+        <label>집 주소 (동네만 넣어도 돼요)</label>
+        <input id="addr" class="inp" placeholder="예) 관악구 신림동, 또는 도로명주소" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>생년월일</label>
+        <div class="dob"><select id="yy"></select><select id="mm"></select><select id="dd"></select></div>
+      </div>
+      <div class="field">
+        <label>성별</label>
+        <div class="seg" id="sex"><button class="on" data-v="1">남자</button><button data-v="0">여자</button></div>
+      </div>
+      <div class="field">
+        <label>태어난 시간 (모르면 비워두세요)</label>
+        <select id="hh" class="inp"></select>
+      </div>
+      <div style="height:18px"></div>
+      <button class="btn" id="go">🔮 내 집과 궁합 보기</button>
+      <div class="note">실제 지형(산·강·도로) + 만세력(사주)으로 봐요 · 무료</div>
+      <div class="stat" id="totalStat"></div>
+    </div>
+  </section>
+
+  <!-- 로딩 -->
+  <section id="load"><div class="spin"></div><div style="font-weight:800" id="loadMsg">터를 읽는 중…</div></section>
+
+  <!-- 결과 -->
+  <section id="result"><div class="pad" id="resultBody"></div></section>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const TB={
+  geumgo:{e:'🏦',n:'금고집',t:'돈이 새지 않는 터',c1:'#FBBF24',c2:'#B45309',rt:'희귀',rp:12},
+  river:{e:'🌊',n:'강가집',t:'기회가 흘러드는 터',c1:'#38BDF8',c2:'#2563EB',rt:'레어',rp:6},
+  screen:{e:'🛡️',n:'병풍집',t:'든든하게 지켜주는 터',c1:'#34D399',c2:'#047857',rt:'흔함',rp:35},
+  sun:{e:'☀️',n:'햇살집',t:'볕과 이름이 드는 터',c1:'#FDBA74',c2:'#EA580C',rt:'보통',rp:22},
+  forest:{e:'🌳',n:'숲속집',t:'건강이 자라는 터',c1:'#4ADE80',c2:'#15803D',rt:'보통',rp:20},
+  harbor:{e:'⛵',n:'나루터집',t:'사람이 오가는 터',c1:'#818CF8',c2:'#4338CA',rt:'보통',rp:25},
+  beacon:{e:'🗼',n:'등대집',t:'이름이 빛나는 터',c1:'#C084FC',c2:'#7E22CE',rt:'희귀',rp:9},
+  fort:{e:'🏔️',n:'요새집',t:'안정 최강의 터',c1:'#94A3B8',c2:'#334155',rt:'흔함',rp:30},
+  wind:{e:'🍃',n:'바람집',t:'탁 트인 개방형 터',c1:'#5EEAD4',c2:'#0D9488',rt:'흔함',rp:33},
+  gem:{e:'💎',n:'원석집',t:'다듬으면 빛나는 터',c1:'#F0ABFC',c2:'#A21CAF',rt:'희귀',rp:10}
+};
+function tbArt(code){
+  const W='rgba(255,255,255,.95)',L='rgba(255,255,255,.5)',D='rgba(255,255,255,.26)';
+  const house='<g><rect x="41" y="60" width="28" height="24" rx="3" fill="'+W+'"/><path d="M38 62 L55 48 L72 62 Z" fill="'+W+'"/><rect x="50" y="70" width="10" height="14" rx="1.5" fill="'+D+'"/></g>';
+  const M={geumgo:'<circle cx="80" cy="64" r="11" fill="'+L+'"/><circle cx="71" cy="73" r="11" fill="'+W+'"/>',
+    river:'<path d="M-4 76 q12 -8 24 0 t24 0 t24 0 t24 0 t24 0" stroke="'+L+'" stroke-width="4" fill="none"/><path d="M-4 86 q12 -8 24 0 t24 0 t24 0 t24 0 t24 0" stroke="'+D+'" stroke-width="4" fill="none"/>',
+    screen:'<path d="M-4 86 L26 42 L52 86 Z" fill="'+L+'"/><path d="M38 86 L72 34 L104 86 Z" fill="'+D+'"/>',
+    sun:'<circle cx="78" cy="28" r="17" fill="'+L+'"/>',forest:'<circle cx="20" cy="58" r="14" fill="'+L+'"/><circle cx="86" cy="64" r="11" fill="'+D+'"/>',
+    harbor:'<path d="M6 74 h30 l-6 10 h-18 Z" fill="'+L+'"/><rect x="21" y="56" width="2.5" height="18" fill="'+W+'"/><path d="M23.5 56 l13 9 l-13 4 Z" fill="'+W+'"/>',
+    beacon:'<path d="M72 86 L76 40 L86 40 L90 86 Z" fill="'+L+'"/><circle cx="81" cy="36" r="7" fill="'+W+'"/>',
+    fort:'<path d="M-8 88 L20 46 L44 88 Z" fill="'+D+'"/><path d="M28 88 L58 36 L88 88 Z" fill="'+L+'"/><path d="M64 88 L92 50 L118 88 Z" fill="'+D+'"/>',
+    wind:'<path d="M4 42 q22 -9 38 0 q-7 9 -16 4" stroke="'+L+'" stroke-width="3.5" fill="none"/><path d="M8 60 q28 -9 48 0 q-9 10 -20 4" stroke="'+D+'" stroke-width="3.5" fill="none"/>',
+    gem:'<g transform="translate(78,32)"><path d="M0 -15 L13 -4 L0 17 L-13 -4 Z" fill="'+W+'"/><path d="M-13 -4 L13 -4 L0 17 Z" fill="'+L+'"/></g>'};
+  return '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%">'+(M[code]||M.sun)+house+'</svg>';
+}
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function naverOK(){ return !!(window.naver&&naver.maps&&!window.__naverAuthFail); }
+
+/* 레퍼럴 코드 */
+function genCode(){ return 'j'+Math.random().toString(36).slice(2,8); }
+let MYCODE=localStorage.getItem('jg_ref')||genCode(); localStorage.setItem('jg_ref',MYCODE);
+const INVITER=new URLSearchParams(location.search).get('ref')||'';
+let SEX='1', LASTD=null, LASTC=null;
+
+/* 초기화 */
+(function init(){
+  const yy=$('#yy'),mm=$('#mm'),dd=$('#dd'),hh=$('#hh');
+  for(let y=2015;y>=1955;y--) yy.appendChild(new Option(y+'년',y));
+  for(let m=1;m<=12;m++) mm.appendChild(new Option(m+'월',m));
+  for(let d=1;d<=31;d++) dd.appendChild(new Option(d+'일',d));
+  yy.value=1995; mm.value=5; dd.value=15;
+  hh.appendChild(new Option('시간 모름',''));
+  for(let h=0;h<24;h++) hh.appendChild(new Option(String(h).padStart(2,'0')+':00',h));
+  $('#sex').querySelectorAll('button').forEach(b=>b.onclick=()=>{ SEX=b.dataset.v; $('#sex').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); });
+  $('#go').onclick=run;
+  if(INVITER){ $('#refWelcome').style.display='block'; $('#refWelcome').innerHTML='🎁 친구가 초대했어요! 나도 우리 집 풍수·궁합 보고 유형 모으기'; }
+  fetch('/api/ref?action=leaderboard').then(r=>r.json()).then(d=>{ if(d.totalUsers) $('#totalStat').innerHTML='지금까지 <b>'+d.totalUsers.toLocaleString()+'명</b>이 터를 봤어요'; }).catch(()=>{});
+})();
+
+async function geocode(q){
+  return new Promise(res=>{
+    if(!(naverOK()&&naver.maps.Service&&naver.maps.Service.geocode)) return res(null);
+    try{ naver.maps.Service.geocode({query:q},(st,resp)=>{
+      const a=(st===naver.maps.Service.Status.OK)&&resp.v2&&resp.v2.addresses&&resp.v2.addresses[0];
+      res(a&&a.y&&a.x?{lat:+a.y,lon:+a.x,addr:a.roadAddress||a.jibunAddress||q}:null);
+    }); }catch(_){ res(null); }
+    setTimeout(()=>res(null),4500);
+  });
+}
+async function run(){
+  const q=($('#addr').value||'').trim();
+  if(!q){ $('#addr').focus(); toast('집 주소(동네)를 넣어주세요'); return; }
+  $('#intro').style.display='none'; $('#load').classList.add('on');
+  ['터를 읽는 중…','산과 물길을 확인 중…','사주와 궁합을 보는 중…'].forEach((m,i)=>setTimeout(()=>{ if($('#load').classList.contains('on')) $('#loadMsg').textContent=m; }, i*2600));
+  try{
+    const g=await geocode(q);
+    const qs = g ? ('lat='+g.lat.toFixed(6)+'&lon='+g.lon.toFixed(6)) : ('address='+encodeURIComponent(q));
+    const d=await (await fetch('/api/assess?'+qs)).json();
+    if(!d||d.error) throw new Error('assess');
+    if(g) d.addr=g.addr;
+    const y=+$('#yy').value,m=+$('#mm').value,day=+$('#dd').value,hv=$('#hh').value;
+    const cqs=`facing=${d.facing||180}&sect=${encodeURIComponent(d.houseSect||'동사택')}&y=${y}&m=${m}&d=${day}&male=${SEX}`+(hv!==''?`&hour=${hv}`:'');
+    let c=null; try{ c=await (await fetch('/api/compat?'+cqs)).json(); if(c&&c.error)c=null; }catch(_){}
+    LASTD=d; LASTC=c;
+    // 레퍼럴 등록
+    fetch('/api/ref',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:MYCODE,invitedBy:INVITER,terbti:(d.terbti||{}).code,region:d.region})}).catch(()=>{});
+    renderResult(d,c);
+  }catch(e){
+    $('#load').classList.remove('on'); $('#intro').style.display='block';
+    toast('잠시 후 다시 시도해 주세요');
+  }
+}
+
+function renderResult(d,c){
+  $('#load').classList.remove('on');
+  const tb=(d.terbti&&TB[d.terbti.code])?TB[d.terbti.code]:TB.sun;
+  const code=(d.terbti||{}).code||'sun';
+  const tip=(d.advice&&d.advice[0]);
+  const pct=c?c.percent:null;
+  let html='';
+  // 터BTI 카드
+  html+=`<div class="tbcard" style="background:linear-gradient(150deg,${tb.c1},${tb.c2})">
+    <div class="tbart">${tbArt(code)}</div>
+    <div class="tbin">
+      <span class="rar">✨ ${tb.rt} 유형 · 상위 ${tb.rp}%</span>
+      <div class="tbtop"><div class="tbemoji">${tb.e}</div>
+        <div class="tbname"><small>${d.region||'우리 집'} · 우리 집 유형</small><b>${tb.n}</b><span>${tb.t}</span></div></div>
+      <div class="tbdesc">${(d.terbti&&d.terbti.desc)||''}</div>
+    </div></div>`;
+  // 점수 + 궁합
+  html+=`<div class="bigrow">
+    <div class="bigbox"><div class="t">이 집 풍수</div><div class="v">${d.site_score}<small>점</small></div><div class="s">「${d.grade}」</div></div>
+    ${pct!=null?`<div class="bigbox"><div class="t">나와 궁합</div><div class="v jae">${pct}<small>%</small></div><div class="s">${c.caption||''}</div></div>`:''}
+  </div>`;
+  // 조언
+  if(d.advice&&d.advice.length){
+    html+='<div class="advice"><div class="h">🌿 오늘 바로 할 개운 처방</div>'+
+      d.advice.slice(0,2).map(a=>`<div class="ad"><div class="i">${a.icon}</div><div><b>${a.title}</b><p>✔ ${a.action}</p></div></div>`).join('')+'</div>';
+  }
+  // 공유
+  html+=`<div class="share-row">
+    <button class="btn" onclick="shareResult()">💬 공유하기</button>
+    <button class="btn ghost" onclick="restart()">다른 집 보기</button></div>`;
+  // 초대
+  const link=location.origin+'/v?ref='+MYCODE;
+  html+=`<div class="invite">
+    <h3>친구 초대하고 순위 올리기 🏆</h3>
+    <p>친구가 이 링크로 들어와 결과를 보면 내 초대 수가 올라가요.</p>
+    <div class="reflink"><input id="reflink" value="${link}" readonly><button onclick="copyRef()">복사</button></div>
+    <div class="invited" id="invitedBox"></div>
+  </div>`;
+  // 도감
+  const keys=Object.keys(TB);
+  const collected=JSON.parse(localStorage.getItem('jg_dex')||'[]');
+  if(!collected.includes(code)){ collected.push(code); localStorage.setItem('jg_dex',JSON.stringify(collected)); }
+  html+=`<div class="dex"><div class="hd"><h3>터BTI 도감</h3><span class="cnt">${collected.length}/${keys.length} 수집</span></div>
+    <div class="dexgrid">${keys.map(k=>{ const t=TB[k]; const has=collected.includes(k); const mine=k===code;
+      return has?`<div class="dexc ${mine?'mine':''}" style="background:linear-gradient(150deg,${t.c1},${t.c2})">${mine?'<span class="badge">내 유형</span>':''}<div class="e">${t.e}</div><div class="n">${t.n}</div><div class="g">${t.t}</div></div>`
+        :`<div class="dexc locked"><div class="e">🔒</div><div class="n">???</div><div class="g">다른 집을 감정하면 해금</div></div>`; }).join('')}</div>
+    <div class="small" style="margin-top:10px">다른 집·친구 집 주소로 감정하면 새 유형이 열려요</div></div>`;
+  html+=`<div class="small">지관 · 실제 지형(OSM·DEM)과 만세력 기반 · 참고·오락용<br><a href="/">전체 지도 서비스 열기 →</a></div>`;
+  $('#resultBody').innerHTML=html;
+  $('#result').classList.add('on'); window.scrollTo(0,0);
+  loadInvited();
+}
+function loadInvited(){
+  fetch('/api/ref?code='+MYCODE).then(r=>r.json()).then(d=>{
+    const box=$('#invitedBox'); if(!box) return;
+    const n=d.count||0;
+    let h=`<div class="hd">내가 초대한 친구 · <b style="color:var(--seal)">${n}명</b>${d.rank?` · 전국 ${d.rank}위`:''}</div>`;
+    if(n>0){ h+=(d.invited||[]).slice(0,12).map(u=>{ const t=TB[u.terbti]; return `<span class="ichip">${t?t.e:'🏠'} ${t?t.n:'터'}${u.region?' · '+u.region:''}</span>`; }).join(''); }
+    else { h+=`<div class="crown">아직 없어요 — 링크를 공유해 첫 친구를 초대해보세요!</div>`; }
+    box.innerHTML=h;
+  }).catch(()=>{});
+}
+function copyRef(){ const el=$('#reflink'); el.select(); const link=el.value;
+  (navigator.clipboard?navigator.clipboard.writeText(link):Promise.reject()).then(()=>toast('초대 링크 복사됨! 카톡에 붙여넣기 🎉')).catch(()=>toast(link)); }
+async function shareResult(){
+  const d=LASTD,c=LASTC; const tb=TB[(d.terbti||{}).code]||TB.sun;
+  const link=location.origin+'/v?ref='+MYCODE;
+  const txt=`우리 집은 ${tb.n} ${tb.e} (${tb.rt}·상위 ${tb.rp}%) · 풍수 ${d.site_score}점${c?`, 나와 궁합 ${c.percent}%`:''}\n너네 집은? 나랑 터가 잘 맞나 👉`;
+  if(navigator.share){ try{ await navigator.share({title:'지관',text:txt,url:link}); return; }catch(_){ } }
+  (navigator.clipboard?navigator.clipboard.writeText(txt+' '+link):Promise.reject()).then(()=>toast('공유 문구 복사됨! 붙여넣기 하세요')).catch(()=>toast(link));
+}
+function restart(){ $('#result').classList.remove('on'); $('#intro').style.display='block'; $('#addr').value=''; window.scrollTo(0,0); }
+window.shareResult=shareResult; window.copyRef=copyRef; window.restart=restart;
+</script>

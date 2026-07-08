@@ -4,7 +4,10 @@ const nextConfig = {
   outputFileTracingRoot: process.cwd() + "/..",
   // '/'에서 전체 프로토타입(public/index.html)을 서빙. /api·/report는 그대로.
   async rewrites() {
-    return [{ source: "/", destination: "/index.html" }];
+    return [
+      { source: "/", destination: "/index.html" },
+      { source: "/v", destination: "/v.html" }, // 바이럴 전용 페이지
+    ];
   },
 };
 

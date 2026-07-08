@@ -17,3 +17,4 @@ venv/
 .claude/settings.local.json
 web/hotspots_cache.json
 web/coord_cache.json
+data/referrals.json
