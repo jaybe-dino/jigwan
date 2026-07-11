@@ -102,6 +102,29 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .share-row{ display:flex; gap:10px; margin-bottom:12px; } .share-row .btn{ flex:1; }
 .small{ font-size:11.5px; color:var(--ink-faint); text-align:center; line-height:1.6; }
 .small a{ color:var(--seal); }
+/* 지도 + 풍수 해석 */
+.vmap{ position:relative; height:260px; border-radius:16px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:8px; background:var(--panel-2); }
+#vmapHost{ position:absolute; inset:0; height:260px; }
+.vmap-fb{ display:grid; place-items:center; height:100%; color:var(--ink-faint); font-size:13px; }
+.vdot{ width:16px; height:16px; border-radius:50%; background:var(--seal); border:3px solid #fff; box-shadow:0 2px 7px rgba(0,0,0,.4); }
+.vlmk{ transform:translate(-50%,-50%); white-space:nowrap; background:rgba(255,255,255,.97); color:#1f2430; font-size:11px; font-weight:800; padding:4px 9px; border-radius:9px; box-shadow:0 2px 9px rgba(0,0,0,.2); border-left:3px solid var(--ink-faint); line-height:1.22; }
+.vlmk b{ display:block; font-size:9px; margin-bottom:1px; }
+.vlmk.back{ border-left-color:#2f9e6f; } .vlmk.back b{ color:#2f9e6f; }
+.vlmk.left{ border-left-color:#3B82F6; } .vlmk.left b{ color:#3B82F6; }
+.vlmk.right{ border-left-color:#8b94a3; } .vlmk.right b{ color:#6b7484; }
+.vlmk.front{ border-left-color:#2f8fd8; } .vlmk.front b{ color:#2f8fd8; }
+@media (prefers-color-scheme:dark){ .vlmk{ background:rgba(30,33,37,.97); color:#e9ebee; } }
+.vlegend{ display:flex; flex-wrap:wrap; gap:9px; font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:16px; }
+.vlegend i{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:4px; }
+.vcard{ background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:17px; margin-bottom:16px; }
+.vcard .h{ font-size:13px; font-weight:800; color:var(--seal); margin-bottom:9px; }
+.vcard .body{ font-size:14.5px; line-height:1.65; }
+.vprof{ display:flex; flex-direction:column; margin-top:13px; }
+.vpr{ display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--line-soft); font-size:12.5px; }
+.vpr:first-child{ border-top:none; }
+.vpr .k{ width:66px; flex:none; font-weight:800; color:var(--ink-soft); padding-top:1px; }
+.vpr .v b{ font-weight:800; font-size:14px; } .vpr .v b.good{ color:var(--gun); } .vpr .v b.jae{ color:var(--seal); }
+.vpr .v small{ display:block; color:var(--ink-soft); margin-top:1px; font-variant-numeric:tabular-nums; }
 #toast{ position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--ink); color:var(--paper); font-size:13px; font-weight:700; padding:12px 18px; border-radius:14px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:.25s; z-index:99; }
 #toast.show{ opacity:1; transform:translate(-50%,0); }
 </style>
@@ -179,6 +202,32 @@ function tbArt(code){
 }
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
 function naverOK(){ return !!(window.naver&&naver.maps&&!window.__naverAuthFail); }
+function nLatLng(a){ return new naver.maps.LatLng(a[0],a[1]); }
+function makeNMap(host,c,z){ return new naver.maps.Map(host,{center:nLatLng(c),zoom:z,logoControl:false,mapDataControl:false,scaleControl:false,zoomControl:false}); }
+function llOffset(lat,lon,dist,brg){ const R=6378137,d=dist/R,b=brg*Math.PI/180,la=lat*Math.PI/180,lo=lon*Math.PI/180;
+  const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
+  const lo2=lo+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la),Math.cos(d)-Math.sin(la)*Math.sin(la2));
+  return [la2*180/Math.PI,lo2*180/Math.PI]; }
+let VMAP=null;
+function drawViralMap(d){
+  const host=$('#vmapHost'); if(!host) return;
+  if(!(naverOK()&&d.coord&&d.coord[0])){ host.innerHTML='<div class="vmap-fb">지도 준비 중…</div>'; return; }
+  host.innerHTML='';
+  VMAP=makeNMap(host,d.coord,15);
+  const lat=d.coord[0],lon=d.coord[1],m=d.map||{},lm=d.landmarks||{};
+  const facing=(m.facing!=null?m.facing:180), backBrg=m.ridge?m.ridge.bearing:(facing+180)%360, seal='#FF6A2C';
+  new naver.maps.Circle({map:VMAP,center:nLatLng(d.coord),radius:340,strokeColor:seal,strokeWeight:1,fillColor:seal,fillOpacity:0.06});
+  const backPt=llOffset(lat,lon,820,backBrg),frontPt=llOffset(lat,lon,540,facing);
+  new naver.maps.Polyline({map:VMAP,path:[nLatLng(backPt),nLatLng(d.coord),nLatLng(frontPt)],strokeColor:seal,strokeWeight:2,strokeOpacity:.5,strokeStyle:'shortdash'});
+  new naver.maps.Marker({position:nLatLng(d.coord),map:VMAP,zIndex:100,icon:{content:'<div class="vdot"></div>',anchor:new naver.maps.Point(9,9)}});
+  const g=(brg,dist,role,name,icon,cls)=>{ if(!name) return; const p=llOffset(lat,lon,dist,brg);
+    new naver.maps.Marker({position:nLatLng(p),map:VMAP,icon:{content:`<div class="vlmk ${cls}"><b>${icon} ${role}</b>${name}</div>`,anchor:new naver.maps.Point(0,0)}}); };
+  g(backBrg,820,'현무(뒷산)',lm.back,'⛰️','back');
+  g((facing+90)%360,560,'청룡(좌)',lm.left,'⛰️','left');
+  g((facing-90+360)%360,560,'백호(우)',lm.right,'⛰️','right');
+  g(facing,540,lm.water?'득수(물)':'주작(앞)',lm.water||lm.front,lm.water?'💧':'🏞️','front');
+  [200,600].forEach(t=>setTimeout(()=>{ if(VMAP&&naverOK()) naver.maps.Event.trigger(VMAP,'resize'); },t));
+}
 
 /* 레퍼럴 코드 */
 function genCode(){ return 'j'+Math.random().toString(36).slice(2,8); }
@@ -257,6 +306,18 @@ function renderResult(d,c){
     <div class="bigbox"><div class="t">이 집 풍수</div><div class="v">${d.site_score}<small>점</small></div><div class="s">「${d.grade}」</div></div>
     ${pct!=null?`<div class="bigbox"><div class="t">나와 궁합</div><div class="v jae">${pct}<small>%</small></div><div class="s">${c.caption||''}</div></div>`:''}
   </div>`;
+  // 지도 (풍수 오버레이) + 해석
+  html+=`<div class="vmap"><div id="vmapHost"></div></div>
+    <div class="vlegend"><span><i style="background:#2f9e6f"></i>현무</span><span><i style="background:#3B82F6"></i>청룡</span><span><i style="background:#8b94a3"></i>백호</span><span><i style="background:#2f8fd8"></i>득수</span><span>┈ 배산임수 축</span></div>`;
+  if(d.interp&&d.interp.body){
+    html+=`<div class="vcard"><div class="h">🧭 풍수 해석 · ${d.region||''}</div><div class="body">${d.interp.body}</div>`;
+    if(d.profile&&d.profile.length){
+      html+=`<div class="vprof">`+d.profile.filter(p=>p.k.indexOf('주변')<0).slice(0,5).map(p=>{
+        const cl=p.ok>0?'good':(p.ok<0?'jae':'');
+        return `<div class="vpr"><div class="k">${p.k.replace(/\(.*\)/,'')}</div><div class="v"><b class="${cl}">${p.v}</b><small>${p.d}</small></div></div>`;}).join('')+`</div>`;
+    }
+    html+=`</div>`;
+  }
   // 조언
   if(d.advice&&d.advice.length){
     html+='<div class="advice"><div class="h">🌿 오늘 바로 할 개운 처방</div>'+
@@ -286,6 +347,7 @@ function renderResult(d,c){
   html+=`<div class="small">지관 · 실제 지형(OSM·DEM)과 만세력 기반 · 참고·오락용<br><a href="/">전체 지도 서비스 열기 →</a></div>`;
   $('#resultBody').innerHTML=html;
   $('#result').classList.add('on'); window.scrollTo(0,0);
+  drawViralMap(d);
   loadInvited();
 }
 function loadInvited(){
