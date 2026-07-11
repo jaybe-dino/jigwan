@@ -141,6 +141,19 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .vpr .k{ width:66px; flex:none; font-weight:800; color:var(--ink-soft); padding-top:1px; }
 .vpr .v b{ font-weight:800; font-size:14px; } .vpr .v b.good{ color:var(--gun); } .vpr .v b.jae{ color:var(--seal); }
 .vpr .v small{ display:block; color:var(--ink-soft); margin-top:1px; font-variant-numeric:tabular-nums; }
+/* 이 터의 산과 강 */
+.vgeo{ display:flex; flex-direction:column; margin-top:13px; }
+.vg{ display:flex; gap:11px; align-items:flex-start; padding:11px 0; border-top:1px solid var(--line-soft); }
+.vg:first-child{ border-top:none; }
+.vg .ic{ width:34px; height:34px; flex:none; border-radius:10px; display:grid; place-items:center; font-size:18px; background:var(--panel-2); }
+.vg.bad .ic{ background:color-mix(in srgb,#FA5252 12%,transparent); }
+.vg .bd{ flex:1; min-width:0; }
+.vg .tp{ display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; }
+.vg .nm{ font-size:14.5px; font-weight:800; letter-spacing:-.01em; word-break:keep-all; }
+.vg .rl{ font-size:11px; font-weight:700; color:var(--gun); }
+.vg.bad .rl{ color:var(--seal); }
+.vg .dt{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; font-variant-numeric:tabular-nums; }
+.vg .mn{ font-size:12.5px; color:var(--ink); margin-top:4px; line-height:1.5; word-break:keep-all; }
 #toast{ position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--ink); color:var(--paper); font-size:13px; font-weight:700; padding:12px 18px; border-radius:14px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:.25s; z-index:99; }
 #toast.show{ opacity:1; transform:translate(-50%,0); }
 </style>
@@ -363,6 +376,18 @@ function renderResult(d,c){
         return `<div class="vpr"><div class="k">${p.k.replace(/\(.*\)/,'')}</div><div class="v"><b class="${cl}">${p.v}</b><small>${p.d}</small></div></div>`;}).join('')+`</div>`;
     }
     html+=`</div>`;
+  }
+  // 이 터의 산과 강 — 지역 지형지물 이름·역할 해설
+  const geo=d.geo||[];
+  if(geo.length){
+    html+=`<div class="vcard"><div class="h">⛰️ 이 터의 산과 강 · ${d.region||''}</div><div class="vgeo">`+
+      geo.map(g=>`<div class="vg ${g.good?'':'bad'}">
+        <div class="ic">${g.icon}</div>
+        <div class="bd">
+          <div class="tp"><span class="nm">${g.name}</span><span class="rl">${g.role}</span></div>
+          ${g.detail?`<div class="dt">${g.detail}</div>`:''}
+          <div class="mn">${g.mean}</div>
+        </div></div>`).join('')+`</div></div>`;
   }
   // 조언
   if(d.advice&&d.advice.length){

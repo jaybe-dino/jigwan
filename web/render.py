@@ -161,6 +161,46 @@ def _clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
 
 
+# 사신사·득수 — 역할과 풍수 의미 해설
+_ROLE_MEAN = {
+    "back": ("현무 · 주산(뒷산)", "⛰️", "이 터의 등을 받치는 주산. 든든할수록 재물이 쌓이고 건강·안정이 좋아집니다."),
+    "left": ("청룡 · 좌산", "⛰️", "왼쪽을 감싸는 산. 남자·명예·귀인의 기운을 북돋웁니다."),
+    "right": ("백호 · 우산", "🏔️", "오른쪽을 감싸는 산. 여자·재물·실리의 기운을 관장합니다."),
+    "front": ("주작 · 안산(앞산)", "🏞️", "앞에서 마주보는 산. 손님·기회·명예를 맞이합니다."),
+    "water": ("득수 · 물길", "💧", "앞을 흐르는 물. 감싸 흐르면(환포) 재물이 고이고, 등지면(반궁) 새어나갑니다."),
+}
+
+
+def _geo(a: SiteAssessment, R, lm: dict) -> list:
+    """지역 지형지물(산·강)을 이름·역할·수치와 함께 해설. 실제 이름 그대로 노출."""
+    r01 = R["R01"].metrics if "R01" in R else {}
+    r03 = R["R03"].metrics if "R03" in R else {}
+    out = []
+
+    def push(key, detail="", good=True):
+        nm = lm.get(key)
+        if not nm:
+            return
+        role, icon, mean = _ROLE_MEAN[key]
+        out.append({"name": nm, "role": role, "icon": icon, "mean": mean, "detail": detail, "good": good})
+
+    back_detail = ""
+    if r01.get("dist_m"):
+        back_detail = f"{_compass(r01.get('bearing_deg'))}쪽 {int(r01['dist_m'])}m · 표고 +{int(r01.get('max_gain_m', 0))}m"
+    push("back", back_detail)
+    push("left")
+    push("right")
+    push("front")
+    if lm.get("water"):
+        emb = r03.get("embrace_sign", 0)
+        det = ""
+        if r03.get("dist_m") is not None:
+            det = f"{int(r03['dist_m'])}m · " + ("환포(감싸 흐름·길)" if emb >= 0 else "반궁(등지고 흐름·흉)")
+        role, icon, mean = _ROLE_MEAN["water"]
+        out.append({"name": lm["water"], "role": role, "icon": icon, "mean": mean, "detail": det, "good": emb >= 0})
+    return out
+
+
 def _breakdown(code: str, m: dict, applicable: bool) -> list:
     """각 판정을 세부 항목으로 분해(복합 점수 체계). 항목: {label, pct(0~100), note}."""
     if not applicable or not m:
@@ -391,6 +431,7 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "terbti": _terbti(a, R),
         "advice": _advice(a, R),
         "profile": _profile(a, R, a.landmarks or {}),  # 실측 프로필(수치·지형지물)
+        "geo": _geo(a, R, a.landmarks or {}),            # 지역 산·강 이름·역할 해설
         "section": a.section,                            # 배산임수 표고 단면
         "factors": a.factors,                            # 지도용 풍수 영향 요인(아이콘)
         "region": _region(a.address),                    # 지역명(구·동)

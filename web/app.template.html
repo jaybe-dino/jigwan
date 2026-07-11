@@ -387,6 +387,21 @@ body.panel-open .map-bottom{ opacity:0; transform:translateY(8px); pointer-event
 .pv b.good{ color:var(--gun); } .pv b.bad{ color:var(--seal); } .pv b.neu{ color:var(--ink); }
 .pv span{ display:block; font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.5; font-variant-numeric:tabular-nums; }
 
+/* 이 터의 산과 강 — 지역 지형지물 해설 */
+.geo-list{ display:flex; flex-direction:column; }
+.grow{ display:flex; gap:12px; align-items:flex-start; padding:13px 2px; border-top:1px solid var(--line-soft); }
+.grow:first-child{ border-top:none; }
+.gic{ width:38px; height:38px; flex:none; border-radius:11px; display:grid; place-items:center;
+  font-size:20px; background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.grow.bad .gic{ background:rgba(190,60,60,.09); }
+.gbody{ flex:1; min-width:0; }
+.gtop{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.gname{ font-size:15px; font-weight:800; letter-spacing:-.01em; word-break:keep-all; }
+.grole{ font-size:11.5px; font-weight:700; color:var(--gun); }
+.grow.bad .grole{ color:var(--seal); }
+.gdetail{ font-size:12px; color:var(--ink-soft); margin-top:2px; font-variant-numeric:tabular-nums; }
+.gmean{ font-size:12.5px; color:var(--ink); margin-top:5px; line-height:1.5; word-break:keep-all; }
+
 /* 근거 레이어 아코디언 */
 .evtabs{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
 .evtab{ font-size:12px; font-weight:700; padding:6px 11px; border-radius:999px;
@@ -810,6 +825,12 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
         </div>
         <div style="font-size:12px; color:var(--ink-soft)" id="mapLegend">뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다</div>
       </div>
+    </div>
+
+    <!-- 이 터의 산과 강 (지역 지형지물 이름·역할 해설) -->
+    <div class="card" id="geoCard" style="display:none">
+      <div class="hd"><h3>이 터의 산과 강</h3><span class="sub" id="geoSub">사신사·득수의 실제 이름</span></div>
+      <div id="geoList" class="geo-list"></div>
     </div>
 
     <!-- 주변 풍수 영향 요인 (지도 아이콘과 연동) -->
@@ -1524,6 +1545,23 @@ function renderReport(id){
   $('#mapLegend').textContent = names.length
     ? ('실측: '+names.join(' · '))
     : '뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다';
+
+  // 이 터의 산과 강 — 지역 지형지물 이름·역할 해설
+  const geo=d.geo||[];
+  const gcard=$('#geoCard');
+  if(geo.length){
+    $('#geoSub').textContent = (d.region||'') + ' 실제 지형';
+    $('#geoList').innerHTML=geo.map(g=>`
+      <div class="grow ${g.good?'':'bad'}">
+        <div class="gic">${g.icon}</div>
+        <div class="gbody">
+          <div class="gtop"><span class="gname">${g.name}</span><span class="grole">${g.role}</span></div>
+          ${g.detail?`<div class="gdetail">${g.detail}</div>`:''}
+          <div class="gmean">${g.mean}</div>
+        </div>
+      </div>`).join('');
+    gcard.style.display='block';
+  } else { gcard.style.display='none'; }
 
   // 주변 풍수 영향 요인 (지도 아이콘과 연동)
   const fx=d.factors||[];
