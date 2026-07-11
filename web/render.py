@@ -392,6 +392,7 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "advice": _advice(a, R),
         "profile": _profile(a, R, a.landmarks or {}),  # 실측 프로필(수치·지형지물)
         "section": a.section,                            # 배산임수 표고 단면
+        "factors": a.factors,                            # 지도용 풍수 영향 요인(아이콘)
         "region": _region(a.address),                    # 지역명(구·동)
         "confidence": _confidence(a.sources),            # 데이터 충실도(신뢰도)
         # 리포트에는 아주 구체적인 주소(도로명+동·호수)를 그대로 노출 — 전문 감정.

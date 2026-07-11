@@ -156,6 +156,13 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; color
 @media (prefers-color-scheme:dark){ .lmk{ background:rgba(30,33,37,.97); color:#e9ebee; } }
 .lmk-key{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--ink-soft); }
 .lmk-key i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+/* 지도 위 풍수 영향 요인 아이콘(공원·장례식장·전기탑 등) */
+.fxpin{ width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:14px; background:#fff; box-shadow:0 2px 7px rgba(0,0,0,.28); border:2px solid #94a3b8; }
+.fxpin.fx-good{ border-color:var(--gun); } .fxpin.fx-bad{ border-color:var(--bad); } .fxpin.fx-neu{ border-color:#94a3b8; }
+.fxlist{ display:flex; flex-wrap:wrap; gap:6px; }
+.fxi{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:var(--ink-soft); background:var(--panel-2); border-radius:999px; padding:5px 10px; }
+.fxi.g{ color:var(--gun); background:color-mix(in srgb,var(--gun) 12%,transparent); }
+.fxi.b{ color:var(--bad); background:color-mix(in srgb,var(--bad) 12%,transparent); }
 .pin{ position:absolute; transform:translate(-50%,-100%); text-align:center;
   cursor:pointer; transition:transform .12s; }
 .pin:active{ transform:translate(-50%,-100%) scale(.94); }
@@ -803,6 +810,12 @@ body.panel-open .pscrim{ opacity:1; pointer-events:auto; }
         </div>
         <div style="font-size:12px; color:var(--ink-soft)" id="mapLegend">뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다</div>
       </div>
+    </div>
+
+    <!-- 주변 풍수 영향 요인 (지도 아이콘과 연동) -->
+    <div class="card" id="factorCard" style="display:none">
+      <div class="hd"><h3>주변 영향 요인</h3><span class="sub" id="factorSub">지도 아이콘과 같은 자리</span></div>
+      <div id="factorList" class="fxlist"></div>
     </div>
 
     <!-- 표고 단면 (배산임수) -->
@@ -1512,6 +1525,16 @@ function renderReport(id){
     ? ('실측: '+names.join(' · '))
     : '뒷산이 받치고 앞에 물이 흐르는지(배산임수)를 실제 지형으로 봅니다';
 
+  // 주변 풍수 영향 요인 (지도 아이콘과 연동)
+  const fx=d.factors||[];
+  const fcard=$('#factorCard');
+  if(fx.length){
+    const good=fx.filter(f=>f.effect>0).length, bad=fx.filter(f=>f.effect<0).length;
+    $('#factorSub').textContent=`🟢 길 ${good} · 🔴 흉 ${bad}`;
+    $('#factorList').innerHTML=fx.map(f=>`<span class="fxi ${f.effect>0?'g':(f.effect<0?'b':'')}">${f.icon} ${f.label} · ${f.dist}m</span>`).join('');
+    fcard.style.display='block';
+  } else { fcard.style.display='none'; }
+
   // 표고 단면 (배산임수 시각화)
   const secCard=$('#sectionCard'); const sec=d.section||[];
   if(sec.length>=2 && (Math.max(...sec.map(p=>p.e))-Math.min(...sec.map(p=>p.e)))>=3){
@@ -1584,6 +1607,12 @@ function drawRepMap(d){
     g((facing+90)%360, 560, '청룡(좌)', lm.left, '⛰️', 'left');
     g((facing-90+360)%360, 560, '백호(우)', lm.right, '⛰️', 'right');
     g(facing, 540, lm.water?'득수(물)':'주작(앞)', lm.water||lm.front, lm.water?'💧':'🏞️', 'front');
+    // 실제 풍수 영향 요인(공원·학교·장례식장·전기탑·물길·철로 등) 아이콘
+    (d.factors||[]).forEach(f=>{
+      const cls=f.effect>0?'fx-good':(f.effect<0?'fx-bad':'fx-neu');
+      new naver.maps.Marker({ position:nLatLng([f.lat,f.lon]), map:repNMap, zIndex:60,
+        icon:{ content:`<div class="fxpin ${cls}">${f.icon}</div>`, anchor:new naver.maps.Point(13,13) }});
+    });
   } else {
     host.innerHTML='<canvas class="fallcv" style="width:100%;height:100%"></canvas>';
     drawTerrain(host.querySelector('canvas'), d, 1);

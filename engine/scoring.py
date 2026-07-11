@@ -64,6 +64,7 @@ class SiteAssessment:
     landmarks: Dict[str, str] = field(default_factory=dict)  # 실제 지형지물 이름
     sources: Dict[str, int] = field(default_factory=dict)   # 실측 데이터 개수(투명성)
     section: List[dict] = field(default_factory=list)       # 배산임수 표고 단면(앞←집→뒤)
+    factors: List[dict] = field(default_factory=list)       # 지도용 풍수 영향 요인(아이콘·좌표·길흉)
 
     @property
     def needs_bibo(self) -> bool:
@@ -130,7 +131,52 @@ def assess_site(
         landmarks=features.landmarks or {},
         sources=sources,
         section=_elev_section(features),
+        factors=_map_factors(features),
     )
+
+
+# 풍수 영향 요인 → (아이콘, 길흉 +1/0/-1, 한줄 이유)
+_POI_FACTOR = {
+    "park": ("🌳", 1, "녹지·생기"), "school": ("🏫", 1, "문곡성·학군"),
+    "library": ("📚", 1, "문창"), "hospital": ("🏥", 0, "의료 인접"),
+    "subway": ("🚇", 1, "교통 편의"), "funeral": ("⚰️", -1, "음기(장례)"),
+    "power_tower": ("⚡", -1, "전자기 살"), "gas_station": ("⛽", -1, "화기·인화"),
+    "nightlife": ("🍸", -1, "야간 소란"),
+}
+
+
+def _map_factors(features: SiteFeatures) -> List[dict]:
+    """지도에 아이콘으로 찍을 실제 풍수 영향 요인(주변 시설·물길·철로)."""
+    from engine.geo import haversine
+
+    o = features.building.location
+    out: List[dict] = []
+    for poi in (features.pois or []):
+        ic = _POI_FACTOR.get(poi.category)
+        if not ic:
+            continue
+        dist = haversine(o.as_tuple(), poi.point.as_tuple())
+        out.append({"lat": poi.point.lat, "lon": poi.point.lon, "icon": ic[0],
+                    "effect": ic[1], "kind": "poi", "why": ic[2],
+                    "label": (poi.name or ic[2]), "dist": int(round(dist))})
+    # 물길 최근접점
+    best = None
+    for s in (features.streams or []):
+        for p in s.points:
+            dd = haversine(o.as_tuple(), p.as_tuple())
+            if best is None or dd < best[0]:
+                best = (dd, p, s.name)
+    if best and best[0] <= 700:
+        out.append({"lat": best[1].lat, "lon": best[1].lon, "icon": "💧", "effect": 1,
+                    "kind": "water", "why": "득수(재물)", "label": best[2] or "물길", "dist": int(best[0])})
+    # 철로/고가 최근접
+    for r in (features.rails_overpasses or [])[:1]:
+        dd = haversine(o.as_tuple(), r.nearest.as_tuple())
+        out.append({"lat": r.nearest.lat, "lon": r.nearest.lon, "icon": "🚆", "effect": -1,
+                    "kind": "rail", "why": "철로 충살", "label": "철로·고가", "dist": int(dd)})
+    # 거리순 상위 24개만
+    out.sort(key=lambda x: x["dist"])
+    return out[:24]
 
 
 def _elev_section(features: SiteFeatures) -> List[dict]:

@@ -13,6 +13,8 @@ function navermap_authFailure(){
 }
 </script>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=__NAVER_KEY__&submodules=geocoder"></script>
+<!-- 다음(카카오) 주소 검색 — 정확한 도로명/지번 주소를 '선택'하게 해 데이터 정확도 확보 -->
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <style>
 :root{
   --paper:#FFFFFF; --panel:#FFFFFF; --panel-2:#F4F5F7; --ink:#212429; --ink-soft:#6A7280; --ink-faint:#AAB0BA;
@@ -48,6 +50,11 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .field{ margin-top:16px; } .field label{ font-size:12.5px; font-weight:800; color:var(--ink-soft); }
 .inp{ width:100%; margin-top:8px; padding:15px 15px; border-radius:13px; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line);
   color:var(--ink); font-family:inherit; font-size:15.5px; -webkit-appearance:none; appearance:none; }
+.addrbox{ display:flex; gap:8px; margin-top:8px; align-items:stretch; }
+.addrbox .inp{ margin-top:0; flex:1; cursor:pointer; }
+.addrbtn{ flex:none; padding:0 16px; border-radius:13px; background:var(--ink); color:var(--paper); font-weight:800; font-size:14px; white-space:nowrap; }
+.addrhint{ font-size:12px; font-weight:700; color:var(--gun); margin-top:8px; min-height:16px; }
+.addrhint b{ color:var(--gun); }
 .dob{ display:flex; gap:8px; margin-top:8px; } .dob select{ flex:1; padding:14px 8px; border-radius:12px; background:var(--panel); box-shadow:inset 0 0 0 1px var(--line); color:var(--ink); font-family:inherit; font-size:14.5px; -webkit-appearance:none; appearance:none; }
 .seg{ display:flex; gap:8px; margin-top:8px; } .seg button{ flex:1; padding:13px; border-radius:12px; background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--line); font-weight:800; font-size:14.5px; color:var(--ink-soft); }
 .seg button.on{ background:var(--seal); color:#fff; box-shadow:none; }
@@ -114,8 +121,17 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .vlmk.right{ border-left-color:#8b94a3; } .vlmk.right b{ color:#6b7484; }
 .vlmk.front{ border-left-color:#2f8fd8; } .vlmk.front b{ color:#2f8fd8; }
 @media (prefers-color-scheme:dark){ .vlmk{ background:rgba(30,33,37,.97); color:#e9ebee; } }
-.vlegend{ display:flex; flex-wrap:wrap; gap:9px; font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:16px; }
+.vlegend{ display:flex; flex-wrap:wrap; gap:9px; font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:12px; }
 .vlegend i{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:4px; }
+.fxpin{ width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:14px; background:#fff; box-shadow:0 2px 7px rgba(0,0,0,.28); border:2px solid #94a3b8; }
+.fxpin.fx-good{ border-color:#12B886; } .fxpin.fx-bad{ border-color:#FA5252; } .fxpin.fx-neu{ border-color:#94a3b8; }
+.fxsum{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.fxchip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; padding:7px 12px; border-radius:999px; box-shadow:var(--shadow); background:var(--panel); }
+.fxchip.g{ color:var(--gun); } .fxchip.b{ color:#FA5252; }
+.fxlist{ margin-top:11px; display:flex; flex-wrap:wrap; gap:6px; }
+.fxi{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:var(--ink-soft); background:var(--panel-2); border-radius:999px; padding:5px 10px; }
+.fxi.b{ color:#e03131; background:color-mix(in srgb,#FA5252 12%,transparent); }
+.fxi.g{ color:#0ca678; background:color-mix(in srgb,#12B886 12%,transparent); }
 .vcard{ background:var(--panel); border-radius:16px; box-shadow:var(--shadow); padding:17px; margin-bottom:16px; }
 .vcard .h{ font-size:13px; font-weight:800; color:var(--seal); margin-bottom:9px; }
 .vcard .body{ font-size:14.5px; line-height:1.65; }
@@ -142,8 +158,12 @@ button{ font-family:inherit; cursor:pointer; border:none; }
     <div id="refWelcome" class="refwelcome" style="display:none"></div>
     <div class="pad">
       <div class="field">
-        <label>집 주소 (동네만 넣어도 돼요)</label>
-        <input id="addr" class="inp" placeholder="예) 관악구 신림동, 또는 도로명주소" autocomplete="off">
+        <label>집 주소 <span style="color:var(--seal)">*정확히 선택</span></label>
+        <div class="addrbox">
+          <input id="addr" class="inp" placeholder="주소 검색을 눌러 선택하세요" readonly onclick="openPostcode()">
+          <button type="button" class="addrbtn" id="findAddr" onclick="openPostcode()">🔍 검색</button>
+        </div>
+        <div id="addrHint" class="addrhint"></div>
       </div>
       <div class="field">
         <label>생년월일</label>
@@ -226,6 +246,12 @@ function drawViralMap(d){
   g((facing+90)%360,560,'청룡(좌)',lm.left,'⛰️','left');
   g((facing-90+360)%360,560,'백호(우)',lm.right,'⛰️','right');
   g(facing,540,lm.water?'득수(물)':'주작(앞)',lm.water||lm.front,lm.water?'💧':'🏞️','front');
+  // 실제 풍수 영향 요인(공원·학교·장례식장·전기탑·물길·철로 등)을 아이콘으로
+  (d.factors||[]).forEach(f=>{
+    const cls=f.effect>0?'fx-good':(f.effect<0?'fx-bad':'fx-neu');
+    new naver.maps.Marker({ position:nLatLng([f.lat,f.lon]), map:VMAP, zIndex:60,
+      icon:{ content:`<div class="fxpin ${cls}">${f.icon}</div>`, anchor:new naver.maps.Point(13,13) }});
+  });
   [200,600].forEach(t=>setTimeout(()=>{ if(VMAP&&naverOK()) naver.maps.Event.trigger(VMAP,'resize'); },t));
 }
 
@@ -250,6 +276,20 @@ let SEX='1', LASTD=null, LASTC=null;
   fetch('/api/ref?action=leaderboard').then(r=>r.json()).then(d=>{ if(d.totalUsers) $('#totalStat').innerHTML='지금까지 <b>'+d.totalUsers.toLocaleString()+'명</b>이 터를 봤어요'; }).catch(()=>{});
 })();
 
+/* 다음 주소검색 — 정확한 도로명주소 선택 */
+let SELECTED=null;   // {addr, sido, sigungu, bname}
+function openPostcode(){
+  if(!window.daum || !daum.Postcode){ $('#addr').removeAttribute('readonly'); $('#addr').placeholder='예) 관악구 신림동'; $('#addr').focus(); return; }
+  new daum.Postcode({ oncomplete:function(data){
+    const road=data.roadAddress||'', jibun=data.jibunAddress||'';
+    const full=road||jibun;
+    SELECTED={ addr:full, sido:data.sido, sigungu:data.sigungu, bname:data.bname };
+    $('#addr').value=full;
+    $('#addrHint').innerHTML='✓ <b>'+[data.sigungu,data.bname].filter(Boolean).join(' ')+'</b> 정확히 선택됨';
+    $('#go').removeAttribute('disabled');
+  }}).open();
+}
+
 async function geocode(q){
   return new Promise(res=>{
     if(!(naverOK()&&naver.maps.Service&&naver.maps.Service.geocode)) return res(null);
@@ -261,8 +301,8 @@ async function geocode(q){
   });
 }
 async function run(){
-  const q=($('#addr').value||'').trim();
-  if(!q){ $('#addr').focus(); toast('집 주소(동네)를 넣어주세요'); return; }
+  const q=(SELECTED&&SELECTED.addr)||($('#addr').value||'').trim();
+  if(!q){ toast('주소 검색을 눌러 정확한 주소를 선택해주세요'); openPostcode(); return; }
   $('#intro').style.display='none'; $('#load').classList.add('on');
   ['터를 읽는 중…','산과 물길을 확인 중…','사주와 궁합을 보는 중…'].forEach((m,i)=>setTimeout(()=>{ if($('#load').classList.contains('on')) $('#loadMsg').textContent=m; }, i*2600));
   try{
@@ -306,9 +346,15 @@ function renderResult(d,c){
     <div class="bigbox"><div class="t">이 집 풍수</div><div class="v">${d.site_score}<small>점</small></div><div class="s">「${d.grade}」</div></div>
     ${pct!=null?`<div class="bigbox"><div class="t">나와 궁합</div><div class="v jae">${pct}<small>%</small></div><div class="s">${c.caption||''}</div></div>`:''}
   </div>`;
-  // 지도 (풍수 오버레이) + 해석
+  // 지도 (풍수 오버레이 + 영향 요인 아이콘) + 해석
   html+=`<div class="vmap"><div id="vmapHost"></div></div>
-    <div class="vlegend"><span><i style="background:#2f9e6f"></i>현무</span><span><i style="background:#3B82F6"></i>청룡</span><span><i style="background:#8b94a3"></i>백호</span><span><i style="background:#2f8fd8"></i>득수</span><span>┈ 배산임수 축</span></div>`;
+    <div class="vlegend"><span><i style="background:#2f9e6f"></i>현무</span><span><i style="background:#3B82F6"></i>청룡</span><span><i style="background:#8b94a3"></i>백호</span><span><i style="background:#2f8fd8"></i>득수</span><span>┈ 배산임수 축</span><span>🟢길 🔴흉 요인</span></div>`;
+  const fx=d.factors||[]; const good=fx.filter(f=>f.effect>0), bad=fx.filter(f=>f.effect<0);
+  if(fx.length){
+    html+=`<div class="fxsum"><span class="fxchip g">🟢 길한 요인 ${good.length}</span><span class="fxchip b">🔴 흉한 요인 ${bad.length}</span></div>`;
+    const top=[...bad.slice(0,4), ...good.slice(0,5)];
+    if(top.length) html+=`<div class="fxlist" style="margin:-6px 0 16px">${top.map(f=>`<span class="fxi ${f.effect>0?'g':(f.effect<0?'b':'')}">${f.icon} ${f.label} · ${f.dist}m</span>`).join('')}</div>`;
+  }
   if(d.interp&&d.interp.body){
     html+=`<div class="vcard"><div class="h">🧭 풍수 해석 · ${d.region||''}</div><div class="body">${d.interp.body}</div>`;
     if(d.profile&&d.profile.length){
