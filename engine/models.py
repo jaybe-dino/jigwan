@@ -106,6 +106,8 @@ class SiteFeatures:
     precision: Optional[Precision] = None
     # 실제 지형지물 이름(뒷산·물길 등) — 있으면 해석에 그대로 반영
     landmarks: Optional[Dict[str, str]] = None
+    # 다중 스케일 지형지물 상세(산봉우리·하천) — {name,kind,lat,lon,ele,dist,bearing}
+    terrain: List[dict] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

@@ -161,44 +161,262 @@ def _clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
 
 
-# 사신사·득수 — 역할과 풍수 의미 해설
-_ROLE_MEAN = {
-    "back": ("현무 · 주산(뒷산)", "⛰️", "이 터의 등을 받치는 주산. 든든할수록 재물이 쌓이고 건강·안정이 좋아집니다."),
-    "left": ("청룡 · 좌산", "⛰️", "왼쪽을 감싸는 산. 남자·명예·귀인의 기운을 북돋웁니다."),
-    "right": ("백호 · 우산", "🏔️", "오른쪽을 감싸는 산. 여자·재물·실리의 기운을 관장합니다."),
-    "front": ("주작 · 안산(앞산)", "🏞️", "앞에서 마주보는 산. 손님·기회·명예를 맞이합니다."),
-    "water": ("득수 · 물길", "💧", "앞을 흐르는 물. 감싸 흐르면(환포) 재물이 고이고, 등지면(반궁) 새어나갑니다."),
+# ── 다중 스케일 지형지물 지식베이스(고도화) ────────────────────────────────
+# 실제 산·강 이름 → (오행, 산세/특성 해설, 개운 처방). 신빙성 있는 구체 서술.
+_LORE = {
+    "관악산": ("화(火)", "불꽃처럼 솟은 바위산(화체·火體)으로 기세가 매우 강합니다. 문필·시험·명예운을 크게 북돋우나 화기가 세, 조선 왕조도 경복궁 화재를 막으려 해태상과 연못으로 이 산의 화기를 눌렀을 정도입니다.", "창가에 물그릇·수경식물을 두고 붉은 조명을 피해 화기를 물로 다스리세요."),
+    "삼성산": ("화(火)", "관악산 자락의 바위 명산으로 세 성인의 전설이 깃든 문필의 산입니다. 학업·수행의 기운이 서립니다.", "책상을 이 산 방향으로 두면 집중과 성취에 좋습니다."),
+    "장군봉": ("금(金)", "우뚝한 근봉으로 무(武)·결단·추진의 기운을 줍니다. 뾰족하고 굳센 봉우리는 강한 리더십을 상징합니다.", "결단이 필요할 때 이 봉우리가 보이는 창가에서 계획을 세우세요."),
+    "북한산": ("금(金)", "서울의 조종산(祖宗山)인 바위 명산(삼각산). 우뚝한 석산은 귀(貴)와 기상을 세워 큰 인물을 배출하는 기운입니다.", "높고 귀한 산 기운을 등지면 자존과 명예가 섭니다."),
+    "북악산": ("목(木)", "경복궁의 주산(백악). 단정하게 솟아 반듯한 귀인·관운의 기운을 세웁니다.", "등 뒤로 두면 신뢰와 지위가 안정됩니다."),
+    "인왕산": ("금(金)", "바위 기운이 웅장한 서울의 우백호. 재물과 예술·기예의 기운이 함께 서립니다.", "오른쪽에 두면 실리와 재능이 살아납니다."),
+    "남산": ("목(木)", "서울 도심의 안산(案山)이자 목멱산. 단정한 앞산은 명예와 조망을 열어줍니다.", "앞으로 두면 손님과 기회가 모입니다."),
+    "아차산": ("목(木)", "한강을 굽어보는 완만한 육산으로 온화한 생기를 품습니다.", "부드러운 산 기운은 건강과 화합에 좋습니다."),
+    "대모산": ("토(土)", "강남의 완만한 흙산으로 넉넉한 재물·안정의 토(土) 기운을 줍니다.", "안정과 저축의 기운 — 재물 자리를 밝게 두세요."),
+    "우면산": ("토(土)", "서초를 받치는 육산으로 두터운 안정감을 줍니다.", "든든한 배경 — 등 뒤를 비우지 마세요."),
+    "청계산": ("목(木)", "울창한 육산으로 맑고 곧은 생기를 품은 명산입니다.", "맑은 산 기운 — 건강과 정직의 자리."),
+    "한라산": ("토(火)", "제주를 이룬 거대한 화산으로 웅혼한 지기의 원천입니다.", "큰 산의 기운 — 큰 뜻을 품기 좋습니다."),
+    "지리산": ("토(土)", "백두대간 남단의 어머니 산으로 두텁고 넉넉한 기운을 품습니다.", "넓은 품의 산 — 안정과 포용의 자리."),
+    "무등산": ("토(土)", "광주를 감싸는 넉넉한 육산으로 평온한 기운을 줍니다.", "온화한 기운 — 관계와 건강에 좋습니다."),
+    "팔공산": ("금(金)", "대구의 진산으로 웅장한 바위 기운이 귀함을 세웁니다.", "귀한 산을 등지면 명예가 섭니다."),
+    "금정산": ("금(金)", "부산의 진산으로 바위 기세가 강건합니다.", "굳센 산 기운 — 추진과 결단의 자리."),
+    "계룡산": ("목(火)", "예로부터 신령한 기운으로 이름난 바위 명산입니다.", "영기가 강한 산 — 수행·집중에 좋습니다."),
+    # 강·하천
+    "한강": ("수(水)", "서울을 크게 감싸 흐르는 외수(客水)이자 큰 명당수. 큰물이 멀리서 감싸면 대재물·교류·물류의 큰 기운이 모입니다.", "큰 물이 앞을 두르면 재물의 그릇이 커집니다."),
+    "도림천": ("수(水)", "관악·삼성산에서 발원해 안양천을 거쳐 한강으로 드는 내수(內水). 집 앞을 감싸 흐르면(환포) 재물이 고입니다.", "앞을 흐르는 개천이 감싸면 알뜰히 모이는 재물운."),
+    "안양천": ("수(水)", "서남부를 흐르는 지류로 재물의 통로가 됩니다.", "물길을 등지지 말고 마주 보게 두세요."),
+    "중랑천": ("수(水)", "동북부를 흐르는 큰 지류로 재물·교류의 기운입니다.", "감싸 흐르는 쪽이 길합니다."),
+    "청계천": ("수(水)", "도심을 흐르는 물길로 재물과 소통의 기운을 되살린 하천입니다.", "물가 가까이는 활기와 재물이 돕니다."),
+    "탄천": ("수(水)", "분당·강남을 흐르는 지류로 재물의 흐름을 만듭니다.", "물을 마주 보는 향이 좋습니다."),
+    "양재천": ("수(水)", "강남을 완만히 감싸 흐르는 물길로 알뜰한 재물운입니다.", "감싸 흐르는 안쪽이 명당입니다."),
+    "낙동강": ("수(水)", "영남을 관통하는 큰 강으로 큰 재물·물류의 기운입니다.", "큰 물이 감싸면 그릇이 커집니다."),
+    "금강": ("수(水)", "충청을 감아 도는 큰 강으로 넉넉한 재물수입니다.", "물을 앞에 두면 재물이 모입니다."),
+    "영산강": ("수(水)", "호남을 흐르는 큰 강으로 풍요의 물길입니다.", "감싸 흐르는 쪽에 터가 길합니다."),
+    "섬진강": ("수(水)", "맑기로 이름난 큰 강으로 청정한 재물·건강 기운입니다.", "맑은 물가 — 건강과 재물의 자리."),
+}
+
+# 오행 → 아이콘(불꽃·바위·흙 등 형상 반영)
+_OHAENG_ICON = {"화": "🔥", "금": "⛰️", "목": "🌲", "토": "🏔️", "수": "💧"}
+# 스케일·종류별 지도/카드 아이콘
+_KIND_ICON = {"josan": "🏔️", "peak": "⛰️", "sasin_back": "⛰️", "sasin_left": "🐉",
+              "sasin_right": "🐯", "sasin_front": "🏞️", "river": "🌊", "stream": "💧"}
+# 사신사 역할 라벨
+_SASIN = {"back": ("현무·주산(뒷산)", "🐢"), "left": ("청룡·좌산", "🐉"),
+          "right": ("백호·우산", "🐯"), "front": ("주작·안산(앞산)", "🏞️")}
+
+# 지역(구/동/시) → 큰 물(대수·객수). 창수·객수는 멀어도 국세를 좌우한다.
+_MACRO_RIVER = {
+    "관악": "한강", "동작": "한강", "영등포": "한강", "구로": "한강", "금천": "안양천",
+    "마포": "한강", "용산": "한강", "성동": "한강", "광진": "한강", "강동": "한강",
+    "송파": "한강", "강남": "한강", "서초": "양재천", "양천": "안양천", "강서": "한강",
+    "은평": "한강", "서대문": "홍제천", "종로": "청계천", "중구": "청계천", "성북": "정릉천",
+    "강북": "우이천", "도봉": "중랑천", "노원": "중랑천", "중랑": "중랑천", "동대문": "중랑천",
+    "성남": "탄천", "분당": "탄천", "대구": "낙동강", "부산": "낙동강", "대전": "금강",
+    "광주": "영산강", "제주": "한라산",
+}
+# 서울 권역 → 조산(祖山·큰 산). OSM에 큰 산이 안 잡혀도 국세를 세운다.
+_MACRO_JOSAN = {
+    "관악": "관악산", "동작": "관악산", "금천": "관악산", "구로": "관악산",
+    "서초": "우면산", "강남": "대모산", "송파": "남한산", "강동": "아차산", "광진": "아차산",
+    "종로": "북한산", "성북": "북한산", "강북": "북한산", "도봉": "도봉산", "노원": "수락산",
+    "은평": "북한산", "서대문": "안산", "마포": "와우산", "용산": "남산", "중구": "남산",
+    "성남": "청계산", "분당": "청계산",
 }
 
 
-def _geo(a: SiteAssessment, R, lm: dict) -> list:
-    """지역 지형지물(산·강)을 이름·역할·수치와 함께 해설. 실제 이름 그대로 노출."""
+def _match_lore(name: str):
+    if not name:
+        return None
+    for key, val in _LORE.items():
+        if key in name:
+            return val
+    return None
+
+
+def _sector_of(facing, brg):
+    """향(facing) 기준 방위 → 사신사 구역(back/left/right/front)."""
+    from engine.geo import angle_diff
+    for key, cdeg in (("back", (facing + 180) % 360), ("front", facing % 360),
+                      ("left", (facing + 90) % 360), ("right", (facing - 90) % 360)):
+        if angle_diff(brg, cdeg) <= 45:
+            return key
+    return "front"
+
+
+def _scale_of(kind, dist):
+    """거리·종류로 풍수 스케일 판정. 대(큰 국세)/중(사신사)/소(가까운 봉·개천)."""
+    if kind in ("river",):
+        return "대"
+    if kind == "josan":
+        return "대"
+    if dist is None:
+        return "중"
+    if kind == "stream":
+        return "소" if dist <= 900 else "중"
+    # 산봉우리
+    if dist <= 800:
+        return "소"
+    if dist <= 2500:
+        return "중"
+    return "대"
+
+
+def _terrain(a: SiteAssessment, R, lm: dict) -> dict:
+    """다중 스케일 지형지물 해설 — 큰 산줄기·큰 물(대) / 주산·사신사(중) / 가까운 봉·개천(소).
+
+    실제 이름과 오행·산세·거리·방위를 결합해 '단순 뒷산'이 아니라 '뒤에 어떤 산'을 설명한다.
+    반환: {"items": [...], "note": 국세 한 줄}
+    """
+    from engine.geo import angle_diff
     r01 = R["R01"].metrics if "R01" in R else {}
     r03 = R["R03"].metrics if "R03" in R else {}
-    out = []
+    facing = (R["R08"].metrics.get("facing_deg", 180.0) if "R08" in R else 180.0)
+    region = _region(a.address)
+    items = []
+    seen = set()
 
-    def push(key, detail="", good=True):
-        nm = lm.get(key)
-        if not nm:
+    def emit(name, kind, role, dist, ele, brg, good, note_bits, lat=None, lon=None):
+        if not name or name in seen:
             return
-        role, icon, mean = _ROLE_MEAN[key]
-        out.append({"name": nm, "role": role, "icon": icon, "mean": mean, "detail": detail, "good": good})
+        seen.add(name)
+        lore = _match_lore(name)
+        oh = lore[0] if lore else None
+        if kind == "river":
+            icon = "🌊"
+        elif kind == "stream":
+            icon = "💧"
+        else:  # 산 — 오행 형상 아이콘(화=🔥·금=⛰️·목=🌲·토=🏔️) 우선
+            icon = (_OHAENG_ICON.get(oh[0]) if oh else None) or _KIND_ICON.get(kind, "⛰️")
+        mean = (lore[1] if lore else _role_mean(kind, role))
+        tip = lore[2] if lore else ""
+        detail = " · ".join([b for b in note_bits if b])
+        items.append({
+            "name": name, "kind": kind, "role": role, "scale": _scale_of(kind, dist),
+            "icon": icon, "ohaeng": oh, "dist": dist, "ele": ele,
+            "dir": _compass(brg) if brg is not None else "",
+            "mean": mean, "tip": tip, "detail": detail, "good": good,
+            "lat": lat, "lon": lon,
+        })
 
-    back_detail = ""
-    if r01.get("dist_m"):
-        back_detail = f"{_compass(r01.get('bearing_deg'))}쪽 {int(r01['dist_m'])}m · 표고 +{int(r01.get('max_gain_m', 0))}m"
-    push("back", back_detail)
-    push("left")
-    push("right")
-    push("front")
+    # 1) 실측 사신사(landmarks) — 역할·수치 결합 (중 스케일 기본)
+    if lm.get("back"):
+        d = int(r01["dist_m"]) if r01.get("dist_m") else None
+        g = int(r01.get("max_gain_m", 0) or 0)
+        emit(lm["back"], "sasin_back", "현무·주산(뒷산)", d, None,
+             r01.get("bearing_deg"), (r01.get("max_gain_m", 0) or 0) > 0,
+             [f"{_compass(r01.get('bearing_deg'))}쪽 {d}m" if d else "", f"표고 +{g}m" if g else ""])
+    for key in ("left", "right", "front"):
+        if lm.get(key):
+            role, _ic = _SASIN[key]
+            emit(lm[key], "sasin_" + key, role, None, None, None, True, [])
+    # 물(내수)
     if lm.get("water"):
         emb = r03.get("embrace_sign", 0)
-        det = ""
-        if r03.get("dist_m") is not None:
-            det = f"{int(r03['dist_m'])}m · " + ("환포(감싸 흐름·길)" if emb >= 0 else "반궁(등지고 흐름·흉)")
-        role, icon, mean = _ROLE_MEAN["water"]
-        out.append({"name": lm["water"], "role": role, "icon": icon, "mean": mean, "detail": det, "good": emb >= 0})
-    return out
+        d = int(r03["dist_m"]) if r03.get("dist_m") is not None else None
+        emit(lm["water"], "stream", "득수·물길", d, None, None, emb >= 0,
+             [f"{d}m" if d else "", ("환포(감싸 흐름·길)" if emb >= 0 else "반궁(등지고 흐름·흉)")])
+
+    # 2) OSM 실측 지형지물(a.terrain) — 근봉(장군봉 등)·먼 조산까지 스케일별로
+    for t in (a.terrain or []):
+        nm = t.get("name")
+        if not nm or nm in seen:
+            continue
+        kind = "river" if t.get("kind") == "river" else (
+            "stream" if t.get("kind") in ("water", "stream") else "peak")
+        dist = t.get("dist")
+        brg = t.get("bearing")
+        sec = _sector_of(facing, brg) if brg is not None else "front"
+        role = {"back": "현무 방향 봉우리", "left": "청룡 방향 봉우리",
+                "right": "백호 방향 봉우리", "front": "안산 방향 봉우리"}.get(sec, "주변 봉우리")
+        if kind in ("stream", "river"):
+            role = "득수·물길"
+        ele = t.get("ele")
+        emit(nm, kind, role, dist, ele, brg, True,
+             [f"{_compass(brg)}쪽 {int(dist)}m" if dist else "", f"해발 {int(ele)}m" if ele else ""],
+             lat=t.get("lat"), lon=t.get("lon"))
+
+    # 3) 큰 산줄기·큰 물(대 스케일) — OSM에 안 잡혀도 국세를 세운다
+    josan = _pick_region(region, _MACRO_JOSAN)
+    daesu = _pick_region(region, _MACRO_RIVER)
+    if josan and josan not in seen:
+        emit(josan, "josan", "조산(祖山)·큰 산줄기", None, None, None, True,
+             ["이 고을을 세운 큰 산"])
+    if daesu and daesu not in seen:
+        kind = "river" if daesu in ("한강", "낙동강", "금강", "영산강", "섬진강") else "stream"
+        emit(daesu, kind, "대수(大水)·큰 물", None, None, None, True, ["국세를 감싸는 큰 물"])
+
+    note = _terrain_note(region, lm, josan, daesu, r03)
+    # 대→중→소, 같은 스케일 내 거리순
+    order = {"대": 0, "중": 1, "소": 2}
+    items.sort(key=lambda x: (order.get(x["scale"], 3), x["dist"] if x["dist"] is not None else 9999))
+    return {"items": items, "note": note}
+
+
+def _role_mean(kind, role):
+    if kind.startswith("sasin_") or kind in ("josan", "peak"):
+        base = {
+            "sasin_back": "이 터의 등을 받치는 주산. 든든할수록 재물이 쌓이고 건강·안정이 좋아집니다.",
+            "sasin_left": "왼쪽을 감싸는 청룡. 남자·명예·귀인의 기운을 북돋웁니다.",
+            "sasin_right": "오른쪽을 감싸는 백호. 여자·재물·실리의 기운을 관장합니다.",
+            "sasin_front": "앞에서 마주보는 안산. 손님·기회·명예를 맞이합니다.",
+            "josan": "이 고을의 큰 산줄기가 내려온 조산. 국세의 크기를 정합니다.",
+            "peak": "터 주변의 봉우리로 산세를 이룹니다.",
+        }
+        return base.get(kind, "산세를 이루는 봉우리입니다.")
+    return "앞을 흐르는 물. 감싸 흐르면(환포) 재물이 고이고, 등지면(반궁) 새어나갑니다."
+
+
+def _pick_region(region, table):
+    for key, val in table.items():
+        if key in (region or ""):
+            return val
+    return None
+
+
+def _terrain_note(region, lm, josan, daesu, r03):
+    back = lm.get("back") or josan
+    water = lm.get("water") or daesu
+    parts = [region]
+    if josan:
+        parts.append(f"{josan} 자락")
+    bits = []
+    if back:
+        bits.append(f"뒤로 {back}이(가) 받치고")
+    if lm.get("water"):
+        emb = r03.get("embrace_sign", 0)
+        bits.append(f"앞을 {lm['water']}이(가) {'감싸 흐르며' if emb >= 0 else '스치며'}")
+    if daesu and daesu != lm.get("water"):
+        bits.append(f"멀리 {daesu}이(가) 국세를 두르는")
+    head = " ".join(p for p in parts if p)
+    body = ", ".join(bits)
+    if body:
+        return f"{head} — {body} 국세입니다."
+    return f"{head}의 지형을 실제 산·강 이름으로 풀었습니다."
+
+
+def _facing_guide(a: SiteAssessment, R, lm: dict) -> dict:
+    """창(주된 개구부)이 향하는 방위별 풍수 조언. 뒷산 오행과 겹쳐 구체화한다."""
+    facing = (R["R08"].metrics.get("facing_deg", 180.0) if "R08" in R else 180.0)
+    d8 = _compass(facing)
+    base = {
+        "남": ("남향 — 볕이 가득한 양명(陽明)의 향", "하루 종일 볕이 들어 건강·화합·재물이 두루 좋은 으뜸 향입니다. 거실·침실을 이 창 쪽에 두세요."),
+        "남동": ("남동향 — 아침볕과 생기의 향", "아침 햇살이 들어 성장·시작·자녀운이 좋습니다. 재물이 자라는 방위라 초록 식물을 두면 좋습니다."),
+        "동": ("동향 — 떠오르는 기운의 향", "아침 기운이 강해 건강·성장·새 출발에 좋습니다. 아침에 창을 활짝 여세요."),
+        "남서": ("남서향 — 오후볕과 관계의 향", "따뜻한 오후볕으로 관계·화합에 좋으나 볕이 셀 수 있어 발(블라인드)로 조절하세요."),
+        "서": ("서향 — 노을과 결실의 향", "오후볕이 강해 재물의 결실을 뜻하나 화기가 셀 수 있습니다. 여름 햇빛은 가리고 수경식물로 식혀주세요."),
+        "북서": ("북서향 — 안정과 권위의 향", "차분한 빛으로 집중·권위에 좋습니다. 다소 서늘하니 따뜻한 색 조명으로 온기를 더하세요."),
+        "북": ("북향 — 그윽하고 차분한 향", "직사광이 적어 서늘합니다. 밝은 조명과 따뜻한 색, 물 대신 나무 기운(초록)으로 보완하세요."),
+        "북동": ("북동향 — 이른 기운의 향", "이른 아침 빛이 잠깐 듭니다. 습을 조심하고 환기·채광을 자주 하세요."),
+    }
+    title, body = base.get(d8, ("향 정보", "창의 방향을 실제 좌향으로 풀었습니다."))
+    # 뒷산 오행이 화(火)면(관악산 등) 화기 비보 조언 강화
+    lore = _match_lore(lm.get("back") or "")
+    tip = "창가에 초록 식물이나 물그릇을 두어 기운을 부드럽게 하세요."
+    if lore and lore[0].startswith("화"):
+        tip = f"뒤의 {lm.get('back')}은 화기가 강한 산이라, 창가에 수경식물·물그릇을 두어 화기를 물로 눌러 다스리세요(경복궁이 관악산 화기를 물로 비보한 이치)."
+    elif d8 in ("서", "남서"):
+        tip = "오후 햇빛이 세니 얇은 커튼으로 가리고, 창가에 수경식물을 두어 화기를 식히세요."
+    return {"dir": d8, "deg": round(facing), "title": title, "body": body, "tip": tip}
 
 
 def _breakdown(code: str, m: dict, applicable: bool) -> list:
@@ -431,7 +649,8 @@ def shape_assessment(a: SiteAssessment, up: bool, share_dong: str, accuracy: int
         "terbti": _terbti(a, R),
         "advice": _advice(a, R),
         "profile": _profile(a, R, a.landmarks or {}),  # 실측 프로필(수치·지형지물)
-        "geo": _geo(a, R, a.landmarks or {}),            # 지역 산·강 이름·역할 해설
+        "terrain": _terrain(a, R, a.landmarks or {}),    # 다중 스케일 지형지물(대/중/소)
+        "facingGuide": _facing_guide(a, R, a.landmarks or {}),  # 창 방향별 풍수 조언
         "section": a.section,                            # 배산임수 표고 단면
         "factors": a.factors,                            # 지도용 풍수 영향 요인(아이콘)
         "region": _region(a.address),                    # 지역명(구·동)

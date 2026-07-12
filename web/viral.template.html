@@ -154,6 +154,17 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .vg.bad .rl{ color:var(--seal); }
 .vg .dt{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; font-variant-numeric:tabular-nums; }
 .vg .mn{ font-size:12.5px; color:var(--ink); margin-top:4px; line-height:1.5; word-break:keep-all; }
+.vg .oh{ font-size:10px; font-weight:800; color:var(--ink-faint); }
+.vg .tip{ font-size:11.5px; color:var(--gun); margin-top:4px; line-height:1.45; word-break:keep-all; }
+.vg.bad .tip{ color:var(--seal); }
+.vgnote{ font-size:12.5px; line-height:1.55; color:var(--ink); background:var(--panel-2);
+  border-radius:11px; padding:10px 12px; margin:2px 0 6px; word-break:keep-all; }
+.vgs{ display:flex; align-items:center; gap:7px; margin:14px 0 0; font-size:11.5px; font-weight:700; color:var(--ink-soft); }
+.vgs .b{ font-size:10.5px; font-weight:800; color:#fff; border-radius:999px; padding:2px 8px; }
+.vgs .b.s대{ background:#2f6f9e; } .vgs .b.s중{ background:#0ca678; } .vgs .b.s소{ background:#9e7a2f; }
+.vcard .ftip{ font-size:12px; line-height:1.5; color:var(--ink); background:var(--panel-2);
+  border-radius:11px; padding:10px 12px; margin-top:9px; word-break:keep-all; }
+.vcard .ftip::before{ content:"🧭 "; }
 #toast{ position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--ink); color:var(--paper); font-size:13px; font-weight:700; padding:12px 18px; border-radius:14px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:.25s; z-index:99; }
 #toast.show{ opacity:1; transform:translate(-50%,0); }
 </style>
@@ -259,6 +270,14 @@ function drawViralMap(d){
   g((facing+90)%360,560,'청룡(좌)',lm.left,'⛰️','left');
   g((facing-90+360)%360,560,'백호(우)',lm.right,'⛰️','right');
   g(facing,540,lm.water?'득수(물)':'주작(앞)',lm.water||lm.front,lm.water?'💧':'🏞️','front');
+  // 실측 지형지물(실좌표) — 근봉·개천을 실제 위치에 오행 아이콘으로
+  const shown=new Set([lm.back,lm.left,lm.right,lm.front,lm.water].filter(Boolean));
+  ((d.terrain&&d.terrain.items)||[]).forEach(t=>{
+    if(t.lat==null||shown.has(t.name)) return; shown.add(t.name);
+    const cls=(t.kind==='river'||t.kind==='stream')?'front':'back';
+    new naver.maps.Marker({position:nLatLng([t.lat,t.lon]),map:VMAP,zIndex:70,
+      icon:{content:`<div class="vlmk ${cls}"><b>${t.icon} ${t.name}</b>${t.dir?t.dir+'쪽 '+t.dist+'m':''}</div>`,anchor:new naver.maps.Point(0,0)}});
+  });
   // 실제 풍수 영향 요인(공원·학교·장례식장·전기탑·물길·철로 등)을 아이콘으로
   (d.factors||[]).forEach(f=>{
     const cls=f.effect>0?'fx-good':(f.effect<0?'fx-bad':'fx-neu');
@@ -377,17 +396,32 @@ function renderResult(d,c){
     }
     html+=`</div>`;
   }
-  // 이 터의 산과 강 — 지역 지형지물 이름·역할 해설
-  const geo=d.geo||[];
-  if(geo.length){
-    html+=`<div class="vcard"><div class="h">⛰️ 이 터의 산과 강 · ${d.region||''}</div><div class="vgeo">`+
-      geo.map(g=>`<div class="vg ${g.good?'':'bad'}">
+  // 이 터의 산과 강 — 다중 스케일 지형지물(대/중/소) + 오행
+  const ter=(d.terrain&&d.terrain.items)||[];
+  if(ter.length){
+    const SLAB={'대':'큰 산줄기·큰 물','중':'주산·사신사','소':'가까운 봉우리·개천'};
+    html+=`<div class="vcard"><div class="h">⛰️ 이 터의 산과 강 · ${d.region||''}</div>`;
+    if(d.terrain&&d.terrain.note) html+=`<div class="vgnote">${d.terrain.note}</div>`;
+    html+=`<div class="vgeo">`;
+    let cur=null;
+    ter.forEach(g=>{
+      if(g.scale!==cur){ cur=g.scale; html+=`<div class="vgs"><span class="b s${g.scale}">${g.scale}</span>${SLAB[g.scale]||''}</div>`; }
+      html+=`<div class="vg ${g.good?'':'bad'}">
         <div class="ic">${g.icon}</div>
         <div class="bd">
-          <div class="tp"><span class="nm">${g.name}</span><span class="rl">${g.role}</span></div>
+          <div class="tp"><span class="nm">${g.name}</span>${g.ohaeng?`<span class="oh">${g.ohaeng}</span>`:''}<span class="rl">${g.role}</span></div>
           ${g.detail?`<div class="dt">${g.detail}</div>`:''}
           <div class="mn">${g.mean}</div>
-        </div></div>`).join('')+`</div></div>`;
+          ${g.tip?`<div class="tip">💡 ${g.tip}</div>`:''}
+        </div></div>`;
+    });
+    html+=`</div></div>`;
+  }
+  // 창(향) 방향 풍수 조언
+  const fg=d.facingGuide;
+  if(fg&&fg.title){
+    html+=`<div class="vcard"><div class="h">🧭 ${fg.title} · ${fg.dir}향 ${fg.deg}°</div>
+      <div class="body">${fg.body}</div><div class="ftip">${fg.tip}</div></div>`;
   }
   // 조언
   if(d.advice&&d.advice.length){

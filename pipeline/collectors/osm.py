@@ -120,3 +120,50 @@ class OsmCollectors:
                 haversine(center.as_tuple(), p.as_tuple()) for p in w.points))
             out["water"] = nearest.name
         return out
+
+    def terrain(self, center: LatLon) -> List[dict]:
+        """다중 스케일 지형지물 상세 — 실제 산봉우리·하천을 거리·방위·해발과 함께.
+
+        landmarks(사신사 이름)보다 풍부하게, 근봉(장군봉 등)부터 먼 조산까지 모두 담아
+        해석 층(web.render._terrain)이 대/중/소 스케일로 풀 수 있게 한다.
+        """
+        bundle = self._get_bundle(center)
+        c = center.as_tuple()
+        out: List[dict] = []
+        seen = set()
+        # 산봉우리 — 가까운 순, 최대 8개
+        peaks = sorted(
+            bundle.get("peaks", []),
+            key=lambda t: haversine(c, t[0].as_tuple()))
+        for loc, name, ele in peaks:
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            out.append({
+                "name": name, "kind": "peak", "lat": loc.lat, "lon": loc.lon,
+                "ele": round(ele, 1) if ele else None,
+                "dist": int(haversine(c, loc.as_tuple())),
+                "bearing": round(bearing(c, loc.as_tuple()), 1),
+            })
+            if len(out) >= 8:
+                break
+        # 하천 — 이름 있는 물길, 가까운 순, 최대 4개
+        named = [w for w in bundle.get("streams", []) if w.name]
+        named.sort(key=lambda w: min(haversine(c, p.as_tuple()) for p in w.points))
+        cnt = 0
+        for w in named:
+            if w.name in seen:
+                continue
+            seen.add(w.name)
+            near = min(w.points, key=lambda p: haversine(c, p.as_tuple()))
+            # 폭이 넓으면 큰 강(river)으로 분류 — 국세를 감싸는 대수
+            kind = "river" if (w.width_m or 0) >= 20 else "water"
+            out.append({
+                "name": w.name, "kind": kind, "lat": near.lat, "lon": near.lon,
+                "ele": None, "dist": int(haversine(c, near.as_tuple())),
+                "bearing": round(bearing(c, near.as_tuple()), 1),
+            })
+            cnt += 1
+            if cnt >= 4:
+                break
+        return out

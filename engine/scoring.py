@@ -65,6 +65,7 @@ class SiteAssessment:
     sources: Dict[str, int] = field(default_factory=dict)   # 실측 데이터 개수(투명성)
     section: List[dict] = field(default_factory=list)       # 배산임수 표고 단면(앞←집→뒤)
     factors: List[dict] = field(default_factory=list)       # 지도용 풍수 영향 요인(아이콘·좌표·길흉)
+    terrain: List[dict] = field(default_factory=list)       # 다중 스케일 지형지물(산·강 상세)
 
     @property
     def needs_bibo(self) -> bool:
@@ -132,6 +133,7 @@ def assess_site(
         sources=sources,
         section=_elev_section(features),
         factors=_map_factors(features),
+        terrain=list(features.terrain or []),
     )
 
 

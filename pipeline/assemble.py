@@ -46,6 +46,7 @@ def assemble_features(
     loc = info.location
     dl = _deadline()
     lm_fn = getattr(collectors, "landmarks", None)
+    ter_fn = getattr(collectors, "terrain", None)
     dem = _within(dl, lambda: collectors.dem(loc, radius_m), [])
     return SiteFeatures(
         address=address,
@@ -63,6 +64,7 @@ def assemble_features(
         historical=_safe(lambda: collectors.historical(loc), None),
         precision=Precision(dong_position=None),
         landmarks=_safe(lambda: lm_fn(loc) if callable(lm_fn) else None, None),
+        terrain=_safe(lambda: ter_fn(loc) if callable(ter_fn) else [], []),
     )
 
 
@@ -74,6 +76,7 @@ def assemble_at(lat: float, lon: float, collectors, radius_m: float = DEFAULT_RA
     dl = _deadline()
     get_at = getattr(collectors, "building_at", None)
     lm_fn = getattr(collectors, "landmarks", None)
+    ter_fn = getattr(collectors, "terrain", None)
 
     # 무거운 네트워크(고도·통합 지형지물)만 예산으로 보호. DEM(신뢰) 먼저,
     # 이어서 건물해석이 Overpass 통합 번들을 '한 번' 받는다.
@@ -96,6 +99,7 @@ def assemble_at(lat: float, lon: float, collectors, radius_m: float = DEFAULT_RA
         historical=_safe(lambda: collectors.historical(loc), None),
         precision=Precision(dong_position=None),
         landmarks=_safe(lambda: lm_fn(loc) if callable(lm_fn) else None, None),
+        terrain=_safe(lambda: ter_fn(loc) if callable(ter_fn) else [], []),
     )
 
 
